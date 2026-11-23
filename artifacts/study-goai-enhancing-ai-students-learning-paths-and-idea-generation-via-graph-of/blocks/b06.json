@@ -1,0 +1,13 @@
+{
+  "question": "In the literature-search stage, what does the forward extension from a key reference paper do?",
+  "options": [
+    "It finds the papers listed in the key reference's bibliography.",
+    "It finds papers that cite the key reference, showing how the idea developed afterwards.",
+    "It ranks the key references by publication date.",
+    "It extends the search by adding $K$ random papers on the topic."
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "Forward means following citations *to* the key paper (later work). Backward uses the reference list (earlier work), which is the tempting confusion. Selection is by cosine similarity, not randomness or date."
+  }
+}

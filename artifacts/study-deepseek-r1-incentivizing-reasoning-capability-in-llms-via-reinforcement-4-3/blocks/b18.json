@@ -1,0 +1,13 @@
+{
+  "question": "Qwen2.5-32B-Zero (pure large-scale RL on a 32B base) scores 47.0 on AIME 2024, while DeepSeek-R1-Distill-Qwen-32B (SFT on R1 outputs) scores 72.6. What conclusion do the authors draw?",
+  "options": [
+    "Pure RL does not work at all on 32B models, which is why only the 671B model improved.",
+    "The distilled models outperform because they also went through an RL stage after SFT.",
+    "Smaller models are inherently better reasoners than larger ones once fine-tuned.",
+    "For small models, distilling from a stronger model beats running the same large-scale RL on them, though going further may still need stronger bases and larger-scale RL."
+  ],
+  "private": {
+    "correct_index": 3,
+    "explanation": "Distillation was SFT only, yet it clearly beat pure RL at the same size, and the authors conclude that distillation is economical and effective for small models. The first option is tempting but wrong: pure RL did help the 32B base, which roughly matched QwQ-32B-Preview, and 32B was among the sizes the authors found large enough to succeed. It just fell short of distillation."
+  }
+}

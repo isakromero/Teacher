@@ -1,0 +1,162 @@
+/* The reader's standing on concepts (standing.js): the status chips, "Suggested next" (history
+   page and library), the standing table, and the standing mark on the concept graph's nodes. The
+   colours are app.css's state colours: weak = --err, developing = --warn, strong = --ok, not
+   studied = --muted. Each status also has its own words wherever it is shown. */
+
+.standing-chip {
+  display: inline-block;
+  padding: 0 0.45rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.standing-chip.standing-weak {
+  color: var(--err);
+  border-color: var(--err);
+  background: var(--err-bg);
+}
+.standing-chip.standing-developing {
+  color: var(--warn);
+  border-color: var(--warn);
+  background: var(--warn-bg);
+}
+.standing-chip.standing-strong {
+  color: var(--ok);
+  border-color: var(--ok);
+  background: var(--ok-bg);
+}
+
+/* "Suggested next" */
+.suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+/* Compact cards (app.css's card style): head, reason and action on short lines; the numbers
+   folded away. */
+.suggestion {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.925rem;
+  line-height: 1.5;
+}
+.suggestion-head {
+  margin-bottom: var(--space-1);
+}
+.suggestion .suggestion-action {
+  margin-top: var(--space-1);
+}
+.suggestion-fill_gap {
+  border-left-color: var(--err);
+}
+.suggestion-review {
+  border-left-color: var(--warn);
+}
+.suggestion-ready_next {
+  border-left-color: var(--accent);
+}
+.suggestion-kind {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+.suggestion-reason,
+.suggestion-action {
+  margin: 0;
+}
+.suggestion-numbers {
+  margin-top: var(--space-1);
+  font-size: 0.85rem;
+}
+.suggestion-numbers > summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.suggestion-numbers p {
+  margin: 0;
+}
+.suggestions-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-2) 0;
+}
+
+/* the per-concept table and the inspector section */
+.standing-table td,
+.standing-table th {
+  white-space: nowrap;
+}
+.standing-table th[scope="row"] {
+  white-space: normal;
+}
+.standing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+.standing-section h3 .standing-chip {
+  margin-left: var(--space-1);
+}
+.standing-question .md > :first-child {
+  margin-top: 0;
+}
+
+/* the concept graph: a small mark at the node's lower right (the pin mark is at its upper
+   right), drawn only for concepts with answers; the node's fill (origin), its outline (review
+   state) and the selection and roadmap halos are left as they are. */
+.node .standing-mark,
+.legend-standing {
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.node .standing-mark {
+  display: none;
+}
+.node.standing-weak .standing-mark,
+.node.standing-developing .standing-mark,
+.node.standing-strong .standing-mark {
+  display: inline;
+}
+.node.standing-weak .standing-mark,
+.legend-standing.standing-weak {
+  fill: var(--err);
+}
+.node.standing-developing .standing-mark,
+.legend-standing.standing-developing {
+  fill: var(--warn);
+}
+.node.standing-strong .standing-mark,
+.legend-standing.standing-strong {
+  fill: var(--ok);
+}
+.standing-dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--surface);
+}
+.standing-dot.standing-weak {
+  background: var(--err);
+}
+.standing-dot.standing-developing {
+  background: var(--warn);
+}
+.standing-dot.standing-strong {
+  background: var(--ok);
+}

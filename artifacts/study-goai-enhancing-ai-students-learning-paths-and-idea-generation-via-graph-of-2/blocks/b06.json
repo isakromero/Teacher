@@ -1,0 +1,13 @@
+{
+  "question": "A paper's related-work paragraph says it proposes a different method from a cited paper and compares against it. Which GoAI label fits best, and what does the edge record besides the label?",
+  "options": [
+    "B&E; it also records the cited paper's publication year",
+    "C&A; it also records where in the citing paper the reference appears",
+    "Q&A; it also records the similarity score used to retrieve it",
+    "M/I; it also records the number of times the cited paper is quoted"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "Proposing alternatives and comparing is the Contrast and Alternative category. Edges also store citation position, which the paper uses as a measure of citation importance. Q&A is for questioning or refuting, not merely comparing."
+  }
+}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{#- The review queue: one due question at a time, and the review bank of each page. Filled in
+    by static/js/review.js. -#}
+{% block title %}Review{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ static('vendor/katex-0.16.22/katex.min.css') }}">
+<link rel="stylesheet" href="{{ static('css/review.css') }}">
+{% endblock %}
+{% block page_class %}page-review{% endblock %}
+{% block content %}
+<div id="review-page" data-page="review"{% if concept %} data-concept="{{ concept }}"{% endif %}>
+  <header class="page-header">
+    <h1>Review</h1>
+    <p class="lead">Questions you have cleared on your study pages come back here, spaced out: soon after a miss, later and later after each right answer, often in a fresh form. One try each; then you see the answer.</p>
+    {% if concept %}
+    <p class="notice">Reviewing only questions about <strong>{{ concept_name }}</strong>. <a href="/review">Review everything</a></p>
+    {% endif %}
+    <p id="review-summary" class="muted" aria-live="polite"></p>
+  </header>
+
+  <section aria-label="The question to review">
+    <div id="review-card" class="review-card" aria-live="polite" aria-busy="true">
+      <p class="loading">Loading the review queue...</p>
+    </div>
+  </section>
+
+  <section class="review-banks-section" aria-labelledby="review-banks-heading">
+    <h2 id="review-banks-heading">Fresh forms of the questions</h2>
+    <p class="muted small">Each page's questions can be asked in variants, so that you recall the idea rather than recognise the question. A page without variants is reviewed with its original questions.</p>
+    <div id="review-banks" aria-live="polite"><p class="muted">Loading...</p></div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/review.js') }}"></script>
+{% endblock %}

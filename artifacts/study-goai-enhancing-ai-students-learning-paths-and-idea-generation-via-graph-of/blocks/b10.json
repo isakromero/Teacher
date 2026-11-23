@@ -1,0 +1,13 @@
+{
+  "question": "Why does GoAI explore relations first and only then entities?",
+  "options": [
+    "Relations are always fewer than entities, so the graph can be stored more compactly.",
+    "Choosing important relations first narrows down the neighbouring papers, so the LLM does not have to judge a huge number of entities at once.",
+    "Entities cannot be expressed in natural language, so relations must be used as a substitute.",
+    "The relation step trains the LLM before the entity step uses it."
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The two-step strategy addresses the difficulty of processing many neighbours with an LLM. Entities are in natural language (the paper says so), and no training is involved; pruning is done by prompting."
+  }
+}

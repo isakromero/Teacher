@@ -1,0 +1,13 @@
+{
+  "question": "What do the Dev1 and Dev2 results together suggest about the cold-start SFT stage?",
+  "options": [
+    "Cold-start SFT improves everything, so later stages are optional",
+    "It improved instruction following but initially cost reasoning performance, which the subsequent reasoning RL recovered and extended",
+    "It made the model worse at instruction following but better at math",
+    "It had no measurable effect because R1-Zero was already readable"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "Dev1 gained on IF-Eval and ArenaHard but dropped on AIME (the authors cite the small cold-start set); Dev2 after reasoning RL restored reasoning strength."
+  }
+}

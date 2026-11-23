@@ -1,0 +1,21 @@
+{
+  "prompt": "A model's DCF workbook shows the right Enterprise Value, yet fails a perturbation criterion that changes WACC. Give a likely cause and explain why the paper treats this as an important weakness.",
+  "min_words": 25,
+  "private": {
+    "model_answer": "The model probably hardcoded a value or overwrote a formula with a constant, so Enterprise Value no longer depends on WACC. The paper treats this as important because a real model must stay live when assumptions change; static correctness hides brittle workbooks that fail when analysts adjust inputs.",
+    "rubric": [
+      {
+        "criterion": "Identifies a plausible cause such as a hardcoded value, a constant overwriting a formula, or non-converging circularity",
+        "required": true
+      },
+      {
+        "criterion": "Explains that the output stops responding to the input so the model is not dynamically correct",
+        "required": true
+      },
+      {
+        "criterion": "Connects this to real use, where analysts change assumptions",
+        "required": false
+      }
+    ]
+  }
+}

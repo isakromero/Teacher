@@ -1,0 +1,49 @@
+/* Citations: the source page's References section (static/js/source_references.js) and the add
+   page's "Cited by your library" list (static/js/add_frontier.js). Adds to app.css and uses
+   its tokens only. */
+
+.reference-list {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.75rem;
+}
+.reference-item,
+.frontier-item {
+  padding: var(--space-2) 0;
+}
+.reference-item + .reference-item,
+.frontier-item + .frontier-item {
+  border-top: 1px solid var(--border);
+}
+.reference-title {
+  display: block;
+  font-family: var(--font-read);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.reference-meta,
+.reference-raw,
+.reference-actions {
+  display: block;
+  margin-top: var(--space-1);
+  overflow-wrap: anywhere;
+}
+.reference-actions .button.compact {
+  margin-right: var(--space-1);
+}
+.reference-actions .tag {
+  margin-left: 0;
+}
+#source-references-section h3 {
+  font-size: 1rem;
+  margin: var(--space-4) 0 var(--space-1);
+}
+.add-frontier {
+  margin-top: var(--space-5);
+}
+.add-frontier h2 {
+  margin-top: 0;
+}
+.frontier-list {
+  list-style: none;
+  padding-left: 0;
+}

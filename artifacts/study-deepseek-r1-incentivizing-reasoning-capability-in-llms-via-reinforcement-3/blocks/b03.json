@@ -1,0 +1,13 @@
+{
+  "question": "In GRPO, where does the baseline for judging whether an output was good come from?",
+  "options": [
+    "A learned value model about the same size as the policy",
+    "The mean and standard deviation of rewards among the other outputs sampled for the same question",
+    "A fixed human-written reference answer for each question",
+    "The KL divergence to the reference policy"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "GRPO normalizes each reward by its group's mean and standard deviation, so no value model is needed. A value model is PPO's approach. The KL term is a separate regularizer, not the advantage baseline.}"
+  }
+}

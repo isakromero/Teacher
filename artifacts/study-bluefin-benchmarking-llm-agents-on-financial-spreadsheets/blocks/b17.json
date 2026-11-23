@@ -1,0 +1,13 @@
+{
+  "question": "What does it mean that Opus 4.7 is \"dominated\" on the cost-performance chart?",
+  "options": [
+    "Opus has the lowest score of all five models",
+    "Another model, GPT-5.5, scores at least as well at a much lower cost",
+    "Opus was excluded from the evaluation because of its cost",
+    "Opus fails every Perturbation criterion"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "A dominated point has some other point that is no worse on score and cheaper. GPT-5.5 scores 49.6 versus Opus 49.2 at $8.85 versus $49.21 per task. Opus is not the lowest scorer; Grok is."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "question": "Which statement best captures the authors' hypothesis for skipping SFT before RL in R1-Zero?",
+  "options": [
+    "SFT is too expensive in GPU hours compared with RL, so skipping it saves compute.",
+    "Human-defined reasoning patterns may restrict what the model explores, so unrestricted RL may elicit novel reasoning.",
+    "SFT data cannot contain correct final answers, so it would teach the model wrong conclusions.",
+    "RL needs a cold, untuned model because tuned models cannot receive a reward signal."
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The paper's stated motivation is that human-defined patterns may limit exploration. Cost is mentioned as a drawback of annotation, but it is not the hypothesis. SFT data can be correct, and RL does not require an untuned model; the authors later use SFT in R1 itself."
+  }
+}

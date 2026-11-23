@@ -1,0 +1,13 @@
+{
+  "question": "Which observation best supports the paper's claim that reflective behaviour *emerged* in R1-Zero rather than being taught?",
+  "options": [
+    "The R1-Zero template explicitly instructed the model to verify each step before answering.",
+    "A process reward model gave higher scores to reasoning steps that contained verification.",
+    "The frequency of reflective words such as \"wait\" rose several-fold during training, with \"wait\" spiking after about step 8000, even though the reward checked only answer correctness and format.",
+    "Human annotators rewrote R1-Zero's outputs to include reflection before RL continued."
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "The template constrained only the structure (think and answer tags), and the reward checked only correctness and format. So the rise in reflective words came from the model itself. No process reward model was used for R1-Zero. The human rewriting described in the last option belongs to the cold-start data for DeepSeek-R1, not to R1-Zero's training."
+  }
+}

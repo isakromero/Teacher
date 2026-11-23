@@ -1,0 +1,188 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChDN52qHuENVEZ6Twvn42",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 5495,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 233381,
+    "output_tokens": 6341
+  },
+  "source": {
+    "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement",
+    "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+    "media_type": "application/pdf"
+  },
+  "depth": "standard",
+  "output": {
+    "blocks": [
+      {
+        "type": "prose",
+        "section": null,
+        "markdown": "## Can reasoning be *grown* rather than *taught*?\n\nMost ways of making language models reason well depend on humans: chain-of-thought prompts, or supervised fine-tuning (SFT) on human-written step-by-step solutions. The authors of this paper (DeepSeek-R1) argue that this has two costs. Annotated reasoning traces are expensive and carry human biases. And a model trained to imitate human reasoning is capped at human-style reasoning, so it cannot find non-human but better strategies.\n\nTheir alternative is to give the model a hard question, check only whether its final answer is right, and let reinforcement learning (RL) reward correct answers. The first model, **DeepSeek-R1-Zero**, skips SFT entirely and starts from the base model DeepSeek-V3-Base. It reasons impressively but is hard to read, mixes languages and is narrow. So the authors build **DeepSeek-R1**, a multi-stage pipeline that keeps the reasoning and fixes the rest. Finally, they distill R1's outputs into smaller models.\n\nThis page follows that story: the algorithm, the rewards, what emerged, the pipeline, the evidence, and the limits."
+      },
+      {
+        "type": "prose",
+        "section": "grpo-algorithm",
+        "markdown": "## GRPO: RL without a value model\n\nThe RL algorithm is Group Relative Policy Optimization (GRPO). For each question $q$, it samples a *group* of $G$ outputs $o_1,\\dots,o_G$ from the old policy, and scores each with a reward $r_i$. Each output's **advantage** is its reward relative to the rest of its group:\n\n$$A_i=\\frac{r_i-\\text{mean}(\\{r_1,\\dots,r_G\\})}{\\text{std}(\\{r_1,\\dots,r_G\\})}$$\n\nOutputs better than their siblings get positive advantage and are made more likely; worse ones are pushed down. The objective uses a PPO-style clipped probability ratio (clip range $\\varepsilon$) and subtracts a KL penalty, weighted by $\\beta$, that keeps the policy near a reference policy.\n\nFor R1-Zero the settings were: learning rate 3e-6, KL coefficient 0.001, 16 samples per question, and a maximum length of 32,768 tokens that was raised to 65,536 at step 8.2k, where performance and response length jumped. The reference model is replaced by the latest policy every 400 steps."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "grpo-algorithm",
+        "question": "In GRPO, where does the baseline for judging whether an output was good come from?",
+        "options": [
+          "A learned value model about the same size as the policy",
+          "The mean and standard deviation of rewards among the other outputs sampled for the same question",
+          "A fixed human-written reference answer for each question",
+          "The KL divergence to the reference policy"
+        ],
+        "correct_index": 1,
+        "explanation": "GRPO normalizes each reward by its group's mean and standard deviation, so no value model is needed. A value model is PPO's approach. The KL term is a separate regularizer, not the advantage baseline.}"
+      },
+      {
+        "type": "prose",
+        "section": "grpo-vs-ppo",
+        "markdown": "## Why not just PPO?\n\nThe appendix gives the reasoning for GRPO over PPO.\n\n- **Value model cost.** PPO estimates advantages with a learned value model, usually as large as the policy, adding memory and compute. It must predict the final reward from a partial response. That is especially hard for long chains of thought, where early text may later be revised or contradicted, and when only a final outcome reward exists.\n- **KL handling.** PPO adds a per-token KL penalty as a dense reward. The authors argue this cumulative penalty may implicitly penalize length and discourage longer responses. GRPO puts the KL estimate directly in the loss.\n- **Tuning.** On MATH with a small model (DeepSeek-Coder-V2-Lite), PPO with GAE $\\lambda=0.95$ performed well below GRPO. With $\\lambda=1.0$ it came close, but needed extra tuning.\n\nThe claim is therefore practicality, not that PPO cannot work."
+      },
+      {
+        "type": "prose",
+        "section": "r1-zero-rewards-results",
+        "markdown": "## R1-Zero: rules as the teacher\n\nThe reward is purely **rule-based**, with two equally weighted parts:\n\n- **Accuracy reward:** for math, the final answer must be in a set format (e.g. boxed) so it can be matched; for code, a compiler runs predefined tests.\n- **Format reward:** reasoning must be wrapped in `<think>...</think>` tags.\n\nThe authors deliberately avoid neural reward models (outcome or process) for reasoning, because they observed these are prone to **reward hacking** at large scale and add training complexity. The prompt template constrains only structure (think, then answer), not content, so the model's own progression can be observed.\n\nResults: AIME 2024 pass@1 rose from 15.6% to 77.9% over training, and to 86.7% with self-consistency (majority vote), above the human average. Average response length grew steadily, and counts of reflective words (\"wait\", \"verify\", \"check\"...) rose 5- to 7-fold. A sample shows an \"aha moment\" where the model stops and re-evaluates; the word \"wait\" was nearly absent early and spiked after step 8000. Note that this evidence is word counts plus a sample trace."
+      },
+      {
+        "type": "blurb",
+        "section": "r1-zero-rewards-results",
+        "prompt": "Explain why the R1-Zero setup is a meaningful test of whether reasoning can emerge from RL alone: what does the reward check, and what does it deliberately leave unconstrained?",
+        "min_words": 25,
+        "model_answer": "The reward only checks the final answer's correctness (plus a format reward for think tags), using rules like answer matching or test cases. It does not prescribe or score the reasoning steps, and the template constrains only structure. So any reflection or longer reasoning that appears must have been discovered by the model because it led to correct answers.",
+        "rubric": [
+          {
+            "criterion": "States that the reward is based on final-answer correctness (rule-based accuracy), with format as a minor extra",
+            "required": true
+          },
+          {
+            "criterion": "States that the reasoning process content is not constrained or supervised",
+            "required": true
+          },
+          {
+            "criterion": "Concludes that emerging behaviours therefore come from the model's own exploration",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": "prose",
+        "section": "r1-pipeline",
+        "markdown": "## From R1-Zero to R1\n\nR1-Zero has poor readability, mixes English and Chinese within one chain of thought, and, because its RL was only on reasoning tasks, is weak at writing and open-domain QA. DeepSeek-R1 addresses this in four stages:\n\n1. **Cold-start SFT** on thousands of long-CoT examples in a readable, first-person, conversational style.\n2. **Reasoning RL** as in R1-Zero, plus a **language-consistency reward**: the proportion of target-language words in the CoT. An ablation shows a slight performance drop but more readable output.\n3. **Rejection sampling + SFT:** sample from the stage-2 model, keep correct responses, and fine-tune the base model on about 800K samples (roughly 600K reasoning, 200K non-reasoning).\n4. **Second RL** combining rule-based rewards for reasoning with reward models for helpfulness and harmlessness. Temperature drops to 0.7, and preference rewards are used only in the final 400 of 1,700 steps, since longer exposure risked reward hacking.\n\nThe helpful reward model was trained on 66K preference pairs judged by DeepSeek-V3; the safety model on 106K prompts labeled safe or unsafe."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "r1-pipeline",
+        "question": "Why does the second RL stage use model-based preference rewards only in its last 400 steps?",
+        "options": [
+          "Preference rewards are more expensive to compute than rule-based rewards, so they were rationed",
+          "The authors found that more steps with the model-based preference reward may lead to reward hacking",
+          "Reasoning data cannot be mixed with general data earlier",
+          "The language-consistency reward requires the preference reward to be added last"
+        ],
+        "correct_index": 1,
+        "explanation": "The paper says more training with the model-based preference signal may lead to reward hacking (documented in an appendix). Cost is not the stated reason, and reasoning and general data were mixed in the stage generally."
+      },
+      {
+        "type": "prose",
+        "section": "data-recipe",
+        "markdown": "## Where the data comes from\n\nReasoning RL data is all verifiable: 26K math, 17K code, 22K STEM multiple-choice and 15K logic prompts. Math proofs are excluded because correctness is hard to check automatically. Math and STEM rewards are binary (matches the reference or not). General data (66K helpfulness prompts, plus harmlessness data) relies on reward models.\n\nCold-start data were made by sampling R1-Zero outputs, keeping those with correct answers and a readable format, then having DeepSeek-V3 and human annotators rewrite them into a natural, single-language, first-person style. For the 800K SFT set, reasoning samples came from rejection sampling the stage-2 checkpoint, with chaotic, mixed-language or overly long outputs filtered out. Most samples are single-turn.\n\nThe authors add a caution: the vivid human-like reasoning style reflects engineered heuristics, not evidence that the model has human-like intelligence."
+      },
+      {
+        "type": "prose",
+        "section": "main-results",
+        "markdown": "## What each stage buys\n\nThe stage-by-stage table is informative because it shows trade-offs, not just gains.\n\n- **Dev1** (cold-start SFT) greatly improves instruction following (IF-Eval 46.6 to 71.7) but loses reasoning, notably AIME (77.9 to 59.0); the authors attribute this to the small cold-start set.\n- **Dev2** (reasoning RL) recovers reasoning gains, but general benchmarks like AlpacaEval improve only marginally. So reasoning RL mostly helps reasoning.\n- **Dev3** (SFT with reasoning and non-reasoning data) lifts AlpacaEval and Aider-Polyglot.\n- **Final R1** (second RL) mostly improves instruction-following and preference benchmarks, with AlpacaEval 2.0 up 25% and ArenaHard 17%.\n\nFinal R1 reaches AIME 2024 pass@1 of 79.8, MATH-500 97.3 and a Codeforces rating of 2029. Against o1-1217 it is on par on math, behind on Aider, and comparable on SWE Verified."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "main-results",
+        "question": "What do the Dev1 and Dev2 results together suggest about the cold-start SFT stage?",
+        "options": [
+          "Cold-start SFT improves everything, so later stages are optional",
+          "It improved instruction following but initially cost reasoning performance, which the subsequent reasoning RL recovered and extended",
+          "It made the model worse at instruction following but better at math",
+          "It had no measurable effect because R1-Zero was already readable"
+        ],
+        "correct_index": 1,
+        "explanation": "Dev1 gained on IF-Eval and ArenaHard but dropped on AIME (the authors cite the small cold-start set); Dev2 after reasoning RL restored reasoning strength."
+      },
+      {
+        "type": "prose",
+        "section": "evaluation-comparisons",
+        "markdown": "## How much to trust the numbers\n\nA few details of the evaluation matter.\n\n**Sampling.** Greedy decoding gave high repetition and variability for long-output models, so pass@1 is estimated as the average correctness of $k$ responses sampled at temperature 0.6 (e.g. $k=64$ for AIME). Cons@64 is majority vote over 64 samples.\n\n**Contamination.** The authors filtered training text with 10-gram matching against evaluation questions and used pre-2023 competition sources for math SFT/RL data. They concede this misses paraphrases, so benchmarks released before 2024 may still be contaminated. As a check, they tested on AIME 2025, released after training, where R1 solved 75% against o1's 80%.\n\n**Humans.** R1 beats the human average on AIME and outperforms 96.3% of Codeforces participants, but trails PhD-level experts with web access on GPQA Diamond. On ChatbotArena with style control it shared first place in a January 2025 screenshot."
+      },
+      {
+        "type": "blurb",
+        "section": "evaluation-comparisons",
+        "prompt": "Why can the authors' n-gram decontamination not fully rule out contamination, and what additional check did they run to address this?",
+        "min_words": 20,
+        "model_answer": "The 10-gram filtering only removes text that literally matches evaluation questions, so paraphrased versions of test items could remain in training data. To probe this, they evaluated on AIME 2025, which was released after training, where R1 scored about 75% pass@1.",
+        "rubric": [
+          {
+            "criterion": "Explains that n-gram matching misses paraphrased test questions",
+            "required": true
+          },
+          {
+            "criterion": "Names evaluation on a post-training benchmark such as AIME 2025 as the extra check",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": "prose",
+        "section": "further-analysis",
+        "markdown": "## Test-time compute and where gains come from\n\nThe appendix analyses behaviour in more depth.\n\n- **Versus V3.** R1 and DeepSeek-V3 share the same base model. R1 gains most on STEM and reasoning (MMLU-Pro, LiveCodeBench, AIME), while V3 keeps an edge on IF-Eval.\n- **Adaptive thinking length.** On a set of 2024 competition problems R1 uses under 7,000 thinking tokens on easier problems and over 18,000 on the hardest. GPT-4o averages 711 output tokens and solves far fewer.\n- **Majority voting.** Voting over 64 samples lifts GPT-4o on AIME 2024 only from 9.3% to 13.4%, but lifts R1 from 79.8% to 86.7%. The authors argue independent samples cannot backtrack or build on each other, so non-reasoning models gain little. R1's pass@64 is 90.0%, showing its single chains sometimes fail.\n- **Weak areas.** Math breakdown shows relative weakness in geometry and combinatorics.\n- **Per stage.** On LiveCodeBench, gains at each stage come mainly from medium and hard problems."
+      },
+      {
+        "type": "prose",
+        "section": "distillation-and-key-findings",
+        "markdown": "## Distillation, and what failed\n\nThe authors fine-tuned small Qwen and Llama models with SFT only (no RL) on the 800K R1-generated samples. DeepSeek-R1-Distill-Qwen-1.5B beats GPT-4o and Claude-3.5-Sonnet on the math benchmarks reported, and performance rises with student size.\n\nThe key comparison: they ran large-scale RL directly on Qwen2.5-32B-Base (over 10K steps), giving Qwen2.5-32B-Zero, which roughly matches QwQ-32B-Preview. The distilled 32B model beat it on every benchmark in the table. Their conclusion: distillation is economical and effective for small models, though pushing beyond current capability may still need stronger base models and larger-scale RL.\n\n**Other findings.** RL on 7B dense and 16B MoE models gave no meaningful AIME improvement, so base-model capacity matters. Two approaches were tried and abandoned: process reward models (hard to define steps, hard to verify them, reward hacking) and MCTS (token search space far larger than chess, and a fine-grained value model is hard to train). The authors note this does not prove the approaches cannot work."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "distillation-and-key-findings",
+        "question": "What does the Qwen2.5-32B-Zero versus DeepSeek-R1-Distill-Qwen-32B comparison show?",
+        "options": [
+          "Large-scale RL always beats distillation if run long enough",
+          "For a 32B model, distilling R1's outputs outperformed running large-scale RL directly, at much lower compute",
+          "Distillation works only when the student is smaller than 10B parameters",
+          "RL on the base model produced results indistinguishable from the distilled model"
+        ],
+        "correct_index": 1,
+        "explanation": "The distilled model was significantly better on all reported benchmarks, while RL-only matched QwQ-32B-Preview. The paper does not claim RL can never win; it says beating distillation may need stronger bases and larger-scale RL."
+      },
+      {
+        "type": "prose",
+        "section": "safety-limitations",
+        "markdown": "## Safety and limitations\n\n**Safety.** Stronger reasoning can make harmful plans more actionable, R1 can be jailbroken, and open weights can be fine-tuned to remove protections. The safety report finds intrinsic safety \"moderate\" (comparable to GPT-4o). An external risk control system, which flags keyword-matched dialogues and has DeepSeek-V3 review them, substantially improves safety. Without it, jailbreak templates raised R1's unsafe rate from 25.2% to 85.9%.\n\n**Capability limits.** Weak structured output and no tool use; overthinking on simple questions; language mixing for languages other than Chinese and English; sensitivity to prompts (few-shot prompting degrades it); little gain over V3 on software engineering, since slow evaluation made large-scale RL impractical there.\n\n**Method limit.** Pure RL needs a reliable verifier. Model-based rewards invite reward hacking, so for tasks like writing, R1 still uses human-annotated SFT data and only hundreds of RL steps."
+      },
+      {
+        "type": "blurb",
+        "section": "safety-limitations",
+        "prompt": "Explain why the authors say pure RL is hard to scale to tasks like writing, and how DeepSeek-R1 handles such tasks instead.",
+        "min_words": 25,
+        "model_answer": "Pure RL depends on a reliable reward signal. For math and code, rules or test cases give one, but for writing no dependable rule-based reward exists, and a model-based reward can be exploited by the policy, which finds shortcuts that score high without being truly better. So R1 uses human-annotated supervised data for such tasks and runs only a few hundred RL steps.",
+        "rubric": [
+          {
+            "criterion": "Says pure RL requires a reliable reward or verifier, which is hard to build for writing",
+            "required": true
+          },
+          {
+            "criterion": "Mentions that model-based rewards can be exploited (reward hacking)",
+            "required": true
+          },
+          {
+            "criterion": "States that R1 relies on human-annotated SFT data and only brief RL for such tasks",
+            "required": false
+          }
+        ]
+      }
+    ]
+  }
+}

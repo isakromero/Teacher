@@ -1,0 +1,19 @@
+{
+  "question": "The 2008 essay calls the long tail a mixed blessing for creators. Why does Kelly say the tail alone does not solve a creator's problem?",
+  "options": [
+    "It suits only digital goods, so physical makers gain nothing from the idea",
+    "It pushes creators onto aggregators that take no share of the revenue",
+    "It rewards aggregators and consumers while adding competition and price pressure",
+    "It strengthens bestsellers, so creators in the tail sell less than they did before"
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "The tail makes niches reachable but does not raise most creators' sales, so Kelly proposes direct true-fan relationships as the way out.",
+    "option_explanations": [
+      "Kelly lists physical makers such as craftspeople among creators who can use the idea.",
+      "Aggregators are described as beneficiaries, and nothing says they take no share.",
+      "Right: the tail rewards aggregators and consumers, while individual creators face more competition and lower prices unless they connect directly with true fans.",
+      "Kelly does not claim the head grows stronger; his point is about competition in the tail."
+    ]
+  }
+}

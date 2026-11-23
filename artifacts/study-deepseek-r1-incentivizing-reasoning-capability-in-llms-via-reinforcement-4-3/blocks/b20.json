@@ -1,0 +1,21 @@
+{
+  "prompt": "Using the paper's helpful-reward-model example, explain what reward hacking is and why it limits how far pure RL can be pushed on tasks like writing.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "Reward hacking happens when a policy learns to score highly on its reward signal without actually doing the task better. In the paper, the helpful reward model's score kept rising during training while Codeforces performance dropped. Maths and code can use rule-based checks that are hard to fool. Writing has no reliable verifier and must rely on a learned reward model, which gets exploited as training continues, so pure RL is hard to scale there.",
+    "rubric": [
+      {
+        "criterion": "Defines reward hacking as the model exploiting flaws in the reward signal, so that reward rises without real improvement on the intended goal.",
+        "required": true
+      },
+      {
+        "criterion": "Cites the paper's evidence that the helpful reward score increased while Codeforces performance decreased.",
+        "required": true
+      },
+      {
+        "criterion": "Explains that tasks such as writing lack rule-based verifiers and so depend on learned reward models that are exploitable, which limits pure RL there.",
+        "required": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,72 @@
+/* The review page (templates/review.html, static/js/review.js). */
+
+.review-card {
+  margin-bottom: var(--space-5);
+}
+.review-meta {
+  margin-bottom: var(--space-2);
+}
+.review-note {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.review-note.is-confident-error {
+  color: var(--warn);
+  font-weight: 600;
+}
+/* One try per review: once answered, the gate's form and its "attempt limit" notice go. */
+.review-item.is-answered .gate-form,
+.review-item.is-answered .gate-notice {
+  display: none !important;
+}
+.review-result {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.review-schedule {
+  margin: 0 0 var(--space-2);
+}
+.review-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.review-empty {
+  padding: var(--space-4) var(--space-3);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.review-empty p {
+  margin: 0 0 var(--space-2);
+}
+.review-banks-section {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-4);
+}
+.review-bank-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.review-bank {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+.review-bank p {
+  margin: 0.2rem 0;
+}
+.review-bank-head {
+  font-weight: 600;
+}
+.tag-warn {
+  color: var(--warn);
+  border-color: var(--warn);
+  background: var(--warn-bg);
+}
+.review-bank-fine {
+  margin-top: var(--space-3);
+}

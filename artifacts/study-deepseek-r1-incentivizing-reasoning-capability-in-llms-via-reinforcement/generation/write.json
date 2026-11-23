@@ -1,0 +1,202 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChDB9NAUkdgJVTfonTfPo",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 5120,
+    "cache_creation_input_tokens": 233345,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 7638
+  },
+  "source": {
+    "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement",
+    "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+    "media_type": "application/pdf"
+  },
+  "depth": "standard",
+  "output": {
+    "blocks": [
+      {
+        "type": "prose",
+        "section": null,
+        "markdown": "## What this paper is about\n\nLarge language models solve harder problems when they write out intermediate reasoning steps. The usual way to teach this is to show the model many human-written reasoning traces (supervised fine-tuning, SFT). The DeepSeek-R1 paper asks whether that is necessary. Its authors argue that human demonstrations are costly to produce, carry human biases, and cap the model at the quality of the examples it imitates.\n\nTheir alternative is to give a strong pre-trained model a *verifiable* reward (is the final answer right?) and let reinforcement learning (RL) discover how to reason. The paper presents two models: **DeepSeek-R1-Zero**, trained by pure RL with no SFT stage, and **DeepSeek-R1**, a multi-stage pipeline that fixes R1-Zero's practical flaws. It also reports that distilling R1 into smaller models works well. We will go through the idea, the algorithm, the evidence, and the limits the authors admit.\n\nTwo things to hold on to: the claim is about *eliciting* reasoning from a capable base model, and everything depends on having a reliable way to check answers.\n\n**Section:** motivation.\n"
+      },
+      {
+        "type": "prose",
+        "section": "motivation",
+        "markdown": "## Why skip human demonstrations?\n\nThe paper lists three weaknesses of learning from human reasoning traces: depending on annotation hinders scalability, it introduces cognitive biases, and it ties performance to the human-provided exemplars, which \"prevents the exploration of superior, non-human-like reasoning pathways.\"\n\nFrom this the authors form a hypothesis: human-defined reasoning patterns may *limit* exploration, whereas unrestricted RL may let new reasoning capabilities emerge. So they build on DeepSeek-V3-Base, use the RL algorithm GRPO, and give a reward based only on whether the final answer matches ground truth, with no constraint on the reasoning process. Notably, they bypass the usual SFT phase before RL.\n\nThe result, R1-Zero, produces longer responses with verification, reflection and alternative approaches, though nobody explicitly taught it to. Its flaws (poor readability, language mixing, weak performance on writing) motivate the second model, DeepSeek-R1, covered later.\n"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "motivation",
+        "question": "Which statement best captures the authors' hypothesis for skipping SFT before RL in R1-Zero?",
+        "options": [
+          "SFT is too expensive in GPU hours compared with RL, so skipping it saves compute.",
+          "Human-defined reasoning patterns may restrict what the model explores, so unrestricted RL may elicit novel reasoning.",
+          "SFT data cannot contain correct final answers, so it would teach the model wrong conclusions.",
+          "RL needs a cold, untuned model because tuned models cannot receive a reward signal."
+        ],
+        "correct_index": 1,
+        "explanation": "The paper's stated motivation is that human-defined patterns may limit exploration. Cost is mentioned as a drawback of annotation, but it is not the hypothesis. SFT data can be correct, and RL does not require an untuned model; the authors later use SFT in R1 itself."
+      },
+      {
+        "type": "prose",
+        "section": "grpo",
+        "markdown": "## GRPO: RL without a value model\n\nRL for language models treats the model as a *policy* that generates an output $o$ for a question $q$. A standard method, PPO, estimates how good each output is relative to expectation using a learned **value model**, roughly as large as the policy itself.\n\nGroup Relative Policy Optimization (GRPO) drops the value model. For each question it samples a group of $G$ outputs $\\{o_1,\\dots,o_G\\}$ from the old policy, scores each with a reward $r_i$, and computes the advantage by comparing within the group:\n\n$$A_i = \\frac{r_i - \\text{mean}(\\{r_1,\\dots,r_G\\})}{\\text{std}(\\{r_1,\\dots,r_G\\})}$$\n\nAn output that beats its siblings gets a positive advantage; a worse one gets a negative advantage. The policy is then updated with a PPO-style clipped objective (the probability ratio between new and old policy is clipped to $[1-\\varepsilon, 1+\\varepsilon]$) minus a KL penalty $\\beta\\,\\mathbb{D}_{KL}(\\pi_\\theta\\|\\pi_{ref})$ that keeps the policy near a reference model.\n\nFor R1-Zero: learning rate 3e-6, KL coefficient 0.001, 16 samples per question, 32 questions per step, and the reference model is replaced with the latest policy every 400 steps.\n"
+      },
+      {
+        "type": "prose",
+        "section": "grpo",
+        "markdown": "## Why GRPO suits long reasoning\n\nAppendix A.3 gives reasons beyond saving memory. A value model must predict the final reward from a *partial* response. That is hard when only a final outcome reward exists, and harder for long chains of thought, where early text may later be revised or contradicted through reflection.\n\nThe KL treatment differs too. In GRPO an estimator of the KL divergence is added directly to the loss. In PPO a per-token KL penalty is added as a dense reward, so the cumulative penalty may implicitly penalize length and discourage longer responses. Since training runs thousands of steps and the policy can drift far from the starting point, the authors periodically refresh the reference policy.\n\nA fair caveat from the paper's own experiment (a smaller model on the MATH task): PPO with the default GAE $\\lambda=0.95$ was clearly worse than GRPO, but after tuning $\\lambda$ to 1.0 it came close. So GRPO is presented as the more *practical* choice, not as strictly superior.\n"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "grpo",
+        "question": "In GRPO, what plays the role that PPO's learned value model plays when computing an output's advantage?",
+        "options": [
+          "The statistics (mean and standard deviation) of rewards across a group of outputs sampled for the same question",
+          "A separate frozen reference model that scores each token",
+          "The KL divergence between the new and old policy",
+          "A neural reward model trained on human preferences"
+        ],
+        "correct_index": 0,
+        "explanation": "GRPO normalizes each output's reward by its group's mean and standard deviation. The reference model only enters via the KL penalty, the clip handles update size, and R1-Zero deliberately uses no neural reward model."
+      },
+      {
+        "type": "prose",
+        "section": "r1-zero-rewards",
+        "markdown": "## Rewards for R1-Zero: simple and checkable\n\nThe reward is the training signal, so its design matters most. R1-Zero uses only **rule-based** rewards in math, coding and logic:\n\n- **Accuracy reward**: for math, the answer must appear in a specified format (e.g. in a box) so it can be checked automatically; for code, a compiler runs the response against predefined test cases.\n- **Format reward**: the reasoning must be enclosed in `<think>` and `</think>` tags.\n\nThey are summed with equal weight. The prompt template merely asks for reasoning first, then an answer, and the authors deliberately restrict constraints to this structure, avoiding content-specific biases, so they can observe the model's natural progression.\n\nThe authors explicitly avoid neural reward models, outcome-based or process-based, for reasoning. Their reasons: such models are susceptible to reward hacking during large-scale RL, and retraining them costs resources and complicates the pipeline. A rule that checks a final answer is hard to game in the way a learned scorer can be.\n"
+      },
+      {
+        "type": "blurb",
+        "section": "r1-zero-rewards",
+        "prompt": "Why did the authors use rule-based accuracy and format rewards for R1-Zero rather than a neural reward model? Explain the reasoning in your own words.",
+        "min_words": 25,
+        "model_answer": "Neural reward models can be exploited by the policy during long RL training, which is reward hacking, and they must be retrained at extra cost, complicating the pipeline. Rule-based checks, like matching a final answer or running test cases, give reliable, hard-to-game feedback in math, code and logic, where correctness is verifiable.",
+        "rubric": [
+          {
+            "criterion": "States that neural reward models are susceptible to reward hacking (the policy exploiting flaws in the learned scorer).",
+            "required": true
+          },
+          {
+            "criterion": "Explains that rule-based rewards are reliable because answers in math/code/logic can be verified automatically.",
+            "required": true
+          },
+          {
+            "criterion": "Mentions the extra compute or pipeline complexity of retraining reward models.",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": "prose",
+        "section": "r1-zero-results",
+        "markdown": "## What R1-Zero learned\n\nOn AIME 2024 (competition math), R1-Zero's average pass@1 climbs from 15.6% at the start of RL to 77.9%. With self-consistency (majority voting over samples) it reaches 86.7%, which the paper says is well above the average human competitor. (pass@1 is the average correctness of single sampled responses.)\n\nResponse length also grows steadily over training. The authors interpret this as the model using more \"thinking time\", generating hundreds to thousands of tokens to explore and refine strategies, driven only by the reward. Reflective behaviours rise along with it: a word list chosen by three human experts (\"wait\", \"verify\", \"check\" and so on) appears 5 to 7 times more often than at the start.\n\nThe paper highlights an \"aha moment\": a sudden rise in the word \"wait\" late in training, illustrated by a transcript where the model stops mid-derivation and re-evaluates. Appendix C also shows harder MATH problems improve most (level 5 from about 0.55 to 0.90).\n\nA caution: the paper itself cites work (Liu et al., 2025) questioning whether such aha moments really occur in R1-Zero-like training, and counting words is only an indirect proxy for reflection.\n"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "r1-zero-results",
+        "question": "What does the paper's evidence on R1-Zero's \"aha moment\" actually consist of?",
+        "options": [
+          "A controlled experiment showing the model's accuracy jumps when it is told to reflect",
+          "A human audit that verified each use of \"wait\" was a genuine self-correction",
+          "An example transcript plus a count showing a sudden increase in the word \"wait\" late in training",
+          "A comparison with SFT data showing humans never write reflective steps"
+        ],
+        "correct_index": 2,
+        "explanation": "The evidence is one illustrative transcript (Table 2) and a word-frequency curve (Figure 9b). It does not include an intervention or a human audit of each instance, which is why the word count is only a proxy and outside work questions the interpretation."
+      },
+      {
+        "type": "prose",
+        "section": "r1-pipeline",
+        "markdown": "## Fixing R1-Zero: the multi-stage pipeline\n\nR1-Zero reasons well but has practical problems: poor readability, language mixing (English and Chinese inside one chain of thought; the base model is trained mostly on those two languages), and narrow competence, since RL on reasoning tasks alone does little for writing or open-domain QA.\n\nDeepSeek-R1 addresses this in four stages (Figure 2):\n\n1. **Cold start SFT**: thousands of long chain-of-thought examples, built from R1-Zero outputs filtered for correct answers and readable format, then refined by DeepSeek-V3 and human verification, in a conversational, first-person style. This gives checkpoint Dev1.\n2. **Reasoning RL** with rule-based rewards plus a **language-consistency reward**: the proportion of target-language words in the chain of thought. This gives Dev2.\n3. **Rejection sampling + SFT**: sample responses from the RL checkpoint, keep correct ones, and fine-tune on about 800K samples (about 600K reasoning, about 200K non-reasoning such as writing and factual QA). This gives Dev3.\n4. **Second RL stage** with diverse prompts, mixing rule-based rewards for reasoning with reward models for helpfulness and harmlessness. This gives R1.\n\nThe language reward costs a slight performance drop in ablation, but the authors accept it for readability.\n"
+      },
+      {
+        "type": "prose",
+        "section": "r1-pipeline",
+        "markdown": "## Reward models and the limit on preference RL\n\nFor general (non-reasoning) data, no simple rule can say what a good answer is, so the authors use reward models. The helpfulness model is trained on 66,000 preference pairs, built by having DeepSeek-V3 judge pairs four times with randomized order to reduce position bias, keeping only pairs with a clear score gap and similar lengths. Helpfulness is judged on the final summary only; harmlessness is judged on the whole response, reasoning included. A separate safety model is trained point-wise on 106,000 labelled prompts.\n\nThe second RL stage has 1,700 steps, but preference-based rewards are used only in the **final 400**. The reason given: more steps with the model-based preference reward may lead to reward hacking. Appendix B.5 illustrates this in a run where reward rose while CodeForces performance fell.\n\nThis is the pipeline's trade-off: model-based rewards are needed to cover tasks with no verifier, yet they are exactly the kind of signal the authors distrust, so they are used briefly.\n"
+      },
+      {
+        "type": "blurb",
+        "section": "r1-pipeline",
+        "prompt": "Explain why DeepSeek-R1 adds a cold-start SFT stage and a second RL stage with reward models, given that R1-Zero reached strong reasoning scores with pure RL.",
+        "min_words": 30,
+        "model_answer": "R1-Zero had poor readability, mixed languages and was weak outside reasoning, such as writing and open-domain QA. Cold-start SFT gives a readable, human-aligned thinking style to start RL from, and later SFT adds non-reasoning data. The second RL stage uses reward models to align with helpfulness and harmlessness, but only briefly because model-based rewards risk reward hacking.",
+        "rubric": [
+          {
+            "criterion": "Names at least one R1-Zero weakness being fixed (readability, language mixing, or narrow capability beyond reasoning).",
+            "required": true
+          },
+          {
+            "criterion": "Connects the cold-start/SFT data to readability or to broadening beyond reasoning tasks.",
+            "required": true
+          },
+          {
+            "criterion": "Explains that the second RL stage adds helpfulness/harmlessness via reward models and is limited because of reward hacking risk.",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": "prose",
+        "section": "results",
+        "markdown": "## What the numbers show\n\nTable 3 tracks each stage. Dev1 gains much in instruction-following (IF-Eval 46.6 to 71.7) but loses reasoning because the cold-start set is small (AIME 77.9 to 59.0). Dev2, after reasoning RL, recovers it (74.0). Dev3 adds large non-reasoning and code engineering data and improves AlpacaEval 2.0 and Aider-Polyglot. The final RL stage gives modest math/code gains but large preference gains (AlpacaEval 2.0 62.1 to 87.6; ArenaHard 75.6 to 92.3).\n\nAgainst other models (Table 8), R1 scores AIME 2024 79.8 versus OpenAI-o1-1217's 79.2 and is strong on code, though o1-1217 beats it on Aider (61.7 vs 53.3). Versus humans, R1 exceeds the average AIME and Codeforces participant but trails Ph.D.-level experts with web access on GPQA.\n\nAppendix E adds: results on AIME 2025, weaker performance on geometry and combinatorics, and **adaptive** thinking length (more tokens for harder problems). Majority voting lifts AIME 2024 from 79.8% to 86.7%, and pass@64 is 90.0%.\n\nCaveats: contamination is filtered by 10-gram matching, which cannot catch paraphrases, and the authors say benchmarks released before 2024 may still be affected.\n"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "results",
+        "question": "Which reading of Table 3's stage-by-stage results is best supported by the paper?",
+        "options": [
+          "Cold-start SFT (Dev1) improved every benchmark, including AIME, over R1-Zero.",
+          "The final RL stage mainly improved math and code, since that is where RL was concentrated.",
+          "Reasoning-focused RL helped reasoning benchmarks but did little for preference benchmarks, which improved mostly after SFT on mixed data and the final RL.",
+          "AlpacaEval 2.0 rose most between R1-Zero and Dev2."
+        ],
+        "correct_index": 2,
+        "explanation": "Dev2 shows marginal AlpacaEval gains, while Dev3 and especially the final R1 (87.6) improve it a lot. Dev1 actually dropped AIME, and the final RL stage gave only marginal math/code gains because reasoning RL had been done earlier."
+      },
+      {
+        "type": "prose",
+        "section": "distillation",
+        "markdown": "## Distillation versus RL for small models\n\nThe authors also ask: can smaller models get these abilities? They take open base models (Qwen and Llama families, 1.5B to 70B parameters) and fine-tune them with plain SFT on the roughly 800K samples generated with R1. No RL is applied to these distilled models.\n\nThe results are strong. Even DeepSeek-R1-Distill-Qwen-1.5B beats GPT-4o and Claude-3.5-Sonnet on the math benchmarks reported (AIME 28.9 vs 9.3 and 16.0 pass@1), and performance rises with student size.\n\nThe key comparison (Table 16) is against RL applied directly. Training Qwen2.5-32B-Base with large-scale RL for over 10K steps gives Qwen2.5-32B-Zero, which roughly matches QwQ-32B-Preview (AIME 47.0 vs 50.0). The distilled 32B model scores 72.6, much better on every benchmark listed.\n\nThe authors conclude distillation is economical and effective for small models, while pushing *beyond* what current models can do may still need more powerful base models and larger-scale RL. Note the experiment compares one student at one scale and one compute setting.\n"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "distillation",
+        "question": "What does the Qwen2.5-32B-Zero versus DeepSeek-R1-Distill-Qwen-32B comparison support?",
+        "options": [
+          "Distillation always outperforms RL, whatever the model size or compute",
+          "For this smaller model, distilling R1's outputs gave better results than large-scale RL on the same base, though RL may still be needed to advance the frontier",
+          "RL on small models fails because small models cannot produce long chains of thought",
+          "Distilled models were improved by an added RL stage"
+        ],
+        "correct_index": 1,
+        "explanation": "The paper reports the distilled 32B beating the RL-only 32B and says RL on small models needs enormous compute and may not match distillation, while noting that advancing beyond current intelligence may require stronger bases and larger RL. It does not claim universality, and distilled models used SFT only."
+      },
+      {
+        "type": "prose",
+        "section": "safety",
+        "markdown": "## Safety: the model and its wrapper\n\nThe ethics statement admits that R1 can be jailbroken, and that stronger reasoning can make harmful plans more feasible. A public model can also be fine-tuned in ways that remove safety protections.\n\nAppendix D.3 evaluates this in several ways: six public benchmarks, an in-house set of 1,120 questions across a taxonomy of 4 categories and 28 subcategories, 50 languages, and jailbreak prompts. Many deployments add an external **risk control system**: user queries are keyword-matched, flagged dialogues are sent to DeepSeek-V3 with a review prompt, and unsafe ones are retracted.\n\nThe numbers matter. On the in-house set, R1 without the risk control system has an unsafe rate of 25.2%; with it, 8.5%, but rejections rise to 27.3%. Under jailbreak prompts, R1 without risk control reaches an unsafe rate of 85.9% (Table 11), versus 4.3% with it. The authors note that open-weights models run locally lack this layer and recommend developers add similar controls. Their overall judgment is a \"moderate\" intrinsic safety level, comparable to GPT-4o (2024-05-13).\n"
+      },
+      {
+        "type": "prose",
+        "section": "lessons-limits",
+        "markdown": "## Lessons, failed attempts and limits\n\n**Lessons.** RL on small bases (a 7B dense and a 16B MoE model) did not give meaningful AIME gains, so base capacity matters; reliable verifiers are crucial; and both SFT and RL are needed, since RL alone can reward-hack on ill-posed tasks while SFT alone limits exploration.\n\n**Failed attempts.** Process reward models: fine-grained steps are hard to define, step correctness hard to judge, and model-based versions invite reward hacking. Monte Carlo Tree Search: token generation has an enormous search space, and training a good value model is hard. The authors stress these may not be inherently unworkable.\n\n**Limitations.** Weak structured output; no tool use; \"overthinking\" on simple questions; language mixing for languages other than Chinese and English; sensitivity to prompts (few-shot prompting degrades performance); and little gain over DeepSeek-V3 in software engineering because slow evaluation made RL there impractical.\n\nThe central open challenge is tasks without a reliable verifier, like writing, where model-based rewards get exploited. R1 handles these with human-annotated SFT data and only hundreds of RL steps.\n"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "lessons-limits",
+        "question": "Why does the paper say pure RL is hard to scale to tasks like creative writing?",
+        "options": [
+          "There is no verifier as reliable as an answer check, so a model-based reward is needed and can be exploited as training progresses",
+          "Writing tasks have no ground truth, so GRPO's group normalization divides by zero",
+          "Long outputs exceed the 32,768 token limit in every case",
+          "SFT data cannot be gathered for writing tasks"
+        ],
+        "correct_index": 0,
+        "explanation": "The paper ties pure RL's success to reliable reward signals; for writing, rewards come from models and are susceptible to reward hacking. The other options invent mechanisms, and in fact R1 uses human-annotated SFT data for such tasks."
+      }
+    ]
+  }
+}

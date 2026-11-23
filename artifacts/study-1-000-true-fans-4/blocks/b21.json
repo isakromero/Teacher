@@ -1,0 +1,17 @@
+{
+  "prompt": "Imagine a writer with 600 devoted fans who each spend $100 yearly, selling directly. In your own words, explain what could still make her path work or fail, using Kelly's ideas.",
+  "min_words": 35,
+  "private": {
+    "model_answer": "At $100 each, 600 fans give about $60,000, which may be enough if she needs less than the default $100,000, since the number must be adjusted to her costs. She could add income from regular fans or publishers, or raise per-fan spending. It could fail if her living costs are higher or fan tending takes too much time.",
+    "rubric": [
+      {
+        "criterion": "Computes or reasons that 600 fans at $100 give about $60,000 and compares it to income needs",
+        "required": true
+      },
+      {
+        "criterion": "Names an extra lever or risk such as regular fans, intermediaries, higher spend per fan, or the time cost of tending fans",
+        "required": true
+      }
+    ]
+  }
+}

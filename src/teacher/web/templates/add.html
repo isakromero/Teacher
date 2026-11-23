@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{#- Add a source: a PDF from this computer or a web address. Driven by static/js/add.js. -#}
+{% block title %}Add a source{% endblock %}
+{% block page_class %}page-add{% endblock %}
+{% block content %}
+<div id="add-page" data-page="add">
+  <header class="page-header">
+    <p class="crumbs"><a href="/library">Library</a></p>
+    <h1 id="upload-heading">Add a source</h1>
+    <p class="lead">A paper or a web page to study. Teacher detects its details for you to check, then can write a study page from it.</p>
+  </header>
+
+  <section class="card" aria-labelledby="upload-heading">
+    <form id="upload-form" class="form" novalidate aria-busy="false">
+      <fieldset class="field source-mode">
+        <legend>Where is it?</legend>
+        <label class="choice">
+          <input id="upload-mode-file" name="mode" type="radio" value="file" checked>
+          A PDF on this computer
+        </label>
+        <label class="choice">
+          <input id="upload-mode-url" name="mode" type="radio" value="url">
+          A web address
+        </label>
+      </fieldset>
+
+      <div id="upload-file-field" class="field">
+        <label for="upload-file">PDF file <span class="req">(required)</span></label>
+        <input id="upload-file" name="file" type="file" accept="application/pdf,.pdf" required
+               aria-describedby="upload-file-hint">
+        <p id="upload-file-hint" class="hint">
+          Teacher reads the first pages and fills in the title, authors and other details for
+          you to check.
+        </p>
+      </div>
+
+      <div id="upload-url-field" class="field" hidden>
+        <label for="upload-url">Web address <span class="req">(required)</span></label>
+        <div class="input-row">
+          <input id="upload-url" name="url" type="url" inputmode="url" autocomplete="off"
+                 spellcheck="false" placeholder="https://" aria-describedby="upload-url-hint">
+          <button id="upload-url-fetch" type="button" class="button">Fetch</button>
+        </div>
+        <p id="upload-url-hint" class="hint">
+          An article, a tutorial, a documentation page or a link to a PDF. Teacher saves a copy
+          of the text as it is now; images are not kept. Pages that need a login or only
+          appear with JavaScript cannot be read.
+        </p>
+      </div>
+
+      <p id="upload-detect-status" class="status-text" role="status" aria-live="polite"></p>
+      <div id="upload-detect-error" class="error" role="alert" hidden></div>
+      <div id="upload-duplicate" class="notice notice-warn" role="alert" hidden></div>
+
+      <div id="upload-details" class="form-details" hidden>
+        <p id="upload-detected-note" class="notice"></p>
+        <div class="field">
+          <label for="upload-title">Title <span class="req">(required)</span></label>
+          <input id="upload-title" name="title" type="text" required autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="upload-authors">Authors</label>
+          <input id="upload-authors" name="authors" type="text" autocomplete="off"
+                 aria-describedby="upload-authors-hint">
+          <p id="upload-authors-hint" class="hint">Separate names with commas.</p>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="upload-arxiv">arXiv id</label>
+            <input id="upload-arxiv" name="arxiv" type="text" autocomplete="off"
+                   placeholder="1706.03762" spellcheck="false">
+          </div>
+          <div class="field field-narrow">
+            <label for="upload-year">Year</label>
+            <input id="upload-year" name="year" type="text" inputmode="numeric"
+                   pattern="[0-9]{4}" maxlength="4" autocomplete="off" placeholder="2017">
+          </div>
+        </div>
+        <div class="field">
+          <label for="upload-doi">DOI</label>
+          <input id="upload-doi" name="doi" type="text" autocomplete="off"
+                 placeholder="10.48550/arXiv.1706.03762" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="upload-summary">Summary</label>
+          <textarea id="upload-summary" name="summary" rows="4"
+                    aria-describedby="upload-summary-hint"></textarea>
+          <p id="upload-summary-hint" class="hint">A few sentences on what it is about.</p>
+        </div>
+        <div class="field field-check">
+          <input id="upload-generate" name="generate" type="checkbox" checked>
+          <label for="upload-generate">Generate a study page after adding it</label>
+        </div>
+        <div id="upload-model-field" class="field model-field" hidden>
+          <label for="upload-model">Model</label>
+          <select id="upload-model" name="model"></select>
+        </div>
+      </div>
+
+      <div class="actions form-actions">
+        <button id="upload-submit" type="submit" class="button primary" disabled>Add to library</button>
+        <span id="upload-status" class="status-text" aria-live="polite"></span>
+      </div>
+      <div id="upload-error" class="error" role="alert" hidden></div>
+    </form>
+  </section>
+
+  {#- The reading frontier: driven by static/js/add_frontier.js. -#}
+  <section id="add-frontier" class="card add-frontier" aria-labelledby="add-frontier-heading">
+    <link rel="stylesheet" href="{{ static('css/references.css') }}">
+    <h2 id="add-frontier-heading">Cited by your library</h2>
+    <p class="hint">Works your sources cite that are not in your library yet, the most cited first.</p>
+    <div id="add-frontier-list" aria-live="polite"><p class="muted">Loading...</p></div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/add.js') }}"></script>
+<script type="module" src="{{ static('js/add_frontier.js') }}"></script>
+{% endblock %}

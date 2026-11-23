@@ -1,0 +1,326 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChFLb2EgiTWRS1dTaGcGr",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 7307,
+    "cache_creation_input_tokens": 31424,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 2988
+  },
+  "source": {
+    "slug": "goai-enhancing-ai-students-learning-paths-and-idea-generation-via-graph-of-ai",
+    "title": "GoAI: Enhancing AI Students' Learning Paths and Idea Generation via Graph of AI Ideas",
+    "media_type": "application/pdf"
+  },
+  "trigger": "generation",
+  "proposed": 36,
+  "dropped": [
+    {
+      "term": "GoAI Agent",
+      "reason": "does not occur in the study page text"
+    }
+  ],
+  "merged": [],
+  "dropped_aliases": [
+    {
+      "term": "citation semantics",
+      "alias": "semantic roles of citations",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "GNN",
+      "alias": "GNNs",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "Think-on-Graph",
+      "alias": "ToG",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "CoT",
+      "alias": "Chain-of-Thought",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "fine-tuned",
+      "alias": "supervised fine-tuning",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "fine-tuned",
+      "alias": "fine-tunes",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "Pearson correlation",
+      "alias": "Pearson Corr.",
+      "reason": "does not occur in the study page text"
+    }
+  ],
+  "output": {
+    "terms": [
+      {
+        "term": "GoAI",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The name of the tool proposed in the paper, short for Graph of AI Ideas. It builds a knowledge graph of papers and uses an LLM to search it for trends, learning paths and idea feedback.",
+        "aliases": []
+      },
+      {
+        "term": "knowledge graph",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A data structure that stores information as nodes (things) connected by labelled edges (relations between them). Here the nodes are papers and prerequisite knowledge, and the edges are citations with semantic labels.",
+        "aliases": []
+      },
+      {
+        "term": "LLM",
+        "kind": "acronym",
+        "expansion": "large language model",
+        "definition": "A neural network trained on large amounts of text that can read and write natural language. In this paper LLMs summarize, choose graph paths, and generate ideas through prompts.",
+        "aliases": [
+          "LLMs"
+        ]
+      },
+      {
+        "term": "Hint Ideas",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Research ideas the LLM generates from a path through the graph, giving a motivation, novelty and method. They are used to check how plausible a path is and to inspire students.",
+        "aliases": [
+          "Hint Idea"
+        ]
+      },
+      {
+        "term": "citation semantics",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The role a citation plays, such as building on, comparing with or criticizing the cited paper, as opposed to the mere fact that a citation exists.",
+        "aliases": []
+      },
+      {
+        "term": "baseline",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An existing method that a new method is compared against and aims to surpass.",
+        "aliases": [
+          "baselines"
+        ]
+      },
+      {
+        "term": "GNN",
+        "kind": "acronym",
+        "expansion": "Graph Neural Network",
+        "definition": "A neural network that works on graph-structured data by passing information between connected nodes.",
+        "aliases": []
+      },
+      {
+        "term": "retrieval-augmented generation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A technique where relevant information is looked up and placed in the prompt so the language model can use it when answering.",
+        "aliases": []
+      },
+      {
+        "term": "key references",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The top-ranked papers retrieved for a topic, which serve as the starting points from which GoAI grows the graph.",
+        "aliases": [
+          "key reference"
+        ]
+      },
+      {
+        "term": "cosine similarity",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A measure of how similar two vectors are, based on the angle between them. It is commonly used to compare text representations; here it ranks candidate papers against the topic and abstract.",
+        "aliases": []
+      },
+      {
+        "term": "O(2K^N)",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Big-O notation giving how the number of retrieved papers grows with K papers kept per step and N steps in each of two directions.",
+        "aliases": []
+      },
+      {
+        "term": "B&E",
+        "kind": "acronym",
+        "expansion": "Based on and Extension",
+        "definition": "A citation label meaning the paper builds on, extends, applies or is inspired by the cited paper.",
+        "aliases": []
+      },
+      {
+        "term": "S&S",
+        "kind": "acronym",
+        "expansion": "Support and Supplement",
+        "definition": "A citation label meaning the paper supports or supplements the cited work through citation, reuse or indirect connection.",
+        "aliases": []
+      },
+      {
+        "term": "C&A",
+        "kind": "acronym",
+        "expansion": "Contrast and Alternative",
+        "definition": "A citation label meaning the paper compares itself with the cited paper or proposes an alternative to it.",
+        "aliases": []
+      },
+      {
+        "term": "Q&A",
+        "kind": "acronym",
+        "expansion": "Question and Refutation",
+        "definition": "A citation label meaning the paper questions, corrects or refutes the cited paper. Despite the letters, it does not mean question and answer here.",
+        "aliases": []
+      },
+      {
+        "term": "M/I",
+        "kind": "acronym",
+        "expansion": "Simple Mention or Irrelevant",
+        "definition": "A citation label for cases where the paper only mentions the cited work or has little direct relevance to it.",
+        "aliases": []
+      },
+      {
+        "term": "SciPDF Parser",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A tool that extracts text and paragraphs from scientific PDF files, used here before the LLM labels citations.",
+        "aliases": []
+      },
+      {
+        "term": "beam search",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A search method that keeps only the best N partial candidates at each step instead of exploring everything. Here N is the beam width and the candidates are paths through the graph.",
+        "aliases": [
+          "two-step beam search"
+        ]
+      },
+      {
+        "term": "Think-on-Graph",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A prior approach (abbreviated ToG) in which an LLM explores a knowledge graph step by step, choosing relations and then entities. GoAI adopts its two-step strategy.",
+        "aliases": []
+      },
+      {
+        "term": "Tree of Thoughts",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A reasoning method for language models, used in the paper as the example key reference in its Figure 2 workflow.",
+        "aliases": []
+      },
+      {
+        "term": "CoT",
+        "kind": "acronym",
+        "expansion": "Chain-of-Thought",
+        "definition": "A way of prompting a language model to reason through intermediate steps before giving an answer. It is also the name of a paper that appears as a node in the paper's example graph.",
+        "aliases": []
+      },
+      {
+        "term": "Self-Consistency",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A method for improving language-model reasoning by sampling several reasoning paths and combining their answers. It appears as a neighbour of Tree of Thoughts in the paper's example.",
+        "aliases": []
+      },
+      {
+        "term": "CPO",
+        "kind": "acronym",
+        "expansion": null,
+        "definition": "A paper that appears as a node in the example graph. The paper does not spell out the acronym.",
+        "aliases": []
+      },
+      {
+        "term": "trend T",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The summarized development trajectory the LLM produces by evaluating the papers along a path.",
+        "aliases": [
+          "Trend $T$"
+        ]
+      },
+      {
+        "term": "GoAI-CoT-Reviewer",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The paper's fine-tuned evaluation model that scores the novelty of an idea through three tagged stages: summary, analysis and scoring.",
+        "aliases": []
+      },
+      {
+        "term": "OpenReview",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A public platform where conference submissions and their peer-review comments are posted. The paper scrapes it to build training data.",
+        "aliases": []
+      },
+      {
+        "term": "LoRA",
+        "kind": "acronym",
+        "expansion": "Low-Rank Adaptation",
+        "definition": "A fine-tuning method that trains only small added low-rank matrices instead of all of a model's weights. The rank controls how small these additions are.",
+        "aliases": []
+      },
+      {
+        "term": "fine-tuned",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Further trained on a specific dataset so that a pre-trained model adapts to a particular task.",
+        "aliases": []
+      },
+      {
+        "term": "Idea Studio",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The paper's demonstration application in which students get trends and learning paths, propose ideas, and receive reviewer feedback.",
+        "aliases": []
+      },
+      {
+        "term": "Pearson correlation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A statistic from -1 to 1 measuring how closely two sets of numbers move together in a linear way. Values near 0 mean little relationship.",
+        "aliases": []
+      },
+      {
+        "term": "between-subjects",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An experimental design where each participant is assigned to only one condition, and conditions are compared across different people.",
+        "aliases": []
+      },
+      {
+        "term": "Frontier Mapping",
+        "kind": "term",
+        "expansion": null,
+        "definition": "One of the study tasks: drafting a one-page summary of the state of a field, including baselines, extensions, contrasts, datasets/tools and prerequisite knowledge.",
+        "aliases": []
+      },
+      {
+        "term": "Creative Ideation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The study's second task: proposing one or two project ideas related to the assigned topic.",
+        "aliases": []
+      },
+      {
+        "term": "SUS",
+        "kind": "acronym",
+        "expansion": "System Usability Scale",
+        "definition": "A standard questionnaire that rates how easy a system is to use, scored out of 100 with higher meaning better usability.",
+        "aliases": [
+          "System Usability Scale"
+        ]
+      },
+      {
+        "term": "NASA-TLX",
+        "kind": "acronym",
+        "expansion": "NASA Task Load Index",
+        "definition": "A standard questionnaire that measures perceived workload across subscales such as mental, physical and temporal demand, performance, effort and frustration. Lower scores mean lower load.",
+        "aliases": []
+      }
+    ]
+  }
+}

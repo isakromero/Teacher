@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_class %}page-source{% endblock %}
+{% block content %}
+<div id="source-page" data-page="source" data-slug="{{ slug }}">
+  <header class="page-header">
+    <p class="crumbs"><a href="/library">Library</a></p>
+    <p class="eyebrow">Source</p>
+    <h1 id="source-title">{{ title }}</h1>
+  </header>
+
+  <dl id="source-meta" class="meta card" aria-live="polite">
+    <div><dt>Status</dt><dd class="muted">Loading details...</dd></div>
+  </dl>
+
+  <div id="generate-model-field" class="field model-field" hidden>
+    <label for="generate-model">Model</label>
+    <select id="generate-model" name="model"></select>
+  </div>
+  <div class="actions">
+    <a id="source-file-link" class="button" href="/api/sources/{{ slug }}/file"
+       target="_blank" rel="noopener">Open original file</a>
+    <button id="generate-button" type="button" class="button primary">Generate study page</button>
+  </div>
+  <div id="generate-error" class="error" role="alert" hidden></div>
+
+  <section aria-labelledby="artifacts-heading">
+    <h2 id="artifacts-heading">Study pages and labs</h2>
+    <div id="artifact-list" aria-live="polite"><p class="muted">Loading study pages...</p></div>
+  </section>
+
+  <section aria-labelledby="concepts-heading">
+    <h2 id="concepts-heading">Concepts</h2>
+    <div id="concept-list" aria-live="polite"><p class="muted">Loading concepts...</p></div>
+  </section>
+
+  <section id="related-sources-section" aria-labelledby="related-sources-heading">
+    <h2 id="related-sources-heading">Related sources</h2>
+    <div id="related-sources" aria-live="polite"><p class="muted">Loading related sources...</p></div>
+  </section>
+
+  {#- Citations: driven by static/js/source_references.js. -#}
+  <section id="source-references-section" aria-labelledby="references-heading" aria-busy="false">
+    <link rel="stylesheet" href="{{ static('css/references.css') }}">
+    <h2 id="references-heading">References</h2>
+    <p id="source-references-status" class="status-text" role="status" aria-live="polite">Loading references...</p>
+    <div class="actions">
+      <button id="source-references-extract" type="button" class="button compact" hidden>Extract references</button>
+    </div>
+    <div id="source-references-error" class="error" role="alert" hidden></div>
+    <div id="source-references-list"></div>
+    <h3 id="cited-by-heading">Cited by sources in your library</h3>
+    <div id="source-cited-by" aria-live="polite"><p class="muted">Loading...</p></div>
+  </section>
+
+  <section class="danger-zone" aria-labelledby="delete-heading">
+    <h2 id="delete-heading">Delete source</h2>
+    <p class="muted">Removes this source and its stored file. Study pages and labs built from it must be deleted first.</p>
+    <button id="delete-button" type="button" class="button danger">Delete source...</button>
+    <div id="delete-confirm" class="confirm" hidden>
+      <p id="delete-confirm-text"><strong>Delete “{{ title }}”?</strong> This cannot be undone.</p>
+      <div class="actions">
+        <button id="delete-confirm-button" type="button" class="button danger"
+                aria-describedby="delete-confirm-text">Yes, delete it</button>
+        <button id="delete-cancel-button" type="button" class="button">Cancel</button>
+      </div>
+    </div>
+    <div id="delete-error" class="error" role="alert" hidden></div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/source.js') }}"></script>
+<script type="module" src="{{ static('js/source_related.js') }}"></script>
+<script type="module" src="{{ static('js/source_references.js') }}"></script>
+{% endblock %}

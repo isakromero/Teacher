@@ -1,0 +1,248 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChFLXKtUPSWeSAwsXDeuc",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 5450,
+    "cache_creation_input_tokens": 33485,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 6968
+  },
+  "source": {
+    "slug": "goai-enhancing-ai-students-learning-paths-and-idea-generation-via-graph-of-ai",
+    "title": "GoAI: Enhancing AI Students' Learning Paths and Idea Generation via Graph of AI Ideas",
+    "media_type": "application/pdf"
+  },
+  "depth": "standard",
+  "output": {
+    "blocks": [
+      {
+        "type": "prose",
+        "section": null,
+        "markdown": "## Why this paper exists\n\nAn AI student who wants a new research idea has to read a huge pile of papers, work out how a field developed, learn the background concepts those papers assume, and only then propose something feasible. The authors call this the **\"information-to-innovation\" gap**.\n\n*GoAI* (Graph of AI Ideas) is their proposed tool. It builds a **knowledge graph** of papers and uses an LLM to search that graph. The output is a set of research trends, a learning path ordered by prerequisite, and \"Hint Ideas\" to spark the student's own thinking. A fine-tuned reviewer model then gives feedback on the student's ideas.\n\nThe paper is worth understanding for two reasons. Its central design argument is that research is a graph, not a list. And its evidence comes from a very small study, so you will need to judge how far that evidence goes."
+      },
+      {
+        "type": "prose",
+        "section": "problem-motivation",
+        "markdown": "## The problem with a linear story\n\nThe authors say LLM assistants can already summarize papers and even suggest ideas. But they typically tell a *linear* story of how a field developed, and the authors list three problems with that:\n\n1. **Prerequisites are ignored.** The output doesn't say what foundational knowledge to learn first or how difficulty should progress.\n2. **Citation roles are lost.** A citation might mark a baseline to beat, a foundation to extend, or a critique to answer. A plain summary treats these alike.\n3. **Structure is oversimplified.** Research is a web of interconnections, not a chain.\n\nTheir proposed model of the landscape is a graph. Papers (and their ideas) are nodes, citations carrying a functional role are edges, and the concepts and skills inside papers form prerequisite chains. Seeing that structure is meant to enable algorithmic planning of learning paths and to reveal \"innovation opportunities\", places where methods could be combined, extended or contrasted."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "problem-motivation",
+        "question": "Which of the following is NOT one of the limitations the authors attribute to LLM-based academic assistants?",
+        "options": [
+          "They give only a linear narrative that oversimplifies the structure of research",
+          "They overlook what foundational knowledge must be learned first",
+          "They cannot summarize individual papers accurately",
+          "They fail to capture whether a citation is a baseline, extension or critique"
+        ],
+        "correct_index": 2,
+        "explanation": "The authors concede that LLM assistants can summarize papers. Their complaint is that the output is linear, lacks prerequisite information, and ignores citation semantics. The tempting wrong options are all stated limitations."
+      },
+      {
+        "type": "prose",
+        "section": "related-work",
+        "markdown": "## Where GoAI sits among prior work\n\nThe authors make three positioning claims.\n\n- **Educational knowledge graphs** (e.g., EDUKG for K–12, MOOC concept-recommendation work) mostly integrate *static* knowledge. They pay little attention to synthesizing research literature or supporting student innovation.\n- **AI idea-generation systems** typically use research *trend chains* or academic graphs. GoAI instead keeps a graph and adds citation semantics and citation importance.\n- **Combining graphs with LLMs** can be done by feeding GNN-processed graph information into the model, or by turning triples into text prompts. GoAI takes the second route. Its reason is that papers and the relation labels are already natural language, so the graph can simply be written out as text, much like retrieval-augmented generation.\n\nThis last choice shapes the rest of the method. The LLM never sees embeddings of graph structure. It reads descriptions of papers and relations and picks among them."
+      },
+      {
+        "type": "prose",
+        "section": "graph-building",
+        "markdown": "## Building the graph\n\n**Search and expansion.** Given a topic, GoAI queries Semantic Scholar and arXiv and takes the top-ranked papers as *key references*. It then grows the graph in two directions:\n\n- **Backward**: papers in a key reference's reference list, tracing where its ideas came from.\n- **Forward**: papers that cite the key reference, showing what came after.\n\nAt each step, candidate papers are ranked by cosine similarity to the topic and to the key reference's abstract, and the top $K$ are kept. This repeats for up to $N$ steps in each direction. Under ideal conditions that retrieves $O(2K^N)$ papers. If nothing relevant turns up, the search stops.\n\n**Edges.** Each edge is a quadruple $\\langle$paper1, citation position, citation semantics, paper2$\\rangle$. Position stands in for citation *importance* (where in the text the reference appears). Semantics is one of five categories, assigned by an LLM reading paragraphs extracted by SciPDF Parser:\n\n- **B&E**: based on / extends\n- **S&S**: supports / supplements\n- **C&A**: contrasts / alternative\n- **Q&A**: questions / refutes\n- **M/I**: simple mention or irrelevant"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "graph-building",
+        "question": "A paper's related-work paragraph says it proposes a different method from a cited paper and compares against it. Which GoAI label fits best, and what does the edge record besides the label?",
+        "options": [
+          "B&E; it also records the cited paper's publication year",
+          "C&A; it also records where in the citing paper the reference appears",
+          "Q&A; it also records the similarity score used to retrieve it",
+          "M/I; it also records the number of times the cited paper is quoted"
+        ],
+        "correct_index": 1,
+        "explanation": "Proposing alternatives and comparing is the Contrast and Alternative category. Edges also store citation position, which the paper uses as a measure of citation importance. Q&A is for questioning or refuting, not merely comparing."
+      },
+      {
+        "type": "prose",
+        "section": "path-generation",
+        "markdown": "## Searching the graph with an LLM\n\nOnce the graph exists, GoAI generates *paths*, alternating papers and relations, that represent lines of development. Following the Think-on-Graph approach, it uses a **two-step beam search** run by an LLM agent. Each iteration does:\n\n1. **Relation exploration.** Search: for each current path's endpoint paper, collect all its linked relations. Prune: the LLM picks the top-$N$ most relevant (by the query and relation text).\n2. **Entity exploration.** Search: follow the chosen relations to gather neighbouring papers. Prune: the LLM picks the top-$N$ paths again.\n\nBeam width is $N$ paths. Endpoints can extend backward (earlier work) or forward (later work), and each iteration adds two elements to a path, a relation and an entity. Exploring relations first keeps the LLM from having to judge a huge set of neighbours at once. Pruning is done by prompting, so no training is needed and the agent can work on different graphs.\n\nIn the paper's Figure 2 example, \"Tree of Thoughts\" is the key reference. Neighbours include Self-Consistency and CoT backward, and CPO, Diagram of Thought and ControlLLM forward."
+      },
+      {
+        "type": "interactable",
+        "section": "path-generation",
+        "title": "Beam search over a toy citation graph",
+        "instructions": "This uses **made-up** scores, not the paper's data, to show the mechanism. The LLM's pruning is replaced by a fixed relevance score. Pick a beam width N (1 to 3) and step through the iterations. Watch how only the top-N paths survive each step and how paths grow by one hop each time.",
+        "html": "<style>.row{margin:6px 0}.p{padding:4px 8px;border:1px solid var(--border);border-radius:6px;margin:3px 0;background:var(--surface)}.small{color:var(--muted);font-size:.9em}</style><div><div class=\"row\"><label for=\"n\">Beam width N: </label><input id=\"n\" type=\"range\" min=\"1\" max=\"3\" value=\"2\"><output id=\"nv\">2</output></div><div class=\"row\"><button id=\"step\" class=\"primary\">Next iteration</button> <button id=\"reset\">Reset</button></div><div id=\"out\"></div><p class=\"small\">Toy neighbours and scores (invented): Start→A(0.9), B(0.7), C(0.4). A→D(0.8), E(0.6). B→F(0.9), G(0.3). C→H(0.5). D→I(0.7). F→J(0.95), K(0.2). E→L(0.4).</p></div><script>var G={S:{A:.9,B:.7,C:.4},A:{D:.8,E:.6},B:{F:.9,G:.3},C:{H:.5},D:{I:.7},F:{J:.95,K:.2},E:{L:.4}};var paths,it;var n=document.getElementById('n'),nv=document.getElementById('nv'),out=document.getElementById('out');function reset(){paths=[{nodes:['S'],score:0}];it=0;render('Start: one path containing the key reference S.')}function render(msg){var h='<div class=\"row\"><b>Iteration '+it+'</b> — '+msg+'</div>';paths.forEach(function(p){h+='<div class=\"p\">'+p.nodes.join(' → ')+' <span class=\"small\">(total score '+p.score.toFixed(2)+')</span></div>'});out.innerHTML=h}document.getElementById('step').onclick=function(){var N=+n.value,c=[];paths.forEach(function(p){var e=p.nodes[p.nodes.length-1],nb=G[e];if(nb){for(var k in nb)c.push({nodes:p.nodes.concat([k]),score:p.score+nb[k]})}else c.push(p)});c.sort(function(a,b){return b.score-a.score});var before=c.length;paths=c.slice(0,N);it++;render('collected '+before+' candidate paths, kept top '+N+'.')};document.getElementById('reset').onclick=reset;n.oninput=function(){nv.textContent=n.value;reset()};reset();</script>"
+      },
+      {
+        "type": "prose",
+        "section": "path-generation",
+        "markdown": "## From paths to trends, hints and learning paths\n\nFinal paths feed three LLM prompts.\n\n- **Trend $T$**: the LLM evaluates the developmental trajectory of the papers along a path and summarizes it, and also predicts possible future directions.\n- **Hint Idea $H$**: the LLM articulates a motivation, novelty and method. The paper says $H$ has two uses. It serves as a proxy for how plausible the path is during validation, and it is a stimulus for student creativity.\n- **Learning path $P$**: the LLM extracts AI concepts and skills from each paper on the path and orders them from simple to complex. Figure 2 gives Transformer and self-attention as example prerequisites.\n\nNote that the learning path is produced by prompting an LLM. The paper does not describe any separate prerequisite graph algorithm. The prerequisite ordering is the LLM's judgment, checked later by other agents."
+      },
+      {
+        "type": "blurb",
+        "section": "path-generation",
+        "prompt": "Explain why GoAI explores relations first and then entities in each beam-search iteration, rather than asking the LLM to choose among all neighbouring papers directly.",
+        "min_words": 25,
+        "model_answer": "A key paper can have a very large number of neighbouring papers, which is too much for an LLM to judge at once. By first pruning to the most relevant relations, then only looking at neighbours reached through those relations, the candidate set the LLM must judge stays manageable.",
+        "rubric": [
+          {
+            "criterion": "States that the number of neighbouring entities can be too large or complex for the LLM to process directly",
+            "required": true
+          },
+          {
+            "criterion": "Explains that selecting relations first narrows which entities are considered next",
+            "required": true
+          },
+          {
+            "criterion": "Mentions that the LLM does the pruning by prompting, without training",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": "prose",
+        "section": "validation-reviewer",
+        "markdown": "## Validating paths and the CoT reviewer\n\nGenerated paths are checked by a **multi-agent evaluation**. For learning paths, agents check that each paper's extracted prerequisites are accurate and sensibly sequenced, and revisions follow a *majority vote*. For research trajectories, plausibility is judged by scoring the novelty of the Hint Idea.\n\nNovelty scoring uses a purpose-built model, **GoAI-CoT-Reviewer**, which imitates how a human reviewer works in three tagged stages:\n\n1. **Summary**: restate the idea's main content, given the idea and a related paper abstract.\n2. **Analysis**: list strengths and weaknesses.\n3. **Scoring**: give a novelty score.\n\nThis differs from free-form chain of thought because the structure is imposed. The training data are over 38k samples scraped from OpenReview (ICLR and NeurIPS, 2022–2025), accepted and rejected papers alike. Review fields serve as gold answers for each stage: the review summary for Summary, summary plus strengths and weaknesses for Analysis, and the technical novelty and significance field for Scoring. The base model is fine-tuned with LoRA.\n\nAt use time, several reviewer agents each score from 1 to 10. A score of 5 is the threshold between promising and unpromising, matching peer-review acceptance practice, and a majority vote decides."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "validation-reviewer",
+        "question": "How is the final judgment of whether a Hint Idea is promising reached?",
+        "options": [
+          "A single reviewer averages its scores over the summary, analysis and scoring stages",
+          "Several reviewer agents each score from 1 to 10 against a threshold of 5, and a majority vote decides",
+          "The idea is compared by cosine similarity to accepted OpenReview papers",
+          "Human students vote on the idea after reading the reviewer's analysis"
+        ],
+        "correct_index": 1,
+        "explanation": "The paper describes multiple GoAI-CoT-Reviewer agents, each scoring 1–10 with 5 as the promising/unpromising threshold, and then a majority vote. The three stages are steps within one reviewer's reasoning, not separate scores to average."
+      },
+      {
+        "type": "prose",
+        "section": "idea-studio",
+        "markdown": "## Idea Studio\n\n**Idea Studio** is the paper's demonstration application. A student is given a topic, such as \"Enhancing the Reasoning Ability of Large Language Models\". GoAI produces trends, key literature and a personalized learning path. The student studies the prerequisites and papers, proposes original ideas informed by the trends, and gets them evaluated by GoAI-CoT-Reviewer. The student then refines them iteratively.\n\nThe authors frame this twice over: as a pedagogical tool for everyday learning and research, and as the empirical test of whether GoAI is practically useful. That second role is why the user study in the next section uses Idea Studio as the \"GoAI\" condition."
+      },
+      {
+        "type": "prose",
+        "section": "experiments-results",
+        "markdown": "## Setup of the evaluation\n\nThe backend LLM is Deepseek-V3. The reviewer is built on Llama 3.1-8B-Instruct with LoRA (rank 8), trained on NVIDIA A100 GPUs. Because the reviewer is the only trainable component, it was evaluated first, as the Pearson correlation between its scores and human assessments.\n\nThe main study recruited **9** AI students (upper-level undergraduates and early graduate students) in a between-subjects design with three groups of three:\n\n- **G1**: web search plus manual reading\n- **G2**: an LLM-based tutoring assistant\n- **G3**: GoAI Idea Studio\n\nIn two hours they did **Frontier Mapping** (a one-page summary of baselines, extensions, contrasts, datasets/tools and prerequisites) and **Creative Ideation** (one or two project ideas). G2 and G3 filled in the System Usability Scale (SUS), and everyone filled in NASA-TLX for workload. The ideas were scored."
+      },
+      {
+        "type": "chart",
+        "section": "experiments-results",
+        "kind": "bar",
+        "title": "Pearson correlation with human assessment by evaluation method",
+        "x_label": "Evaluation method",
+        "y_label": "Pearson correlation",
+        "series": [
+          {
+            "name": "Correlation",
+            "points": [
+              {
+                "x": "Direct Generation",
+                "y": 0.0058
+              },
+              {
+                "x": "Multi-turn Dialogue",
+                "y": 0.4251
+              },
+              {
+                "x": "Structured Thinking (ours)",
+                "y": 0.681
+              }
+            ]
+          }
+        ],
+        "caption": "The structured summary–analysis–scoring approach agrees far more with human judgments than direct generation, which is essentially uncorrelated.",
+        "source": "Table 2"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "experiments-results",
+        "question": "What does Table 2 support, and what does it leave open?",
+        "options": [
+          "Structured thinking agrees with human assessment more than the other two methods; the paper gives no detail here about how the human assessments were produced",
+          "GoAI-CoT-Reviewer's scores are accurate to within 0.68 points of the human scores",
+          "Multi-turn dialogue and direct generation are equally unreliable",
+          "The reviewer proves GoAI generates ideas that are truly novel"
+        ],
+        "correct_index": 0,
+        "explanation": "The correlations (0.6810 vs 0.4251 vs 0.0058) show better alignment for the structured method, but a correlation is not an error in score points. Multi-turn dialogue is clearly better than direct generation. The table also says nothing about whether generated ideas are truly novel, and the text does not describe the human assessment process."
+      },
+      {
+        "type": "chart",
+        "section": "experiments-results",
+        "kind": "bar",
+        "title": "Student study: average idea score and average NASA-TLX load by group",
+        "x_label": "Group",
+        "y_label": "Score (idea score: higher is better; NASA-TLX avg.: lower is better)",
+        "series": [
+          {
+            "name": "Avg. idea score",
+            "points": [
+              {
+                "x": "Group 1 (Web)",
+                "y": 5.67
+              },
+              {
+                "x": "Group 2 (LLM)",
+                "y": 6.33
+              },
+              {
+                "x": "Group 3 (GoAI)",
+                "y": 7.33
+              }
+            ]
+          },
+          {
+            "name": "NASA-TLX avg.",
+            "points": [
+              {
+                "x": "Group 1 (Web)",
+                "y": 13.83
+              },
+              {
+                "x": "Group 2 (LLM)",
+                "y": 7.72
+              },
+              {
+                "x": "Group 3 (GoAI)",
+                "y": 6.06
+              }
+            ]
+          }
+        ],
+        "caption": "The GoAI group had the highest idea score and the lowest overall workload. With only three students per group, these gaps are suggestive rather than conclusive.",
+        "source": "Table 1"
+      },
+      {
+        "type": "prose",
+        "section": "experiments-results",
+        "markdown": "## Reading the study results\n\nSUS (usability) was similar for the LLM assistant (85.33) and GoAI (87.67), which the authors take to mean GoAI's extra complexity adds no burden. On NASA-TLX, GoAI users reported lower mental demand (5.33) and temporal demand (3.67) than the others, and the lowest average load (6.06). Their ideas also scored highest (7.33, against 6.33 and 5.67).\n\n**How much should you trust this?** The paper's own setup shows several limits:\n\n- Only **3 students per group**, and no statistical tests are reported.\n- The paper does not say who scored the ideas or how, and the novelty reviewer is itself part of GoAI's pipeline, so the scorer's identity matters.\n- Not every NASA-TLX subscale favours GoAI. Its effort (4.67) and frustration (7.67) numbers are mixed relative to the LLM group (6.67 effort, 7.33 frustration), and performance is tied at 8.67.\n\nThe conclusion's words \"significantly reduces\" and \"strong usability\" therefore go beyond what a tiny, untested sample can establish. Treat the results as a promising pilot."
+      },
+      {
+        "type": "blurb",
+        "section": "experiments-results",
+        "prompt": "Give two reasons why the user-study results should be treated as preliminary, and say what each limits you from concluding.",
+        "min_words": 30,
+        "model_answer": "There were only three students per group and no statistical tests, so the differences in cognitive load and idea score could be chance and cannot be called significant. Also, the paper does not say who scored the ideas or how, so we cannot judge whether the higher GoAI score reflects real idea quality.",
+        "rubric": [
+          {
+            "criterion": "Identifies the very small sample (3 per group) or absence of statistical tests as a limitation",
+            "required": true
+          },
+          {
+            "criterion": "Explains that this prevents concluding the differences are reliable or significant",
+            "required": true
+          },
+          {
+            "criterion": "Notes that the paper does not describe who scored the ideas or how",
+            "required": false
+          }
+        ]
+      }
+    ]
+  }
+}

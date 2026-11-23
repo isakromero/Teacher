@@ -1,0 +1,21 @@
+{
+  "prompt": "Explain why the R1-Zero setup is a meaningful test of whether reasoning can emerge from RL alone: what does the reward check, and what does it deliberately leave unconstrained?",
+  "min_words": 25,
+  "private": {
+    "model_answer": "The reward only checks the final answer's correctness (plus a format reward for think tags), using rules like answer matching or test cases. It does not prescribe or score the reasoning steps, and the template constrains only structure. So any reflection or longer reasoning that appears must have been discovered by the model because it led to correct answers.",
+    "rubric": [
+      {
+        "criterion": "States that the reward is based on final-answer correctness (rule-based accuracy), with format as a minor extra",
+        "required": true
+      },
+      {
+        "criterion": "States that the reasoning process content is not constrained or supervised",
+        "required": true
+      },
+      {
+        "criterion": "Concludes that emerging behaviours therefore come from the model's own exploration",
+        "required": false
+      }
+    ]
+  }
+}

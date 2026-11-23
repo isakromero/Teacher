@@ -1,0 +1,21 @@
+{
+  "prompt": "Give two reasons why the user-study results should be treated as preliminary, and say what each limits you from concluding.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "There were only three students per group and no statistical tests, so the differences in cognitive load and idea score could be chance and cannot be called significant. Also, the paper does not say who scored the ideas or how, so we cannot judge whether the higher GoAI score reflects real idea quality.",
+    "rubric": [
+      {
+        "criterion": "Identifies the very small sample (3 per group) or absence of statistical tests as a limitation",
+        "required": true
+      },
+      {
+        "criterion": "Explains that this prevents concluding the differences are reliable or significant",
+        "required": true
+      },
+      {
+        "criterion": "Notes that the paper does not describe who scored the ideas or how",
+        "required": false
+      }
+    ]
+  }
+}

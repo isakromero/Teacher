@@ -1,0 +1,13 @@
+{
+  "question": "What does the Qwen2.5-32B-Zero versus DeepSeek-R1-Distill-Qwen-32B comparison support?",
+  "options": [
+    "Distillation always outperforms RL, whatever the model size or compute",
+    "For this smaller model, distilling R1's outputs gave better results than large-scale RL on the same base, though RL may still be needed to advance the frontier",
+    "RL on small models fails because small models cannot produce long chains of thought",
+    "Distilled models were improved by an added RL stage"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The paper reports the distilled 32B beating the RL-only 32B and says RL on small models needs enormous compute and may not match distillation, while noting that advancing beyond current intelligence may require stronger bases and larger RL. It does not claim universality, and distilled models used SFT only."
+  }
+}

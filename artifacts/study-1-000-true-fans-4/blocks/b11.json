@@ -1,0 +1,12 @@
+{
+  "prompt": "Kelly says the web helps creators in two ways. One is selling directly worldwide. What do you think the second is?",
+  "options": [
+    "It ends competition from other creators in every niche",
+    "It puts obscure items one click from bestsellers, so niche fans can find you",
+    "It turns most casual fans into true fans without any effort"
+  ],
+  "private": {
+    "correct_index": 1,
+    "resolution": "The second is the network structure: the most obscure item is one click from the most popular one, which makes niche audiences reachable. Kelly does not claim competition vanishes."
+  }
+}

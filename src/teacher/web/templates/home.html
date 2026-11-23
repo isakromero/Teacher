@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{#- Home: the search box, and below it what to continue, what to study next and a summary of the
+    study history. Filled in by static/js/home.js (sections) and home_search.js (search). -#}
+{% block title %}Home{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ static('css/standing.css') }}">
+<link rel="stylesheet" href="{{ static('css/home.css') }}">
+{% endblock %}
+{% block page_class %}page-home{% endblock %}
+{% block content %}
+<div id="home-page" class="home" data-page="home">
+  <section class="home-hero" aria-labelledby="home-heading">
+    <h1 id="home-heading" class="home-title">What will you study today?</h1>
+    <form id="home-search" class="search" role="search" action="/" method="get" novalidate>
+      <label for="home-search-input" class="visually-hidden">Search your study pages, labs and sources</label>
+      <div class="search-field">
+        <svg class="icon search-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+        <input id="home-search-input" name="q" type="search" value="{{ q }}" autocomplete="off"
+               spellcheck="false" enterkeyhint="search"
+               placeholder="Search study pages, labs and sources"
+               aria-describedby="home-search-hint" aria-controls="home-results">
+        <kbd class="search-key" aria-hidden="true">/</kbd>
+      </div>
+      <a id="home-add" class="button primary search-add" href="/add">
+        <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+        Add a source
+      </a>
+    </form>
+    <p id="home-search-hint" class="hint search-hint">Titles, authors, sections, glossary terms and concepts. Press / to search, the arrow keys to move through the results, Escape to clear.</p>
+  </section>
+
+  <section id="home-results" class="home-results" aria-labelledby="home-results-heading" hidden>
+    <h2 id="home-results-heading" class="visually-hidden">Search results</h2>
+    <p id="home-results-status" class="results-status" role="status" aria-live="polite"></p>
+    <div id="home-results-error" class="error" role="alert" hidden></div>
+    <ol id="home-results-list" class="results" aria-labelledby="home-results-heading"></ol>
+  </section>
+
+  <div id="home-dashboard" class="home-dashboard">
+    <div class="home-main">
+      <section class="home-section" aria-labelledby="home-continue-heading">
+        <div class="section-head">
+          <h2 id="home-continue-heading" class="section-label">Continue studying</h2>
+          <a class="section-more" href="/library">Library</a>
+        </div>
+        <div id="home-continue" aria-live="polite" aria-busy="true"><p class="loading">Loading what you studied last...</p></div>
+      </section>
+
+      <section class="home-section" aria-labelledby="home-suggestions-heading">
+        <div class="section-head">
+          <h2 id="home-suggestions-heading" class="section-label">Suggested next</h2>
+          <a class="section-more" href="/history?suggestions=all#history-suggestions-heading">More suggestions</a>
+        </div>
+        <div id="home-suggestions" aria-live="polite" aria-busy="true"><p class="loading">Loading suggestions...</p></div>
+      </section>
+    </div>
+
+    <div class="home-side">
+      <section class="home-section" aria-labelledby="home-recent-heading">
+        <div class="section-head">
+          <h2 id="home-recent-heading" class="section-label">Recent study</h2>
+          <a class="section-more" href="/history">Full history</a>
+        </div>
+        <div id="home-recent" aria-live="polite" aria-busy="true"><p class="loading">Loading your history...</p></div>
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/home.js') }}"></script>
+<script type="module" src="{{ static('js/home_search.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{
+  "prompt": "Why can the authors' n-gram decontamination not fully rule out contamination, and what additional check did they run to address this?",
+  "min_words": 20,
+  "private": {
+    "model_answer": "The 10-gram filtering only removes text that literally matches evaluation questions, so paraphrased versions of test items could remain in training data. To probe this, they evaluated on AIME 2025, which was released after training, where R1 scored about 75% pass@1.",
+    "rubric": [
+      {
+        "criterion": "Explains that n-gram matching misses paraphrased test questions",
+        "required": true
+      },
+      {
+        "criterion": "Names evaluation on a post-training benchmark such as AIME 2025 as the extra check",
+        "required": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "question": "Which of the following best captures why the authors think a plain LLM-written literature summary is insufficient for students?",
+  "options": [
+    "It is too long for students to read in a reasonable time.",
+    "It tends to be a single linear story that omits prerequisite knowledge and what each citation actually means (baseline, critique, extension).",
+    "It cannot summarize papers at all without a knowledge graph.",
+    "It always cites papers that do not exist."
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The paper's three limitations are missing prerequisites, missing citation semantics, and an oversimplified linear structure. The authors do not say LLMs cannot summarize, and they do not claim hallucinated citations; they grant that LLM assistants can summarize and answer questions."
+  }
+}

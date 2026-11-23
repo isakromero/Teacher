@@ -1,0 +1,324 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChLFAsyccyajoNRV2p6Ma",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 8506,
+    "cache_creation_input_tokens": 12983,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 7750
+  },
+  "source": {
+    "slug": "1-000-true-fans",
+    "title": "1,000 True Fans",
+    "media_type": "text/markdown"
+  },
+  "depth": "standard",
+  "output": {
+    "blocks": [
+      {
+        "type": "prose",
+        "section": "",
+        "role": "explanation",
+        "markdown": "## Why this essay matters\n\nKevin Kelly's *1,000 True Fans* makes a simple, provocative claim: a creator does not need millions of customers or a blockbuster hit to make a living. A few thousand devoted fans, or even about a thousand, can be enough, as long as they pay the creator directly.\n\nThe essay is useful because it replaces a vague hope (\"get famous\") with arithmetic you can adjust. It also explains why the web changes that arithmetic, and it is honest that the number is a rough guide.\n\nThe page walks through the definition of a true fan, the math, the adjustments, why the web makes it newly possible, the support models Kelly cites, and the costs. Note that the document is a web page: the menus, links and share buttons around it are not part of the argument, and we ignore them. The essay is Kelly's own argument supported by assumptions and anecdotes rather than data, which we will return to at the end.\n\nFirst, a guess."
+      },
+      {
+        "type": "prediction",
+        "section": "core-idea",
+        "prompt": "Kelly says a creator can make a living with a modest number of devoted fans. Before reading his definition, what do you think makes someone a 'true fan'?",
+        "options": [
+          "Someone who follows the creator on social media and shares their posts",
+          "Someone who will buy anything the creator produces",
+          "Someone who has bought from the creator at least once in the past year"
+        ],
+        "correct_index": 1,
+        "resolution": "Kelly defines a true fan by buying behaviour: they will buy anything you produce. Following or buying once makes someone a regular fan, not a true one."
+      },
+      {
+        "type": "prose",
+        "section": "core-idea",
+        "role": "explanation",
+        "markdown": "## The core idea\n\nKelly defines a **true fan** as a fan who will buy anything you produce. His examples are vivid: they drive 200 miles to see you sing, buy the hardback, paperback and audio versions of your book, purchase your next figurine sight unseen, or pay for a \"best-of\" DVD of a channel you give away free. The 2008 original adds details such as setting a Google Alert for your name and buying the box set even when they own the low-resolution version.\n\nThe claim is that roughly a thousand such people let you make **a living, not a fortune**. Why is that exciting? Because a thousand is a human-scale target. You might remember a thousand names, and adding one new true fan a day would take only a few years. Millions of paying fans, by contrast, is not a realistic goal when starting out.\n\nThe essay frames this as an alternative to chasing stardom: the narrow peaks of platinum hits and blockbusters."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "core-idea",
+        "draws_on": [
+          "core-idea"
+        ],
+        "new_scenario": false,
+        "question": "Why does Kelly stress that a true fan buys 'anything you produce' rather than simply being someone who likes your work?",
+        "options": [
+          "Because the buying-everything habit is what makes a small group's income large enough to live on",
+          "Because liking the work is impossible to measure while purchases can be audited",
+          "Because fans who buy everything will also become the creator's employees",
+          "Because regular fans never buy more than once, so they are irrelevant"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Right: income depends on how much each fan spends, so a small group that buys everything can add up to a living.",
+          "Kelly does not make a measurement argument; the point is about how much revenue each fan brings.",
+          "Nothing in the essay says fans work for the creator, though they do act as a marketing force.",
+          "Kelly says regular fans buy occasionally and add income; they are not irrelevant, just less central."
+        ],
+        "explanation": "The definition is built around spending because the math depends on revenue per fan. Regular fans do contribute, so the last option overstates the case."
+      },
+      {
+        "type": "prose",
+        "section": "the-math",
+        "role": "explanation",
+        "markdown": "## The math and its two criteria\n\nKelly says you must meet two criteria.\n\n1. **Enough output to earn about $100 profit per true fan per year.** He equates this to one day's wages per year from each fan. It is easier in some fields than others, but he argues it is always easier and better to give existing customers more than to find new fans.\n2. **A direct relationship.** Fans must pay you directly, so you keep all of it rather than the small percentage you would get from a label, publisher, studio or retailer.\n\nThen the arithmetic is just:\n\n$$1{,}000 \\text{ fans} \\times \\$100 = \\$100{,}000 \\text{ per year}$$\n\nThe 2008 version states the same assumption, notes that $100 is an average because the truest fans spend a lot more, and subtracts \"some modest expenses\". The number 1,000 is not sacred: it is a rough order of magnitude, three orders below a million. At $50 per fan you need 2,000; at $200, 500. If you only need $75K a year, you need fewer."
+      },
+      {
+        "type": "interactable",
+        "section": "the-math",
+        "title": "True-fan calculator",
+        "instructions": "Move the sliders to change the income you need and the amount each true fan spends per year. Watch how many fans you need. Try Kelly's examples: $50 per fan with $100,000 needed (2,000 fans), $200 (500 fans), and $75,000 needed at $100 per fan. These are Kelly's illustrative cases, not measured results.",
+        "html": "<div><label>Income needed per year ($): <input id=\"inc\" type=\"range\" min=\"20000\" max=\"200000\" step=\"5000\" value=\"100000\"></label> <output id=\"incv\"></output></div><div><label>Spend per true fan per year ($): <input id=\"fan\" type=\"range\" min=\"25\" max=\"400\" step=\"5\" value=\"100\"></label> <output id=\"fanv\"></output></div><div><label>Share of payment you keep (%): <input id=\"keep\" type=\"range\" min=\"10\" max=\"100\" step=\"5\" value=\"100\"></label> <output id=\"keepv\"></output></div><p>True fans needed: <output id=\"res\"></output></p><div id=\"bar\" style=\"height:16px;background:var(--surface);border:1px solid var(--border)\"><div id=\"fill\" style=\"height:100%;background:var(--accent);width:0\"></div></div><p style=\"color:var(--muted)\">Bar scale: up to 10,000 fans.</p><style>div label{display:inline-block;margin:4px 0}</style><script>function u(){var i=+document.getElementById('inc').value,f=+document.getElementById('fan').value,k=+document.getElementById('keep').value;document.getElementById('incv').textContent='$'+i;document.getElementById('fanv').textContent='$'+f;document.getElementById('keepv').textContent=k+'%';var n=Math.ceil(i/(f*k/100));document.getElementById('res').textContent=n.toLocaleString();document.getElementById('fill').style.width=Math.min(100,n/100)+'%';}['inc','fan','keep'].forEach(function(id){document.getElementById(id).addEventListener('input',u)});u();</script>"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "the-math",
+        "draws_on": [
+          "core-idea",
+          "the-math"
+        ],
+        "new_scenario": true,
+        "question": "Imagine a potter who needs $60,000 a year, keeps the full price of every sale, and expects each true fan to spend $120 a year. Using Kelly's reasoning, roughly how many true fans does she need?",
+        "options": [
+          "About 500",
+          "About 720",
+          "About 1,000",
+          "About 2,000"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Right: $60,000 divided by $120 is 500, an adjusted figure in the same order of magnitude as 1,000.",
+          "This multiplies instead of dividing sensibly; it does not follow from income divided by spend per fan.",
+          "This is Kelly's default, but the potter's income need and per-fan spend are both different.",
+          "This would fit $30 per fan, not $120 per fan."
+        ],
+        "explanation": "The formula is fans = income needed ÷ (spend per fan kept by the creator). With $60,000 and $120, that gives 500. The 1,000 figure is only a default to adjust."
+      },
+      {
+        "type": "prediction",
+        "section": "adjustments-and-caveats",
+        "prompt": "A duet or a small team shares the income. If a team grows by 33%, how will the number of true fans needed change, according to Kelly?",
+        "options": [
+          "It rises about 33%, in proportion to the team",
+          "It roughly doubles, since network effects compound",
+          "It stays the same, because fans do not care about team size"
+        ],
+        "correct_index": 0,
+        "resolution": "Kelly says the increase is linear: 33% more people means about 33% more fans, not explosive growth."
+      },
+      {
+        "type": "prose",
+        "section": "adjustments-and-caveats",
+        "role": "explanation",
+        "markdown": "## Adjusting the formula\n\nThe base formula is for a solo creator, so Kelly lists adjustments.\n\n- **Team size.** A duet needs about 2,000 fans, and growth is geometric-linear in proportion: 33% more people, 33% more fans. He contrasts this with the exponential growth typical of digital things.\n- **Fan-wrangling.** Not every creator wants to deal with fans. A manager or helper can do it, but that raises the number of fans needed. Handing it to labels, publishers or retailers is usually worse, in his view.\n- **Indirect income.** If a blogger is paid through ad clicks, or an author gives most revenue to a publisher, many more true fans are needed, but still far short of blockbuster territory. The more direct, the fewer you need.\n- **Medium and place.** The 2008 essay guesses 500 for a painter and 5,000 for a video maker, and admits the true number can only be found by trying; it may be off by an order of magnitude.\n- **Regular fans.** Around true fans sit two or three regular fans each, perhaps adding about 50% income, and true fans act as your marketing force toward them."
+      },
+      {
+        "type": "blurb",
+        "section": "adjustments-and-caveats",
+        "draws_on": [
+          "the-math",
+          "adjustments-and-caveats"
+        ],
+        "new_scenario": true,
+        "prompt": "Suppose a musician hires a manager to handle fans and sells partly through a streaming service that keeps most revenue. Explain how each choice changes the number of true fans she needs.",
+        "min_words": 30,
+        "model_answer": "Hiring a manager to deal with fans adds a cost, which raises the number of true fans needed to cover it. Selling through an intermediary that keeps most of the revenue means she keeps less per fan, so she needs many more fans to reach the same income.",
+        "rubric": [
+          {
+            "criterion": "States that a helper or manager raises the number of fans needed",
+            "required": true
+          },
+          {
+            "criterion": "Explains that an intermediary taking a share reduces income per fan, so more fans are needed",
+            "required": true
+          },
+          {
+            "criterion": "Notes that the number still stays far below blockbuster levels",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": "prediction",
+        "section": "why-now",
+        "prompt": "Kelly says the web helps creators in two ways. One is selling directly worldwide. What do you think the second is?",
+        "options": [
+          "It makes obscure items as easy to reach as bestsellers, so niche audiences can find you",
+          "It guarantees that most fans will become true fans",
+          "It removes all competition from other creators"
+        ],
+        "correct_index": 0,
+        "resolution": "The second is the network structure: the most obscure item is one click from the most popular one, which makes niche audiences reachable. Kelly does not claim competition vanishes."
+      },
+      {
+        "type": "prose",
+        "section": "why-now",
+        "role": "explanation",
+        "markdown": "## Why it is newly possible\n\nFans and patrons are ancient, so what is new? First, **directness**. Last century, intermediaries meant most creators never met their consumers. Even publishers often did not know the names of their core readers, so creators needed much larger audiences. Peer-to-peer communication and payment on the web lets a creator in Bend, Oregon sell and deliver a song to someone in Katmandu, keeping the full payment, which reduces the fans needed.\n\nSecond, **the long tail**. In a peer-to-peer network, the most obscure node is one click from the most popular. Chris Anderson named the effect: a few bestsellers form a tall head, and many low-selling items form a long tail whose total area rivals the head. Aggregators like Amazon and Netflix built recommendation engines to push attention into the tail, and search engines did too, so the obscure became less obscure.\n\nThe key arithmetic: if one in a million people is interested, among roughly seven thousand million people that is about 7,000 potential fans. Big corporations are ill suited to serve niches, so the tail is open to you. The challenge is having fans find you."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "why-now",
+        "draws_on": [
+          "the-math",
+          "why-now"
+        ],
+        "new_scenario": false,
+        "question": "The 2008 essay calls the long tail a mixed blessing for creators. Why does Kelly say the tail alone does not solve a creator's problem?",
+        "options": [
+          "It mainly benefits aggregators and consumers, while adding competition and downward price pressure for creators",
+          "It makes bestsellers more dominant, so tail creators sell even less than before",
+          "It forces creators to sell through aggregators that charge no fees",
+          "It only works for digital goods, so physical makers are excluded"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Right: the tail rewards aggregators and consumers, while individual creators face more competition and lower prices unless they connect directly with true fans.",
+          "Kelly does not claim the head grows stronger; his point is about competition in the tail.",
+          "Aggregators are described as beneficiaries, and nothing says they charge no fees.",
+          "Kelly lists physical makers such as craftspeople among creators who can use the idea."
+        ],
+        "explanation": "The tail makes niches reachable but does not raise most creators' sales, so Kelly proposes direct true-fan relationships as the way out."
+      },
+      {
+        "type": "prose",
+        "section": "history-and-models",
+        "role": "explanation",
+        "markdown": "## Precedents and models of support\n\nThe 2008 essay hunts for earlier versions of the idea. Carl Steadman's **microcelebrity** is someone famous to 1,500 people. Others call such support **micro-patronage**. In 1999 Kelsey and Schneier proposed the **Street Performer Protocol**: an author announces that when donations reach a target, the next novel will be released free to everyone.\n\nExamples Kelly gives:\n\n- **Lawrence Watt-Evans** used this model for a novel, posting the next chapter each time fans paid $100, and gets by on an estimated 200 true fans because he also publishes traditionally.\n- **Greg Stolze** had fifty fans seed two pre-financed games.\n- **Jill Sobule** went to fans for a $75,000 recording, with tiered pledges from $10 up to $10,000, and had raised close to $50,000 at the time.\n- **Fundable** used all-or-nothing pre-orders, holding the money until the goal is met. Amelia's CD pre-sale aimed for $400 and reached over $940.\n\nFans lift a creator beyond their numbers in three ways: buying more each, spending directly, and enabling new support models."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "history-and-models",
+        "draws_on": [
+          "the-math",
+          "history-and-models"
+        ],
+        "new_scenario": false,
+        "question": "Watt-Evans gets by on an estimated 200 true fans, well below 1,000. What explains this in Kelly's account?",
+        "options": [
+          "He also earns from traditional publishing, supported by thousands of lesser fans",
+          "He charges far more than $100 per fan and keeps costs at zero",
+          "His fans pay through a label, which raises per-fan revenue",
+          "He sells only one chapter a year, which needs few buyers"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Right: Kelly says he also publishes traditionally, with advances backed by thousands of lesser fans, so true fans are only part of his income.",
+          "The essay gives no such figures for his prices or costs.",
+          "Direct payment is the model here; intermediaries would lower per-fan revenue.",
+          "Chapters were posted as each $100 goal was reached, not once a year."
+        ],
+        "explanation": "The 1,000 figure assumes true fans are the whole income. Mixing in traditional publishing means fewer are needed, which also shows the approach is not exclusive."
+      },
+      {
+        "type": "prose",
+        "section": "crowdfunding",
+        "role": "explanation",
+        "markdown": "## Crowdfunding\n\nKelly calls crowdfunding genius: fans finance your next product for them. He counts about 2,000 platforms worldwide, with different models: some are **all-or-nothing**, others allow partial funding; some fund finished projects, others, like Patreon, fund ongoing work such as a magazine, a video series or an artist's salary.\n\nKickstarter, the largest, has raised $2.5 billion for over 100,000 projects. The average successful project has 241 funders, far fewer than 1,000. His inference: if you have 1,000 true fans you can run a campaign, because by definition a true fan will become a funder. He adds a caveat: success depends on what you ask of your fans.\n\nNotice the logic: 241 is an average of successful projects, so a creator with 1,000 true fans would have a comfortable margin, assuming they really would all fund."
+      },
+      {
+        "type": "chart",
+        "section": "crowdfunding",
+        "kind": "bar",
+        "title": "True fans versus typical Kickstarter funders",
+        "x_label": "Group",
+        "y_label": "Number of people",
+        "series": "[{\"name\": \"People\", \"points\": [{\"x\": \"Avg funders, successful Kickstarter project\", \"y\": 241.0}, {\"x\": \"True fans in Kelly's formula\", \"y\": 1000.0}]}]",
+        "caption": "A creator with 1,000 true fans has about four times the funders of the average successful Kickstarter project.",
+        "source": "Crowdfunding paragraph: 241 funders on average; 1,000 true fans from the formula."
+      },
+      {
+        "type": "prose",
+        "section": "costs-and-takeaway",
+        "role": "explanation",
+        "markdown": "## Costs and takeaway\n\nKelly is frank that cultivating a thousand true fans is time-consuming, sometimes nerve-racking, and not for everyone. Done well it can become another full-time job; at best it is a demanding part-time task. Some creators should just make things and hire someone for fans.\n\nIt is also **not exclusive**. Kelly has used big New York publishers, self-publishing and Kickstarter, choosing by content and aim, and says cultivating true fans enriches every route.\n\nThe takeaway: true fans are an alternative to stardom, and the usual alternative to a fan-based living, he says, is poverty. He cites Ruth Towse's survey of British artists, which found average earnings below subsistence. His claim is that a middle ground exists, a saner destination you are more likely to reach.\n\nNotice what evidence the essay offers: assumptions ($100, one day's wages), anecdotes and a few examples. The updates link to a response and a survey titled *The Case Against 1000 True Fans*, signalling the claim is contested."
+      },
+      {
+        "type": "prose",
+        "section": "",
+        "role": "critique",
+        "markdown": "## A critical look\n\nThe essay is a thought experiment more than a study. The $100 per fan figure is assumed, not measured, and the examples cited are mostly of people who already had followings. It also says little about how fans are found in the first place. Gaining a true fan, who by definition buys everything, may take far longer than one a day, and the essay does not report how many people actually reach 1,000.\n\nThere is also a survivorship issue: success stories are visible, while creators who tried and failed are not. The 'one in a million' argument assumes a niche appeal exists for any work, but finding those people still requires attention and marketing. As far as I know, later commentary has questioned whether the numbers hold in practice, and the Kelly-linked survey is one example, but I cannot vouch for its details. Still, the framing of an adjustable formula, not a fixed number, remains a useful way to think about direct audiences."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "",
+        "draws_on": [
+          "the-math",
+          "why-now",
+          "costs-and-takeaway"
+        ],
+        "new_scenario": false,
+        "question": "Which statement best captures how the web changes the true-fan arithmetic?",
+        "options": [
+          "Direct sales let creators keep the full payment, and the long tail makes niche fans reachable, so fewer fans are needed and they are findable",
+          "Aggregators pay creators more per sale, so the formula requires only a few hundred fans",
+          "The web removes the need for fans to spend a day's wages because purchases are cheaper",
+          "Crowdfunding guarantees that 1,000 fans will always fund any project"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Right: directness lowers the fans needed, and the tail makes the niche audience findable.",
+          "Aggregators are described as beneficiaries, not payers of higher shares.",
+          "The one-day-wage assumption stays; the web changes who keeps the money and who can find whom.",
+          "Kelly says campaign success depends on what you ask of fans."
+        ],
+        "explanation": "Two separate effects combine: keeping the full price (reduces fans needed) and long-tail reachability (makes the fans findable). The other options invent guarantees the essay does not make."
+      },
+      {
+        "type": "blurb",
+        "section": "",
+        "draws_on": [
+          "the-math",
+          "adjustments-and-caveats",
+          "costs-and-takeaway"
+        ],
+        "new_scenario": true,
+        "prompt": "Imagine a writer with 600 devoted fans who each spend $100 yearly, selling directly. In your own words, explain what could still make her path work or fail, using Kelly's ideas.",
+        "min_words": 35,
+        "model_answer": "At $100 each, 600 fans give about $60,000, which may be enough if she needs less than the default $100,000, since the number must be adjusted to her costs. She could add income from regular fans or publishers, or raise per-fan spending. It could fail if her living costs are higher or fan tending takes too much time.",
+        "rubric": [
+          {
+            "criterion": "Computes or reasons that 600 fans at $100 give about $60,000 and compares it to income needs",
+            "required": true
+          },
+          {
+            "criterion": "Names an extra lever or risk such as regular fans, intermediaries, higher spend per fan, or the time cost of tending fans",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": "multiple_choice",
+        "section": "",
+        "draws_on": [
+          "core-idea",
+          "adjustments-and-caveats",
+          "costs-and-takeaway"
+        ],
+        "new_scenario": false,
+        "question": "Kelly says 'the actual number is not critical'. What does he mean?",
+        "options": [
+          "It depends on income, spend per fan, medium, team and intermediaries, and can only be found by attempting it",
+          "The number is irrelevant because success comes from going viral",
+          "Any number of fans works if the creator is skilled enough",
+          "The number is fixed at 1,000 for every creator but does not matter to fans"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Right: the formula is an adjustable order of magnitude, and the real number emerges only by trying.",
+          "Kelly explicitly presents true fans as an alternative to going viral or hitting it big.",
+          "Skill is not the variable he names; income math and structure are.",
+          "He says the number varies by person, medium and place, not that it is fixed."
+        ],
+        "explanation": "1,000 is a rough order of magnitude, possibly off by ten times, so what matters is that the target is far below a million and workable for your situation."
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "detector": "pdfium-captions-v1",
+  "source": {
+    "slug": "1-000-true-fans",
+    "title": "1,000 True Fans",
+    "media_type": "text/markdown"
+  },
+  "outcome": "not_a_pdf",
+  "note": "no figures: the source is not a PDF (a page saved from the web arrives as text, without its images), so it has no figures to show",
+  "pages": null,
+  "figures": [],
+  "dropped": []
+}

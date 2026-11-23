@@ -1,0 +1,72 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChLFF1QiQZPK2KnkTdvVo",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 17700,
+    "cache_creation_input_tokens": 10076,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 1228
+  },
+  "source": {
+    "slug": "1-000-true-fans",
+    "title": "1,000 True Fans",
+    "media_type": "text/markdown"
+  },
+  "stage": "review",
+  "blocks": 22,
+  "output": {
+    "issues": [
+      {
+        "block": 7,
+        "kind": "other",
+        "severity": "must_fix",
+        "problem": "The potter question's option_explanations for 'About 720' says it 'multiplies instead of dividing sensibly', and 'About 2,000' says it 'would fit $30 per fan'. $60,000/$30 is 2,000, but the 720 explanation is vague and the arithmetic of the distractors is not grounded; the 1,000 entry also reveals the formula, which is fine. The 720 explanation misdescribes: 60,000/120 is not multiplied to 720.",
+        "suggestion": "Rewrite the 720 explanation to say it does not follow from income divided by spend per fan, without claiming a specific wrong operation, or choose a distractor with a clear error."
+      },
+      {
+        "block": 9,
+        "kind": "unsupported",
+        "severity": "must_fix",
+        "problem": "'A duet needs about 2,000 fans, and growth is geometric-linear in proportion' is garbled; Kelly says 'geometric and linear in proportion', and 'geometric-linear' misleads. Also the 'medium' bullet attributes 500/5,000 as a guess 'Maybe it is...', which is fine.",
+        "suggestion": "Say simply that fans needed grow in direct proportion to team size (linear), contrasting with exponential growth."
+      },
+      {
+        "block": 10,
+        "kind": "rubric_not_asked",
+        "severity": "must_fix",
+        "problem": "The second required criterion 'Explains that an intermediary taking a share reduces income per fan' is asked, but the first requires that a helper raises fans needed; the model answer says it 'adds a cost', while Kelly says a helper 'skews your formula, increasing the number of fans needed' without stating the reason. Also the prompt's 'streaming service' is not covered by the document.",
+        "suggestion": "Reword the model answer's reasoning to follow Kelly (helper skews the formula, raising fans needed) and describe the intermediary generically as one that takes most revenue."
+      },
+      {
+        "block": 12,
+        "kind": "unsupported",
+        "severity": "should_fix",
+        "problem": "'roughly seven thousand million people' is a muddled restatement; Kelly says one in a million gives 'potentially 7,000 people on the planet', and the page leaves the world population implied.",
+        "suggestion": "State: Kelly says one in a million of the world's population would be about 7,000 people, still enough to contain 1,000 true fans."
+      },
+      {
+        "block": 13,
+        "kind": "explanation_order",
+        "severity": "should_fix",
+        "problem": "Question draws on the 2008 long-tail 'mixed blessing' argument, but block 12 never taught that the tail gives creators little (more competition, downward price pressure); only the aggregator-pushed benefit was explained.",
+        "suggestion": "Add a sentence to block 12 explaining the 'mixed blessing' point: the tail rewards aggregators and consumers but brings creators competition and downward price pressure."
+      },
+      {
+        "block": 17,
+        "kind": "unsupported",
+        "severity": "should_fix",
+        "problem": "The chart compares the Kickstarter average of 241 funders with the 1,000 formula figure, which is not a reported data series; the caption 'about four times' is the page's own computation.",
+        "suggestion": "Drop the chart or label it as an illustrative comparison; avoid presenting the 1,000 as reported data."
+      },
+      {
+        "block": 22,
+        "kind": "phrase_matching",
+        "severity": "should_fix",
+        "problem": "The question quotes 'the actual number is not critical' and the correct option restates the essay's list of dependencies, answerable by matching the earlier block 9 phrase; also the quote is from the 2008 essay only.",
+        "suggestion": "Make it a scenario applying the idea, e.g. a creator whose fans spend $50 each, asking what to do with the number."
+      }
+    ]
+  }
+}

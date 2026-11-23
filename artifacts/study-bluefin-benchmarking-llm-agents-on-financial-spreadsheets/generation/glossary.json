@@ -1,0 +1,356 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChJPjYC6Py5hcS84cEWRW",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 7453,
+    "cache_creation_input_tokens": 81206,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 3022
+  },
+  "source": {
+    "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+    "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+    "media_type": "application/pdf"
+  },
+  "trigger": "generation",
+  "proposed": 42,
+  "dropped": [],
+  "merged": [],
+  "dropped_aliases": [
+    {
+      "term": "LLM",
+      "alias": "LM",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "OpEx",
+      "alias": "operating-expense",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "trajectories",
+      "alias": "trajectory",
+      "reason": "does not occur in the study page text"
+    }
+  ],
+  "output": {
+    "terms": [
+      {
+        "term": "BLUEFIN",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The benchmark introduced in this paper, in which AI agents do synthesis, manipulation and interrogation tasks over professional-finance spreadsheets. The name is loosely inspired by building, understanding and editing financial spreadsheets.",
+        "aliases": []
+      },
+      {
+        "term": "frontier models",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The most capable, newest large language models from the leading AI developers at a given time.",
+        "aliases": [
+          "frontier"
+        ]
+      },
+      {
+        "term": "held-out set",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The portion of a benchmark that is kept private rather than released, so models cannot be trained on it and results are not contaminated by leakage.",
+        "aliases": [
+          "held-out"
+        ]
+      },
+      {
+        "term": "LLM",
+        "kind": "acronym",
+        "expansion": "large language model",
+        "definition": "An AI model trained on large amounts of text that can read and generate language and, here, act as an agent using tools.",
+        "aliases": []
+      },
+      {
+        "term": "LLM judge",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A language model used to grade other models' outputs against a rubric, here by inspecting the output workbook with tools.",
+        "aliases": [
+          "judge"
+        ]
+      },
+      {
+        "term": "rubric criteria",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The individual yes/no checks, each with a point weight, used to score an output. BLUEFIN has 3,225 of them.",
+        "aliases": [
+          "rubric criterion",
+          "rubric",
+          "rubrics"
+        ]
+      },
+      {
+        "term": "workbook",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A spreadsheet file, such as an Excel file, which can contain several sheets (tabs) of cells with values and formulas.",
+        "aliases": [
+          "workbooks"
+        ]
+      },
+      {
+        "term": "tab",
+        "kind": "term",
+        "expansion": null,
+        "definition": "One sheet inside a spreadsheet workbook, such as a WACC tab or a DCF tab.",
+        "aliases": [
+          "tabs"
+        ]
+      },
+      {
+        "term": "DCF",
+        "kind": "acronym",
+        "expansion": "discounted cash flow",
+        "definition": "A valuation method that estimates a company's worth by forecasting its future cash flows and discounting them back to present value.",
+        "aliases": []
+      },
+      {
+        "term": "Synthesis",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A BLUEFIN task family in which the agent builds a whole workbook from a natural-language prompt.",
+        "aliases": []
+      },
+      {
+        "term": "Manipulation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A BLUEFIN task family in which the agent modifies an existing workbook according to a prompt.",
+        "aliases": []
+      },
+      {
+        "term": "Interrogation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A BLUEFIN task family in which the agent answers a question about an existing workbook, graded against a known correct answer.",
+        "aliases": []
+      },
+      {
+        "term": "underspecified",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Described only loosely, so the agent must infer details and implicit expectations rather than follow explicit step-by-step instructions.",
+        "aliases": []
+      },
+      {
+        "term": "bps",
+        "kind": "acronym",
+        "expansion": "basis points",
+        "definition": "A unit equal to one hundredth of a percentage point; 1000 bps is 10 percentage points.",
+        "aliases": []
+      },
+      {
+        "term": "advance rate",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In lending, the percentage of an asset's value, such as inventory, that a lender will advance as a loan against it.",
+        "aliases": []
+      },
+      {
+        "term": "seed workbook",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The starting workbook given to a task contributor, from which they build a modified or task-complete version.",
+        "aliases": []
+      },
+      {
+        "term": "Claude Opus 4.6",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An Anthropic language model that the authors used to draft candidate rubric criteria.",
+        "aliases": []
+      },
+      {
+        "term": "Formula Correctness",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category checking that a formula implements the intended financial calculation, crediting any valid method.",
+        "aliases": []
+      },
+      {
+        "term": "Model Integration",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category checking that a value is linked to its authoritative source tab rather than recomputed or hardcoded locally.",
+        "aliases": []
+      },
+      {
+        "term": "Output Validation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category checking that a key output matches a reference answer within a stated tolerance.",
+        "aliases": []
+      },
+      {
+        "term": "Perturbation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category that changes a driving input and checks that the dependent output recomputes to the correct new value.",
+        "aliases": []
+      },
+      {
+        "term": "Presentation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category checking formatting and labelling conventions without changing the underlying numbers.",
+        "aliases": []
+      },
+      {
+        "term": "Pitfalls",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category of penalty checks for defects that degrade a model, such as error values or truncated text.",
+        "aliases": []
+      },
+      {
+        "term": "hardcoded",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Typed in as a fixed number instead of being produced by a formula, so it does not update when inputs change.",
+        "aliases": [
+          "hardcode"
+        ]
+      },
+      {
+        "term": "tolerance",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The allowed margin of difference from a reference value, such as within ±2%, for a number to count as correct.",
+        "aliases": []
+      },
+      {
+        "term": "#REF!",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A spreadsheet error value shown when a formula refers to a cell that no longer exists or is invalid.",
+        "aliases": []
+      },
+      {
+        "term": "harness",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The software scaffold that gives an agent its tools, prompt and environment so it can attempt tasks and be run consistently.",
+        "aliases": []
+      },
+      {
+        "term": "recalc_workbook",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The harness tool that recalculates all formulas in the workbook, so changed inputs propagate to outputs.",
+        "aliases": []
+      },
+      {
+        "term": "LibreOffice",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An open-source office suite; here its headless mode (no visible window) performs spreadsheet recalculation.",
+        "aliases": []
+      },
+      {
+        "term": "circular references",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Formulas that depend on each other in a loop, as in debt schedules where interest depends on a balance that depends on interest; they need iterative calculation to settle.",
+        "aliases": [
+          "circular"
+        ]
+      },
+      {
+        "term": "execute_python",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A harness tool that runs sandboxed Python code to read or edit the workbook in bulk.",
+        "aliases": []
+      },
+      {
+        "term": "openpyxl",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A Python library for reading and writing Excel workbooks.",
+        "aliases": []
+      },
+      {
+        "term": "Krippendorff's alpha",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A statistic measuring how well different raters agree on labels, corrected for chance; higher means more agreement.",
+        "aliases": [
+          "alpha"
+        ]
+      },
+      {
+        "term": "macro-F1",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A classification score that averages the F1 score (balance of precision and recall) across classes equally.",
+        "aliases": []
+      },
+      {
+        "term": "non-completions",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Runs where a model failed to produce a finished output; the paper scores these as zero.",
+        "aliases": []
+      },
+      {
+        "term": "WACC",
+        "kind": "acronym",
+        "expansion": "weighted average cost of capital",
+        "definition": "The blended rate a company pays to finance itself with debt and equity, used as the discount rate in a DCF.",
+        "aliases": []
+      },
+      {
+        "term": "Enterprise Value",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The total value of a company's operations, roughly what a buyer would pay for the business including its debt, net of cash.",
+        "aliases": []
+      },
+      {
+        "term": "Pareto frontier",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The set of options that no other option beats on every measure at once, here both higher score and lower cost.",
+        "aliases": []
+      },
+      {
+        "term": "dominated",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Describes an option that another option matches or beats on all measures, such as scoring at least as high at lower cost.",
+        "aliases": []
+      },
+      {
+        "term": "revolver",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A revolving credit facility, a flexible loan that a company can draw on and repay repeatedly up to a limit.",
+        "aliases": []
+      },
+      {
+        "term": "OpEx",
+        "kind": "acronym",
+        "expansion": "operating expenses",
+        "definition": "The ongoing costs of running a business, such as salaries and rent.",
+        "aliases": []
+      },
+      {
+        "term": "trajectories",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The recorded sequences of actions and tool results an agent produces while working on a task.",
+        "aliases": []
+      }
+    ]
+  }
+}

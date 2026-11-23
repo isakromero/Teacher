@@ -1,0 +1,13 @@
+{
+  "question": "Why does the second RL stage use model-based preference rewards only in its last 400 steps?",
+  "options": [
+    "Preference rewards are more expensive to compute than rule-based rewards, so they were rationed",
+    "The authors found that more steps with the model-based preference reward may lead to reward hacking",
+    "Reasoning data cannot be mixed with general data earlier",
+    "The language-consistency reward requires the preference reward to be added last"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The paper says more training with the model-based preference signal may lead to reward hacking (documented in an appendix). Cost is not the stated reason, and reasoning and general data were mixed in the stage generally."
+  }
+}

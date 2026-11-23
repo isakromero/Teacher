@@ -1,0 +1,27 @@
+{
+  "kind": "bar",
+  "title": "Pearson correlation with human assessment by evaluation method",
+  "x_label": "Evaluation method",
+  "y_label": "Pearson correlation",
+  "series": [
+    {
+      "name": "Correlation",
+      "points": [
+        {
+          "x": "Direct Generation",
+          "y": 0.0058
+        },
+        {
+          "x": "Multi-turn Dialogue",
+          "y": 0.4251
+        },
+        {
+          "x": "Structured Thinking (ours)",
+          "y": 0.681
+        }
+      ]
+    }
+  ],
+  "caption": "The structured summary–analysis–scoring approach agrees far more with human judgments than direct generation, which is essentially uncorrelated.",
+  "source": "Table 2"
+}

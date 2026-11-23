@@ -1,0 +1,13 @@
+{
+  "question": "DeepSeek-R1 Dev1 scores 59.0 on AIME 2024, well below R1-Zero's 77.9, yet higher on IF-Eval. How does the paper explain the reasoning drop?",
+  "options": [
+    "The cold-start SFT dataset was small (thousands of examples), and Dev1 had not yet had any reasoning RL, so it did not reach R1-Zero's reasoning level.",
+    "The language-consistency reward penalised mathematical notation during Dev1's training.",
+    "Dev1 was trained with preference reward models that it learned to hack.",
+    "AIME 2024 problems leaked into R1-Zero's training data, inflating its score."
+  ],
+  "private": {
+    "correct_index": 0,
+    "explanation": "The paper attributes Dev1's partial loss of reasoning to the limited size of the cold-start dataset. Reasoning comes back once reasoning RL is applied, in Dev2. The language-consistency reward only enters in that later RL stage, so it cannot explain Dev1. Preference reward models are used only in the final RL stage."
+  }
+}

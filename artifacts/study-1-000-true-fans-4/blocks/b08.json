@@ -1,0 +1,12 @@
+{
+  "prompt": "A duet or a small team shares the income. If a team grows by 33%, how will the number of true fans needed change, according to Kelly?",
+  "options": [
+    "It rises about 33%, in proportion to the team",
+    "It stays the same, because fans do not care about team size",
+    "It roughly doubles, since network effects compound"
+  ],
+  "private": {
+    "correct_index": 0,
+    "resolution": "Kelly says the increase is linear: 33% more people means about 33% more fans, not explosive growth."
+  }
+}

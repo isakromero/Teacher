@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{#- The library: every source with its study pages and labs, with a filter. Filled in by
+    static/js/library.js. -#}
+{% block title %}Library{% endblock %}
+{% block page_class %}page-library{% endblock %}
+{% block content %}
+<div id="library-page" data-page="library">
+  <header class="page-header page-header-row">
+    <div>
+      <h1>Library</h1>
+      <p id="library-count" class="lead" aria-live="polite"></p>
+    </div>
+    <a class="button primary" href="/add">
+      <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
+      Add a source
+    </a>
+  </header>
+
+  <div class="filter-bar" role="search">
+    <label for="library-filter" class="visually-hidden">Filter the library</label>
+    <div class="search-field search-field-compact">
+      <svg class="icon search-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      <input id="library-filter" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Filter by title or author" aria-describedby="library-filter-status"
+             aria-controls="source-list">
+    </div>
+    <p id="library-filter-status" class="status-text filter-status" role="status" aria-live="polite"></p>
+  </div>
+
+  <section aria-labelledby="sources-heading">
+    <h2 id="sources-heading" class="visually-hidden">Sources</h2>
+    <div id="source-list" class="source-list" aria-live="polite" aria-busy="true">
+      <p class="loading">Loading the library...</p>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/library.js') }}"></script>
+{% endblock %}

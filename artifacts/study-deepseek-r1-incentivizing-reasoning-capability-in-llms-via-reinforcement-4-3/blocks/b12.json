@@ -1,0 +1,21 @@
+{
+  "prompt": "In the final RL stage of DeepSeek-R1, why do the authors use model-based reward models for general data at all, and why do they limit those preference rewards to only the last 400 training steps?",
+  "min_words": 25,
+  "private": {
+    "model_answer": "General tasks such as writing or open questions have no checkable correct answer, so rule-based rewards cannot judge helpfulness or safety, and learned reward models are needed. But a learned reward model can be exploited: the authors found that training longer with it led to reward hacking. So they apply it only briefly, while reasoning data keeps its reliable rule-based reward.",
+    "rubric": [
+      {
+        "criterion": "Explains that general or open-ended tasks lack verifiable answers, so rule-based rewards cannot score them and learned reward models are needed.",
+        "required": true
+      },
+      {
+        "criterion": "Explains that model-based rewards are prone to reward hacking, so longer training with them is risky, which is why their use is limited to a short final phase.",
+        "required": true
+      },
+      {
+        "criterion": "Notes that reasoning data still uses rule-based rewards, which are more reliable.",
+        "required": false
+      }
+    ]
+  }
+}

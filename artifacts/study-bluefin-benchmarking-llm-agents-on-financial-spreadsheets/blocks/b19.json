@@ -1,0 +1,21 @@
+{
+  "prompt": "Why do the authors say the balance-sheet case study shows that average-quality scoreboards can be misleading about which model to use?",
+  "min_words": 25,
+  "private": {
+    "model_answer": "Gemini and Opus produced functionally equivalent balance sheets, scoring 100% and 95%, but Gemini cost $3.00 and Opus $83.05. A scoreboard of average scores hides this 27.7x gap in cost per correct output, which matters when the task is routine workbook wiring rather than deep reasoning.",
+    "rubric": [
+      {
+        "criterion": "States that the two models reached similar quality (100% vs 95%)",
+        "required": true
+      },
+      {
+        "criterion": "States that costs differed hugely (about 27.7x)",
+        "required": true
+      },
+      {
+        "criterion": "Concludes that score alone hides cost per correct output",
+        "required": true
+      }
+    ]
+  }
+}

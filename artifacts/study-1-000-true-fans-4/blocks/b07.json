@@ -1,0 +1,19 @@
+{
+  "question": "Imagine a potter who needs $60,000 a year, keeps the full price of every sale, and expects each true fan to spend $120 a year. Using Kelly's reasoning, roughly how many true fans does she need?",
+  "options": [
+    "About 720",
+    "About 1,000",
+    "About 500",
+    "About 2,000"
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "The formula is fans = income needed ÷ (spend per fan kept by the creator). With $60,000 and $120, that gives 500. The 1,000 figure is only a default to adjust.",
+    "option_explanations": [
+      "This does not follow from income needed divided by spend per fan.",
+      "This is Kelly's default, but the potter's income need and per-fan spend are both different.",
+      "Right: $60,000 divided by $120 is 500, an adjusted figure in the same order of magnitude as 1,000.",
+      "This would fit $30 per fan, not $120 per fan."
+    ]
+  }
+}

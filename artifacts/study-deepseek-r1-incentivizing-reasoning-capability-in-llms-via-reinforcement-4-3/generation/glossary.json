@@ -1,0 +1,482 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-opus-5-5",
+  "message_id": "msg_011ChGhXY2AdRuK4ZMSNQqjL",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 11134,
+    "cache_creation_input_tokens": 232706,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 8119
+  },
+  "source": {
+    "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement",
+    "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+    "media_type": "application/pdf"
+  },
+  "trigger": "generation",
+  "proposed": 60,
+  "dropped": [],
+  "merged": [],
+  "dropped_aliases": [
+    {
+      "term": "epochs",
+      "alias": "epoch",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "IF-Eval",
+      "alias": "IFEval",
+      "reason": "does not occur in the study page text"
+    }
+  ],
+  "output": {
+    "terms": [
+      {
+        "term": "Large language models",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Very large neural networks trained on huge amounts of text to predict the next piece of text. They can then answer questions, write code and carry out other language tasks.",
+        "aliases": []
+      },
+      {
+        "term": "LLM",
+        "kind": "acronym",
+        "expansion": "large language model",
+        "definition": "Short for large language model, a very large neural network trained on text that generates language one token at a time.",
+        "aliases": []
+      },
+      {
+        "term": "RL",
+        "kind": "acronym",
+        "expansion": "reinforcement learning",
+        "definition": "A training approach in which a model tries actions (here, writing responses), receives a numerical reward, and is updated to make high-reward behaviour more likely.",
+        "aliases": [
+          "reinforcement learning"
+        ]
+      },
+      {
+        "term": "pre-trained",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Describes a model that has already gone through its first, large-scale training on general text, before any task-specific training.",
+        "aliases": []
+      },
+      {
+        "term": "GRPO",
+        "kind": "acronym",
+        "expansion": "Group Relative Policy Optimization",
+        "definition": "The reinforcement learning algorithm the paper uses to train its models. It was originally proposed as a simpler, less resource-hungry alternative to PPO.",
+        "aliases": [
+          "Group Relative Policy Optimization"
+        ]
+      },
+      {
+        "term": "Distillation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Training a smaller 'student' model on outputs produced by a larger 'teacher' model, so that the student picks up some of the teacher's abilities.",
+        "aliases": []
+      },
+      {
+        "term": "Chain-of-thought",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The intermediate reasoning steps a model writes out before giving its final answer.",
+        "aliases": [
+          "chain of thought",
+          "chains of thought"
+        ]
+      },
+      {
+        "term": "CoT",
+        "kind": "acronym",
+        "expansion": "chain-of-thought",
+        "definition": "Short for chain-of-thought: the step-by-step reasoning a model writes before its final answer.",
+        "aliases": []
+      },
+      {
+        "term": "Post-training",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Any training applied after pre-training, such as supervised fine-tuning or reinforcement learning. It shapes a general model towards particular tasks or behaviours.",
+        "aliases": []
+      },
+      {
+        "term": "SFT",
+        "kind": "acronym",
+        "expansion": "supervised fine-tuning",
+        "definition": "Further training of a pre-trained model on a curated set of example inputs paired with the desired outputs, teaching it to reproduce those outputs.",
+        "aliases": [
+          "supervised fine-tuning"
+        ]
+      },
+      {
+        "term": "InstructGPT",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An OpenAI model, described by Ouyang et al. (2022), that was trained with supervised fine-tuning followed by RL from human feedback. It is the standard example of that post-training recipe.",
+        "aliases": []
+      },
+      {
+        "term": "base model",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A model after pre-training only, before any instruction tuning or reinforcement learning has been applied.",
+        "aliases": []
+      },
+      {
+        "term": "ground truth",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The known correct answer that a model's output is checked against.",
+        "aliases": []
+      },
+      {
+        "term": "advantage",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In reinforcement learning, a measure of how much better or worse an action or output turned out than expected. It sets how strongly training pushes the model towards or away from that output.",
+        "aliases": []
+      },
+      {
+        "term": "policy",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In reinforcement learning, the strategy that decides which actions to take. Here it is the language model itself, which assigns probabilities to possible outputs.",
+        "aliases": []
+      },
+      {
+        "term": "PPO",
+        "kind": "acronym",
+        "expansion": "Proximal Policy Optimization",
+        "definition": "A widely used reinforcement learning algorithm that limits how far each update can move the policy. It is the standard choice for the RL stage of LLM training.",
+        "aliases": []
+      },
+      {
+        "term": "Clipping",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Capping a value within a fixed range. In PPO-style objectives the probability ratio is clipped to between 1−ε and 1+ε so that a single update cannot change the policy too much.",
+        "aliases": []
+      },
+      {
+        "term": "KL",
+        "kind": "acronym",
+        "expansion": "Kullback–Leibler",
+        "definition": "Kullback–Leibler divergence measures how different two probability distributions are. In RL training it penalises the model for drifting too far from a reference model.",
+        "aliases": []
+      },
+      {
+        "term": "reference policy",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A fixed copy of the model that the trained policy is compared against through the KL penalty. In this paper it is periodically replaced with the latest policy.",
+        "aliases": []
+      },
+      {
+        "term": "GAE",
+        "kind": "acronym",
+        "expansion": "Generalized Advantage Estimation",
+        "definition": "A method used in PPO to estimate advantages by combining rewards with predictions from a learned value model. A coefficient λ controls how it trades off bias and variance.",
+        "aliases": [
+          "Generalized Advantage Estimation"
+        ]
+      },
+      {
+        "term": "value model",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A separate network, also called a critic, that predicts how much reward is expected from a given point in a response.",
+        "aliases": []
+      },
+      {
+        "term": "token",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The basic unit of text a language model reads and writes, typically a word or a piece of a word. Response lengths and limits are counted in tokens.",
+        "aliases": [
+          "tokens"
+        ]
+      },
+      {
+        "term": "mixture-of-experts",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A model architecture with many sub-networks ('experts'), of which only a few are activated for each token. This allows a very large total size at lower compute per token.",
+        "aliases": []
+      },
+      {
+        "term": "DeepSeek-V3-Base",
+        "kind": "term",
+        "expansion": null,
+        "definition": "DeepSeek's pre-trained mixture-of-experts model, with 671B total parameters and 37B active per token, before any instruction tuning. Both R1-Zero and R1 are trained starting from it.",
+        "aliases": [
+          "V3-Base"
+        ]
+      },
+      {
+        "term": "instruction-tuned",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Describes a model that has been further trained to follow user instructions and hold conversations, as opposed to a raw pre-trained base model.",
+        "aliases": []
+      },
+      {
+        "term": "rule-based",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Computed by fixed, hand-written checks rather than by a learned model. Examples are matching a final answer against the reference or running code against test cases.",
+        "aliases": []
+      },
+      {
+        "term": "reward models",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Neural networks trained to output a score for a response, usually from human or AI preference judgments. During RL they stand in for a human judge.",
+        "aliases": [
+          "reward model"
+        ]
+      },
+      {
+        "term": "STEM",
+        "kind": "acronym",
+        "expansion": "science, technology, engineering and mathematics",
+        "definition": "Science, technology, engineering and mathematics. In this paper it refers mainly to multiple-choice physics, chemistry and biology questions.",
+        "aliases": []
+      },
+      {
+        "term": "Learning rate",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A setting that controls how large a step the model's parameters take in each training update.",
+        "aliases": []
+      },
+      {
+        "term": "epochs",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An epoch is one full pass over the training dataset; 1.6 epochs means each example was seen about 1.6 times on average.",
+        "aliases": []
+      },
+      {
+        "term": "AIME",
+        "kind": "acronym",
+        "expansion": "American Invitational Mathematics Examination",
+        "definition": "A hard US high-school mathematics competition whose answers are integers. It is used as a reasoning benchmark.",
+        "aliases": []
+      },
+      {
+        "term": "pass@1",
+        "kind": "symbol",
+        "expansion": null,
+        "definition": "The probability that a single sampled answer is correct. The paper estimates it by averaging correctness over k samples per question.",
+        "aliases": []
+      },
+      {
+        "term": "self-consistency",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A decoding method that samples several reasoning paths for the same question and takes the most common final answer.",
+        "aliases": []
+      },
+      {
+        "term": "majority voting",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Choosing the answer that appears most often among several independently sampled responses.",
+        "aliases": []
+      },
+      {
+        "term": "MATH",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A benchmark of competition mathematics problems, each labelled with a difficulty level from 1 to 5.",
+        "aliases": []
+      },
+      {
+        "term": "Cold-start",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A small initial set of curated examples used to fine-tune a model before reinforcement learning begins, giving RL a better-behaved starting point.",
+        "aliases": [
+          "cold start"
+        ]
+      },
+      {
+        "term": "ablation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An experiment that removes or disables one component to measure what that component contributes.",
+        "aliases": []
+      },
+      {
+        "term": "Rejection sampling",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Generating many candidate outputs and keeping only those that pass a check, such as a correct answer and clean formatting, to build a training set.",
+        "aliases": []
+      },
+      {
+        "term": "checkpoint",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A saved snapshot of a model's parameters at a particular point in training.",
+        "aliases": []
+      },
+      {
+        "term": "QA",
+        "kind": "acronym",
+        "expansion": "question answering",
+        "definition": "Question answering: tasks in which a model answers questions, often factual ones.",
+        "aliases": []
+      },
+      {
+        "term": "preference pairs",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Training examples made of one query and two candidate responses, labelled with which response is better. They are used to train reward models.",
+        "aliases": []
+      },
+      {
+        "term": "H800",
+        "kind": "acronym",
+        "expansion": null,
+        "definition": "A model of NVIDIA data-centre GPU (the paper does not describe it further). GPU hours on it are used to report training cost.",
+        "aliases": []
+      },
+      {
+        "term": "GPU",
+        "kind": "acronym",
+        "expansion": "graphics processing unit",
+        "definition": "A processor built for highly parallel computation, used to train and run neural networks.",
+        "aliases": []
+      },
+      {
+        "term": "IF-Eval",
+        "kind": "acronym",
+        "expansion": "Instruction-Following Evaluation",
+        "definition": "A benchmark testing whether a model obeys explicit, automatically checkable instructions in a prompt, such as length or format constraints.",
+        "aliases": []
+      },
+      {
+        "term": "AlpacaEval 2.0",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An open-ended benchmark in which an LLM judge compares a model's answers with a reference model's answers. It is scored as a length-controlled win rate.",
+        "aliases": [
+          "AlpacaEval"
+        ]
+      },
+      {
+        "term": "ArenaHard",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An open-ended benchmark of challenging prompts drawn from Chatbot Arena. GPT-4 judges model responses pairwise to approximate human preference.",
+        "aliases": []
+      },
+      {
+        "term": "Aider-Polyglot",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A benchmark of real-world code-editing tasks across several programming languages, measuring software-engineering ability.",
+        "aliases": [
+          "Aider"
+        ]
+      },
+      {
+        "term": "MATH-500",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A 500-problem subset of the MATH competition-mathematics benchmark.",
+        "aliases": []
+      },
+      {
+        "term": "Codeforces",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An online competitive-programming platform. Models are scored by the rating or percentile they would achieve against human contestants.",
+        "aliases": []
+      },
+      {
+        "term": "GPQA Diamond",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The hardest subset of GPQA (Graduate-Level Google-Proof QA), a set of graduate-level multiple-choice questions in biology, physics and chemistry.",
+        "aliases": [
+          "GPQA"
+        ]
+      },
+      {
+        "term": "n-gram",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A sequence of n consecutive words or tokens. N-gram decontamination removes training text that shares such sequences, here 10-grams, with test questions.",
+        "aliases": []
+      },
+      {
+        "term": "contaminated",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Describes a benchmark whose test items, or close variants of them, appeared in a model's training data. Scores on it may then overstate real ability.",
+        "aliases": []
+      },
+      {
+        "term": "Process reward models",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Reward models that score each intermediate reasoning step rather than only the final answer.",
+        "aliases": []
+      },
+      {
+        "term": "Monte Carlo Tree Search",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A search algorithm that explores a tree of possible continuations by repeated simulated rollouts, usually guided by a value estimate.",
+        "aliases": []
+      },
+      {
+        "term": "AlphaGo",
+        "kind": "term",
+        "expansion": null,
+        "definition": "DeepMind's Go-playing system, which combined tree search with learned value and policy networks.",
+        "aliases": []
+      },
+      {
+        "term": "local optima",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Solutions that look best among nearby alternatives but are not the best overall, so a search can get stuck at them.",
+        "aliases": []
+      },
+      {
+        "term": "Few-shot",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Prompting a model by including a few worked examples of the task in the prompt before the actual question.",
+        "aliases": []
+      },
+      {
+        "term": "zero-shot",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Prompting a model with just the task description and question, without any worked examples.",
+        "aliases": []
+      },
+      {
+        "term": "jailbreak",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A prompt crafted to trick a model into bypassing its safety behaviour and producing content it would normally refuse to give.",
+        "aliases": []
+      },
+      {
+        "term": "open weights",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Model parameters released publicly, so anyone can download, run or further fine-tune the model.",
+        "aliases": []
+      }
+    ]
+  }
+}

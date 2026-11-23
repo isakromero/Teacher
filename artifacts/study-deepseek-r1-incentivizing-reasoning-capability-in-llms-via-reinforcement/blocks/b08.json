@@ -1,0 +1,21 @@
+{
+  "prompt": "Why did the authors use rule-based accuracy and format rewards for R1-Zero rather than a neural reward model? Explain the reasoning in your own words.",
+  "min_words": 25,
+  "private": {
+    "model_answer": "Neural reward models can be exploited by the policy during long RL training, which is reward hacking, and they must be retrained at extra cost, complicating the pipeline. Rule-based checks, like matching a final answer or running test cases, give reliable, hard-to-game feedback in math, code and logic, where correctness is verifiable.",
+    "rubric": [
+      {
+        "criterion": "States that neural reward models are susceptible to reward hacking (the policy exploiting flaws in the learned scorer).",
+        "required": true
+      },
+      {
+        "criterion": "Explains that rule-based rewards are reliable because answers in math/code/logic can be verified automatically.",
+        "required": true
+      },
+      {
+        "criterion": "Mentions the extra compute or pipeline complexity of retraining reward models.",
+        "required": false
+      }
+    ]
+  }
+}

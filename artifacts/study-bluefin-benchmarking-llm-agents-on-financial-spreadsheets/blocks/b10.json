@@ -1,0 +1,13 @@
+{
+  "question": "What makes the judge able to grade Perturbation criteria that a static check could not?",
+  "options": [
+    "It reads only the formula text and guesses whether it would update",
+    "It changes the input cell, calls recalc_workbook, and reads the output again",
+    "It asks the agent under test to explain its model",
+    "It compares the workbook visually with the reference solution"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The judge's procedure is to read the output, mutate the input, recalculate and read again. A hardcoded output fails because it does not change. Reading formula text alone could not reveal whether values actually propagate."
+  }
+}

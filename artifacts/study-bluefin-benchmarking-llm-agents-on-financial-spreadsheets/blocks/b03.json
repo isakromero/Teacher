@@ -1,0 +1,13 @@
+{
+  "question": "Why do the authors say many earlier spreadsheet benchmarks are a poor match for professional finance work?",
+  "options": [
+    "They use only small language models that cannot handle formulas",
+    "They give detailed instructions for simple, checkable operations, whereas real finance requests are underspecified and multi-step",
+    "They ignore formatting entirely, which never matters in finance",
+    "They test only question answering over live market data"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The paper says prior work focuses on formula generation, atomic edits, flat tables or fixed-sheet QA that map cleanly to programmatic checks. Real requests are naturally phrased and expect the agent to infer a plan. Formatting does matter in finance, which is why BLUEFIN includes Presentation criteria."
+  }
+}

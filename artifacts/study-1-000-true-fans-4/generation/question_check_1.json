@@ -1,0 +1,375 @@
+{
+  "stage": "question_check",
+  "round": 1,
+  "model": "claude-sonnet-5-5",
+  "judge_model": "claude-haiku-5-5",
+  "source": {
+    "slug": "1-000-true-fans",
+    "title": "1,000 True Fans"
+  },
+  "rule_violations": [],
+  "open_book": [
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFLcJ5AHkY3hDKtbdaJ",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 1991,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 122
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        4
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 4,
+            "reasoning": "The page says a true fan buys anything you produce, and that roughly a thousand such people let you make a living. That implies the fan's total buying is what makes a small group add up to an income. The page doesn't state the arithmetic yet, but option 0 fits best and the others are not supported.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFLnor8tK34QacYNkNw",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 1280,
+        "cache_read_input_tokens": 1991,
+        "output_tokens": 99
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        7
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 7,
+            "reasoning": "The page gives fans needed = income / spend per fan (with full revenue kept). $60,000 / $120 = 500, matching Kelly's scaling logic ($100,000 / $200 = 500).",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFLwr4ZciEtp5hy6vZ2",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 189,
+        "cache_creation_input_tokens": 638,
+        "cache_read_input_tokens": 3271,
+        "output_tokens": 197
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        10
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 10,
+            "reasoning": "Block 9 says a manager or helper handling fans skews the formula and raises the fans needed, and indirect income through intermediaries means many more true fans are needed, though still short of blockbuster territory.",
+            "choice": null,
+            "answer": "Hiring a manager to wrangle fans skews the formula and raises the number of true fans she needs, since income is spread over extra help. Selling through an intermediary that keeps most revenue lowers what she keeps per fan, so she needs many more fans, though still far fewer than blockbuster numbers.\n"
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFMLxNFQT4N2zqSkbgs",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 754,
+        "cache_read_input_tokens": 3909,
+        "output_tokens": 108
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        13
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 13,
+            "reasoning": "Block 12 says the 2008 essay calls the tail a mixed blessing: it mainly rewards aggregators and consumers, while creators get little extra in sales, more competition and downward pressure on prices. That matches option 0.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFMTSoGJvZLpKxqeJEr",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 609,
+        "cache_read_input_tokens": 4663,
+        "output_tokens": 119
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        15
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 15,
+            "reasoning": "The page says Watt-Evans gets by on about 200 true fans \"because he also publishes traditionally.\" That points to traditional publishing income supplementing fan income, which is closest to option 0, though the page doesn't mention advances or lesser fans specifically.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFMbpLkKhJbyEaE2qb8",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 315,
+        "cache_creation_input_tokens": 1739,
+        "cache_read_input_tokens": 5272,
+        "output_tokens": 345
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        20,
+        21,
+        22
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 20,
+            "reasoning": "The page names two changes: directness (creators keep the full payment, reducing fans needed) and the long tail (niche fans can find you). Option 0 matches both.",
+            "choice": 0,
+            "answer": null
+          },
+          {
+            "block": 21,
+            "reasoning": "The page's math gives 600 x $100 = $60,000, which is below the $100,000 baseline, so it depends on her needs; the adjustments and the critique say what else matters.",
+            "choice": null,
+            "answer": "Her path could work if $60,000 covers her living costs, since selling directly means she keeps every dollar. It could fail if she needs closer to $100,000, or if she has a team or helper. Regular fans around her might add about 50% income. Finding more true fans may also take much longer than expected."
+          },
+          {
+            "block": 22,
+            "reasoning": "The page says at $50 per fan you need 2,000 fans, and that the numbers are adjustable. Raising what each fan spends is also consistent with the first criterion of earning about $100 per fan.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    }
+  ],
+  "judged": [
+    {
+      "block": 10,
+      "answer": "Hiring a manager to wrangle fans skews the formula and raises the number of true fans she needs, since income is spread over extra help. Selling through an intermediary that keeps most revenue lowers what she keeps per fan, so she needs many more fans, though still far fewer than blockbuster numbers.",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "States that a helper or manager raises the number of fans needed",
+          "required": true,
+          "met": true,
+          "justification": "The learner states that hiring a manager to handle fans skews the formula and raises the number of true fans needed, matching the criterion."
+        },
+        {
+          "criterion": "Explains that an intermediary taking a share reduces income per fan, so more fans are needed",
+          "required": true,
+          "met": true,
+          "justification": "The learner explains that an intermediary keeping most revenue lowers what she keeps per fan, so she needs many more fans, which meets the criterion."
+        },
+        {
+          "criterion": "Notes that the number still stays far below blockbuster levels",
+          "required": false,
+          "met": true,
+          "justification": "The learner adds that the number is still far fewer than blockbuster numbers, which directly satisfies this optional point."
+        }
+      ],
+      "feedback": "You correctly explained that a manager raises the fans needed because income is spread across extra help, and that an intermediary taking most revenue lowers what you keep per fan. Your point that the required number remains far below blockbuster levels is a useful addition. Your answer covers the full question."
+    },
+    {
+      "block": 21,
+      "answer": "Her path could work if $60,000 covers her living costs, since selling directly means she keeps every dollar. It could fail if she needs closer to $100,000, or if she has a team or helper. Regular fans around her might add about 50% income. Finding more true fans may also take much longer than expected.",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "Computes or reasons that 600 fans at $100 give about $60,000 and compares it to income needs",
+          "required": true,
+          "met": true,
+          "justification": "The learner states that 600 fans at $100 give $60,000 and compares it to living costs, noting it could work if that covers costs and fail if she needs closer to $100,000."
+        },
+        {
+          "criterion": "Names an extra lever or risk such as regular fans, intermediaries, higher spend per fan, or the time cost of tending fans",
+          "required": true,
+          "met": true,
+          "justification": "The learner names regular fans as an extra lever (adding about 50% income) and notes that finding more true fans may take longer than expected, which covers a time-cost risk."
+        }
+      ],
+      "feedback": "You correctly work out the $60,000 total from 600 fans at $100 and set it against her living costs, which is the core of the question. You also name regular fans as a possible extra income source and flag the time it takes to find more fans as a risk. Next time, spell out the mechanism for how the fan-tending time cost could make the path fail."
+    }
+  ],
+  "closed_book": {
+    "generator": "claude-study-v1",
+    "model": "claude-sonnet-5-5",
+    "message_id": "msg_011ChLFNCdayHNZEfSsLnB5G",
+    "stop_reason": "end_turn",
+    "usage": {
+      "input_tokens": 1777,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 145
+    },
+    "source": {
+      "slug": "1-000-true-fans",
+      "title": "1,000 True Fans",
+      "media_type": "text/markdown"
+    },
+    "blocks": [
+      4,
+      7,
+      13,
+      15,
+      20,
+      22
+    ],
+    "correct_by_guess": [],
+    "output": {
+      "answers": [
+        {
+          "block": 4,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 7,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 13,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 15,
+          "choice": 0,
+          "basis": "options"
+        },
+        {
+          "block": 20,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 22,
+          "choice": 0,
+          "basis": "knowledge"
+        }
+      ]
+    }
+  },
+  "issues": [
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 4,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option \"Because each fan's total yearly spending is what lets a small group add up to a living\" from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 7,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'About 500' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 13,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'It rewards aggregators and consumers while adding competition and price pressure' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 15,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'His publisher advances, backed by many lesser fans, supplement the fan income' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 20,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'Creators keep the full payment and niche fans become findable' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 22,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'Adjust it to about 2,000 fans, or raise what each fan spends' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    }
+  ],
+  "must_fix_remaining": [],
+  "note": "6 multiple-choice question(s) (block(s) 4, 7, 13, 15, 20, 22 of the page as written) could still be answered correctly without the page after the revision; the answers are in question_check_1.json"
+}

@@ -1,0 +1,13 @@
+{
+  "question": "What does the Qwen2.5-32B-Zero versus DeepSeek-R1-Distill-Qwen-32B comparison show?",
+  "options": [
+    "Large-scale RL always beats distillation if run long enough",
+    "For a 32B model, distilling R1's outputs outperformed running large-scale RL directly, at much lower compute",
+    "Distillation works only when the student is smaller than 10B parameters",
+    "RL on the base model produced results indistinguishable from the distilled model"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The distilled model was significantly better on all reported benchmarks, while RL-only matched QwQ-32B-Preview. The paper does not claim RL can never win; it says beating distillation may need stronger bases and larger-scale RL."
+  }
+}

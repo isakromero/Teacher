@@ -1,0 +1,13 @@
+{
+  "question": "Why did the authors prefer interrogation questions whose answers depend on multi-step calculation chains?",
+  "options": [
+    "Because they are cheaper to grade with a rubric",
+    "Because simple direct links cannot be checked automatically",
+    "Because they make harder questions that require recomputing dependencies",
+    "Because the judge model cannot read single cells"
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "The paper says chains of dependent calculations were prioritised to build more difficult questions. Interrogation answers are auto-graded against a reference, not a rubric, and direct links are no harder to check."
+  }
+}

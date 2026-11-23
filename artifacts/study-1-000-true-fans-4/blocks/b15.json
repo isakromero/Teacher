@@ -1,0 +1,19 @@
+{
+  "question": "Watt-Evans gets by on an estimated 200 true fans, well below 1,000. What explains this in Kelly's account?",
+  "options": [
+    "His publisher advances, backed by many lesser fans, supplement the fan income",
+    "His fans pay through a label, which raises the revenue he keeps per fan",
+    "His fans each spend several times the $100 average and he has almost no costs",
+    "He releases a single chapter a year, so few buyers are needed to cover it"
+  ],
+  "private": {
+    "correct_index": 0,
+    "explanation": "The 1,000 figure assumes true fans are the whole income. Mixing in traditional publishing means fewer are needed, which also shows the approach is not exclusive.",
+    "option_explanations": [
+      "Right: Kelly says he also publishes traditionally, with advances backed by thousands of lesser fans, so true fans are only part of his income.",
+      "Direct payment is the model here; intermediaries would lower per-fan revenue.",
+      "The essay gives no such figures for his prices or costs.",
+      "Chapters were posted as each $100 goal was reached, not once a year."
+    ]
+  }
+}

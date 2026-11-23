@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ static('vendor/katex-0.16.22/katex.min.css') }}">
+<link rel="stylesheet" href="{{ static('css/history.css') }}">
+<link rel="stylesheet" href="{{ static('css/standing.css') }}">
+{% endblock %}
+{% block page_class %}page-history{% endblock %}
+{% block content %}
+<div id="history-page" data-page="history">
+  <header class="page-header">
+    <h1>Study history</h1>
+    <p class="lead">Every sitting is a session: it ends after {{ idle_gap_minutes }} minutes without activity. Time on a page counts only while its tab is visible and you have scrolled, typed or moved the pointer in the last minute. Sessions marked “from earlier activity” were reconstructed from answers, chats and lab runs made before the history was recorded, so they have no page visits or time on pages.</p>
+  </header>
+
+  <section aria-labelledby="history-suggestions-heading">
+    <h2 id="history-suggestions-heading">Suggested next</h2>
+    <div id="history-suggestions" aria-live="polite"><p class="muted">Loading...</p></div>
+  </section>
+
+  <form id="history-filters" class="history-filters" novalidate>
+    <div class="field">
+      <label for="history-subject">Page or paper</label>
+      <select id="history-subject" name="subject">
+        <option value="">Everything</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="history-from">From</label>
+      <input id="history-from" name="from" type="date">
+    </div>
+    <div class="field">
+      <label for="history-to">To</label>
+      <input id="history-to" name="to" type="date">
+    </div>
+    <div class="actions">
+      <button id="history-apply" type="submit" class="button primary">Show</button>
+      <button id="history-clear" type="button" class="button">Clear</button>
+    </div>
+  </form>
+  <div id="history-error" class="error" role="alert" hidden></div>
+
+  <section aria-labelledby="history-totals-heading">
+    <h2 id="history-totals-heading">Time per page</h2>
+    <div id="history-totals" aria-live="polite"><p class="muted">Loading...</p></div>
+  </section>
+
+  <section aria-labelledby="history-concepts-heading">
+    <h2 id="history-concepts-heading">Standing per concept</h2>
+    <label class="standing-toggle small"><input id="history-concepts-all" type="checkbox"> Also show the concepts no study page covers</label>
+    <div id="history-concepts" aria-live="polite"><p class="muted">Loading...</p></div>
+  </section>
+
+  <section aria-labelledby="history-sessions-heading">
+    <h2 id="history-sessions-heading">Sessions</h2>
+    <p id="history-count" class="muted" aria-live="polite"></p>
+    <ol id="history-sessions" class="history-sessions"></ol>
+    <div class="actions">
+      <button id="history-more" type="button" class="button" hidden>Show older sessions</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="history-export-heading">
+    <h2 id="history-export-heading">Export</h2>
+    <p class="muted">The whole history, every session with its full timeline: JSON is complete (lab files included), Markdown is for reading.</p>
+    <div class="actions">
+      <a id="history-export-json" class="button" href="/api/history/export?format=json" download>Download JSON</a>
+      <a id="history-export-markdown" class="button" href="/api/history/export?format=markdown" download>Download Markdown</a>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/history.js') }}"></script>
+<script type="module" src="{{ static('js/history_concepts.js') }}"></script>
+{% endblock %}

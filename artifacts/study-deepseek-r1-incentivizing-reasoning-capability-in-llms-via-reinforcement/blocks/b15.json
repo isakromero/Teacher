@@ -1,0 +1,13 @@
+{
+  "question": "Which reading of Table 3's stage-by-stage results is best supported by the paper?",
+  "options": [
+    "Cold-start SFT (Dev1) improved every benchmark, including AIME, over R1-Zero.",
+    "The final RL stage mainly improved math and code, since that is where RL was concentrated.",
+    "Reasoning-focused RL helped reasoning benchmarks but did little for preference benchmarks, which improved mostly after SFT on mixed data and the final RL.",
+    "AlpacaEval 2.0 rose most between R1-Zero and Dev2."
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "Dev2 shows marginal AlpacaEval gains, while Dev3 and especially the final R1 (87.6) improve it a lot. Dev1 actually dropped AIME, and the final RL stage gave only marginal math/code gains because reasoning RL had been done earlier."
+  }
+}

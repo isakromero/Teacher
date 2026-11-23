@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{#- The lab page: a skeleton filled in by static/js/lab.js from GET /api/artifacts/{slug}
+    (status, header, the generating and failed states, shared with the study page) and, once
+    the lab is ready, GET /api/labs/{slug} (brief, steps, files) and GET /api/labs/runtime. -#}
+{% block title %}{{ title }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ static('vendor/katex-0.16.22/katex.min.css') }}">
+{% endblock %}
+{% block page_class %}page-lab{% endblock %}
+{% block content %}
+<div id="lab-layout" class="artifact-layout lab-layout">
+<div id="lab-page" data-page="lab" data-slug="{{ slug }}" data-status="{{ status }}">
+  <header class="artifact-header">
+    <nav class="crumbs" aria-label="Breadcrumbs">
+      <a href="/library">Library</a><span id="lab-crumb-page" hidden> / <a id="lab-crumb-link" href="/">Study page</a></span>
+    </nav>
+    <h1 id="lab-title">{{ title }}</h1>
+    <p id="artifact-meta" class="muted"></p>
+    <div id="artifact-notices"></div>
+  </header>
+
+  <section id="state-generating" class="status-panel" aria-labelledby="generating-heading"
+           {% if status != "generating" %}hidden{% endif %}>
+    <h2 id="generating-heading">Generating lab</h2>
+    <p class="muted">The lab is written, then its code is run to check that the starter code runs, that the reference solution passes every check and that the starter code does not. This page updates by itself as each stage finishes.</p>
+    <ol id="generating-stages" class="stages" aria-live="polite"></ol>
+    <div id="generating-error" class="error" role="alert" hidden></div>
+  </section>
+
+  <section id="state-failed" class="status-panel failed" aria-labelledby="failed-heading"
+           {% if status != "failed" %}hidden{% endif %}>
+    <h2 id="failed-heading">Generation failed</h2>
+    <div id="failed-summary"></div>
+    <div id="regenerate-model-field" class="field model-field" hidden>
+      <label for="regenerate-model">Model</label>
+      <select id="regenerate-model" name="model"></select>
+    </div>
+    <div class="actions">
+      <button id="regenerate-button" type="button" class="button primary">Regenerate</button>
+    </div>
+    <div id="regenerate-error" class="error" role="alert" hidden></div>
+    <details class="stage-details">
+      <summary>All stages</summary>
+      <ol id="failed-stages" class="stages"></ol>
+    </details>
+  </section>
+
+  <section id="state-ready" class="lab" aria-label="Lab" {% if status != "ready" %}hidden{% endif %}>
+    <div id="lab-runtime" class="notice lab-runtime" role="status" aria-live="polite" hidden></div>
+
+    <div class="lab-grid">
+      <div class="lab-text">
+        <section class="lab-brief" aria-labelledby="lab-brief-heading">
+          <h2 id="lab-brief-heading">Brief</h2>
+          <div id="lab-brief"></div>
+        </section>
+
+        <section class="lab-steps-section" aria-labelledby="lab-steps-heading">
+          <h2 id="lab-steps-heading">Steps</h2>
+          <p id="lab-progress" class="muted small" aria-live="polite"></p>
+          <ol id="lab-steps" class="lab-steps"></ol>
+        </section>
+      </div>
+
+      <section class="lab-workspace" aria-labelledby="lab-code-heading">
+        <div class="lab-code-header">
+          <h2 id="lab-code-heading">Code</h2>
+          <p id="lab-save-status" class="lab-save-status small" role="status" aria-live="polite"></p>
+        </div>
+        <div id="lab-save-error" class="error" role="alert" hidden></div>
+        <div id="lab-tabs" class="lab-tabs" role="tablist" aria-label="Files"></div>
+        <div id="lab-editors" class="lab-editors"></div>
+        <p id="lab-editor-keys" class="hint lab-editor-keys">
+          Tab indents and Shift+Tab outdents. To leave the editor with the keyboard, press Escape, then Tab.
+          Ctrl+Enter (Cmd+Enter on a Mac) runs the program.
+          <span id="lab-cursor" class="lab-cursor" aria-live="off"></span>
+        </p>
+
+        <div class="lab-run-bar">
+          <button id="lab-run" type="button" class="button primary" aria-describedby="lab-run-status">Run</button>
+          <div class="lab-step-choice">
+            <label for="lab-current-step">Working on</label>
+            <select id="lab-current-step" name="step" aria-describedby="lab-current-step-hint"></select>
+          </div>
+          <p id="lab-current-step-hint" class="visually-hidden">Runs are recorded against this step, so the tutor knows what you were trying.</p>
+        </div>
+        <p id="lab-run-status" class="status-text lab-run-status" role="status" aria-live="polite"></p>
+
+        <div class="lab-tools actions">
+          <button id="lab-reset" type="button" class="button compact" aria-expanded="false" aria-controls="lab-reset-confirm">Reset to starter code</button>
+          <button id="lab-solution-button" type="button" class="button compact" aria-expanded="false" aria-controls="lab-solution-confirm">Show solution</button>
+          <a id="lab-export" class="button compact" href="/api/labs/{{ slug }}/export" download>Download as a folder</a>
+        </div>
+        <div id="lab-reset-confirm" class="confirm" hidden>
+          <p id="lab-reset-text"><strong>Replace your code with the starter code?</strong> Your changes to every file are discarded and cannot be got back.</p>
+          <div class="actions">
+            <button id="lab-reset-yes" type="button" class="button danger" aria-describedby="lab-reset-text">Yes, reset my code</button>
+            <button id="lab-reset-cancel" type="button" class="button">Cancel</button>
+          </div>
+        </div>
+        <div id="lab-solution-confirm" class="notice lab-confirm" hidden>
+          <p id="lab-solution-text">The reference solution is shown below your code, read-only: your files are not changed. Looking at it is recorded, and the tutor knows you have seen it. You may want to try the steps first.</p>
+          <div class="actions">
+            <button id="lab-solution-yes" type="button" class="button primary" aria-describedby="lab-solution-text">Show the solution</button>
+            <button id="lab-solution-cancel" type="button" class="button">Cancel</button>
+          </div>
+        </div>
+        <div id="lab-tools-error" class="error" role="alert" hidden></div>
+
+        <section id="lab-solution" class="lab-solution" aria-labelledby="lab-solution-heading" hidden>
+          <div class="lab-solution-header">
+            <h3 id="lab-solution-heading">Reference solution</h3>
+            <button id="lab-solution-hide" type="button" class="button compact">Hide</button>
+          </div>
+          <div id="lab-solution-files"></div>
+        </section>
+
+        <section class="lab-output" aria-labelledby="lab-output-heading">
+          <h3 id="lab-output-heading">Output</h3>
+          <div id="lab-output" class="lab-output-body">
+            <p class="muted">Run the program to see what it prints. A program is stopped after 20 seconds.</p>
+          </div>
+        </section>
+      </section>
+    </div>
+    <div id="lab-sandbox" hidden></div>
+  </section>
+
+  <div id="artifact-error" class="error" role="alert" hidden></div>
+</div>
+
+<aside id="tutor" class="tutor" aria-labelledby="tutor-heading" hidden>
+  <header class="tutor-header">
+    <h2 id="tutor-heading">Tutor</h2>
+    <button id="tutor-new" type="button" class="button compact">New conversation</button>
+    <button id="tutor-toggle" type="button" class="button compact" aria-controls="tutor">Hide</button>
+  </header>
+  <div id="tutor-messages" class="tutor-messages" role="log" aria-live="off" aria-label="Conversation with the tutor" tabindex="0">
+    <div id="tutor-empty" class="tutor-empty">
+      <p>Ask about the code, an error, or what to try next. The tutor sees your saved files and your latest run.</p>
+      <p><strong>Check my understanding</strong> has the tutor ask you a question about what you have built and run so far.</p>
+    </div>
+  </div>
+  <p id="tutor-status" class="visually-hidden" aria-live="polite"></p>
+  <form id="tutor-composer" class="tutor-composer" novalidate>
+    <ul id="tutor-refs" class="tutor-refs" aria-label="Attached passages" hidden></ul>
+    <p id="tutor-hint" class="tutor-hint" aria-live="polite" hidden></p>
+    <label for="tutor-input" class="visually-hidden">Message to the tutor</label>
+    <textarea id="tutor-input" name="text" rows="1" placeholder="Ask the tutor..." aria-describedby="tutor-keys"></textarea>
+    <p id="tutor-keys" class="tutor-keys">Enter sends, Shift+Enter starts a new line.</p>
+    <div class="tutor-actions">
+      <button id="tutor-check" type="button" class="button">Check my understanding</button>
+      <button id="tutor-send" type="submit" class="button primary">Send</button>
+    </div>
+  </form>
+</aside>
+
+<button id="tutor-open" type="button" class="button primary tutor-fab" aria-controls="tutor" aria-expanded="false" hidden>Tutor</button>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/lab.js') }}"></script>
+{% endblock %}

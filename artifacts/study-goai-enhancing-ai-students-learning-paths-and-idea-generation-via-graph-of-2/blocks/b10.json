@@ -1,0 +1,21 @@
+{
+  "prompt": "Explain why GoAI explores relations first and then entities in each beam-search iteration, rather than asking the LLM to choose among all neighbouring papers directly.",
+  "min_words": 25,
+  "private": {
+    "model_answer": "A key paper can have a very large number of neighbouring papers, which is too much for an LLM to judge at once. By first pruning to the most relevant relations, then only looking at neighbours reached through those relations, the candidate set the LLM must judge stays manageable.",
+    "rubric": [
+      {
+        "criterion": "States that the number of neighbouring entities can be too large or complex for the LLM to process directly",
+        "required": true
+      },
+      {
+        "criterion": "Explains that selecting relations first narrows which entities are considered next",
+        "required": true
+      },
+      {
+        "criterion": "Mentions that the LLM does the pruning by prompting, without training",
+        "required": false
+      }
+    ]
+  }
+}

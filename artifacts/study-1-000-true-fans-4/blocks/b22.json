@@ -1,0 +1,19 @@
+{
+  "question": "Imagine an illustrator who needs $100,000 a year, keeps the full price, and finds her fans spend only $50 each per year. Using Kelly's reasoning, what should she do with the 1,000 figure?",
+  "options": [
+    "Keep 1,000, since the order of magnitude matters more than her spend",
+    "Drop it, since $50 per fan means true fans cannot support a living",
+    "Halve it to about 500, since direct sales already raise her income",
+    "Adjust it to about 2,000 fans, or raise what each fan spends"
+  ],
+  "private": {
+    "correct_index": 3,
+    "explanation": "The 1,000 figure is a default to adjust: at $50 per fan she needs about 2,000, still far below a million. The same sentence in Kelly's essay shows the number is a rough guide that is found by trying.",
+    "option_explanations": [
+      "Kelly says the number is adjusted for each person; the order of magnitude is the rough scale, not a reason to ignore her spend.",
+      "Kelly treats $50 as workable with 2,000 fans, not as a failure of the idea.",
+      "Directness is already assumed in the full-price case; lower spend raises the count, not lowers it.",
+      "Right: $100,000 divided by $50 is 2,000, and Kelly says the number must be adjusted, or per-fan revenue increased."
+    ]
+  }
+}

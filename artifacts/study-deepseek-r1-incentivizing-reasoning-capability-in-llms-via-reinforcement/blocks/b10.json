@@ -1,0 +1,13 @@
+{
+  "question": "What does the paper's evidence on R1-Zero's \"aha moment\" actually consist of?",
+  "options": [
+    "A controlled experiment showing the model's accuracy jumps when it is told to reflect",
+    "A human audit that verified each use of \"wait\" was a genuine self-correction",
+    "An example transcript plus a count showing a sudden increase in the word \"wait\" late in training",
+    "A comparison with SFT data showing humans never write reflective steps"
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "The evidence is one illustrative transcript (Table 2) and a word-frequency curve (Figure 9b). It does not include an intervention or a human audit of each instance, which is why the word count is only a proxy and outside work questions the interpretation."
+  }
+}

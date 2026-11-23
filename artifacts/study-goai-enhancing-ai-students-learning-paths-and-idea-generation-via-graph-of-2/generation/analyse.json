@@ -1,0 +1,166 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChFLW15MUUDZtXdSpTX2M",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 556,
+    "cache_creation_input_tokens": 31601,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 2447
+  },
+  "source": {
+    "slug": "goai-enhancing-ai-students-learning-paths-and-idea-generation-via-graph-of-ai",
+    "title": "GoAI: Enhancing AI Students' Learning Paths and Idea Generation via Graph of AI Ideas",
+    "media_type": "application/pdf"
+  },
+  "ignored_sources": [],
+  "segments": [
+    {
+      "label": "problem-motivation",
+      "id": 22,
+      "created": false
+    },
+    {
+      "label": "related-work",
+      "id": 23,
+      "created": false
+    },
+    {
+      "label": "graph-building",
+      "id": 30,
+      "created": true
+    },
+    {
+      "label": "path-generation",
+      "id": 26,
+      "created": false
+    },
+    {
+      "label": "validation-reviewer",
+      "id": 27,
+      "created": false
+    },
+    {
+      "label": "idea-studio",
+      "id": 28,
+      "created": false
+    },
+    {
+      "label": "experiments-results",
+      "id": 31,
+      "created": true
+    }
+  ],
+  "output": {
+    "summary": "AI students struggle to move from a flood of papers to feasible new ideas, and LLM assistants that summarize literature give only a linear narrative that ignores prerequisite knowledge and the meaning of citations. GoAI builds a knowledge graph in which papers are linked by citations labelled with one of five semantic roles and by citation position, then uses an LLM-driven beam search over that graph to produce research trends, prerequisite-ordered learning paths and 'Hint Ideas'. A fine-tuned reviewer model, GoAI-CoT-Reviewer, scores idea novelty through summary, analysis and scoring stages and is used both to validate paths and to give feedback in a demonstration application called Idea Studio. In a small study with 9 students, the GoAI group reported lower mental and temporal load and produced higher-scored ideas than web-search and plain-LLM groups, and the reviewer correlated with human judgments better than baselines.",
+    "main_claims": [
+      "AI research is better modelled as a graph with semantically labelled citation edges and prerequisite concepts than as a linear chain of papers.",
+      "GoAI builds such a graph by expanding forward and backward from key reference papers and using an LLM to label each citation with one of five semantic categories.",
+      "An LLM agent doing two-step beam search (relations first, then entities) over the graph yields research trends, Hint Ideas and prerequisite-ordered learning paths, which are checked by multi-agent majority voting.",
+      "GoAI-CoT-Reviewer, fine-tuned from OpenReview data with a structured summary-analysis-scoring chain of thought, agrees with human assessments much more than direct generation or multi-turn dialogue (Pearson 0.6810 vs 0.0058 and 0.4251).",
+      "In a 9-student between-subjects study, GoAI users had usability comparable to an LLM assistant, lower mental and temporal demand, and higher average idea scores (7.33 vs 6.33 and 5.67)."
+    ],
+    "background": [
+      "large language models and prompting",
+      "chain-of-thought prompting",
+      "knowledge graphs and (head, relation, tail) triples",
+      "citation networks in academic literature",
+      "beam search",
+      "cosine similarity of text embeddings",
+      "supervised fine-tuning and LoRA",
+      "retrieval-augmented generation",
+      "Pearson correlation",
+      "peer review and OpenReview scoring",
+      "SUS and NASA-TLX questionnaires"
+    ],
+    "sections": [
+      {
+        "label": "problem-motivation",
+        "title": "The information-to-innovation gap and why linear LLM summaries fall short",
+        "start_page": 1,
+        "end_page": 2,
+        "key_points": [
+          "Students must read many papers, trace trends, learn prerequisites and then generate feasible ideas.",
+          "LLM assistants give a linear narrative, overlook prerequisites, and miss the semantic roles of citations.",
+          "The authors argue the landscape is graph-structured: papers as nodes, role-carrying citations as edges, concepts and skills forming prerequisite chains.",
+          "GoAI's three-part answer: a graph, path planning by search, and Idea Studio with a CoT reviewer."
+        ]
+      },
+      {
+        "label": "related-work",
+        "title": "Related work and the design choice of text prompts",
+        "start_page": 2,
+        "end_page": 3,
+        "key_points": [
+          "Educational knowledge graphs have focused on static knowledge integration, not on synthesizing literature or supporting student innovation.",
+          "Prior AI idea-generation work uses research trend chains or academic graphs; GoAI uses a graph with citation semantics and importance.",
+          "Because the graph is already in natural language, GoAI transcribes graph content into textual prompts rather than feeding GNN outputs to the LLM."
+        ]
+      },
+      {
+        "label": "graph-building",
+        "title": "Building the GoAI graph: search, expansion and citation semantics",
+        "start_page": 3,
+        "end_page": 3,
+        "key_points": [
+          "Key reference papers are found via Semantic Scholar and arXiv, then expanded backward (references) and forward (citing papers) for N steps, keeping the top K by cosine similarity each step.",
+          "Retrieval stops if nothing relevant is found; ideal size is O(2K^N).",
+          "Each edge is a quadruple: paper1, citation position, citation semantics, paper2.",
+          "Five citation categories: B&E, S&S, C&A, Q&A (question and refutation), M/I.",
+          "SciPDF Parser extracts paragraphs and an LLM labels each citation."
+        ]
+      },
+      {
+        "label": "path-generation",
+        "title": "Path generation by LLM beam search over the graph",
+        "start_page": 4,
+        "end_page": 5,
+        "key_points": [
+          "Exploration is a two-step strategy inspired by Think-on-Graph: relation exploration, then entity exploration.",
+          "Each step is a beam search of width N with a search step (collect candidates) and a pruning step (LLM selects top-N).",
+          "Endpoints can extend backward or forward; each iteration lengthens paths by 2 (a relation and an entity).",
+          "The Tree of Thoughts example in Figure 2 shows candidate relations and entities such as Self-Consistency, CoT, CPO and Diagram of Thought.",
+          "From the final paths the LLM produces a trend T, predicted directions and a Hint Idea H, and extracts concepts and skills ordered by complexity into a learning path."
+        ]
+      },
+      {
+        "label": "validation-reviewer",
+        "title": "Path validation and the GoAI-CoT-Reviewer",
+        "start_page": 5,
+        "end_page": 6,
+        "key_points": [
+          "Learning paths are checked by agents for prerequisite accuracy and sequencing, with revisions by majority vote.",
+          "Research trajectories are validated by judging the novelty of the Hint Idea.",
+          "The reviewer works in three tagged stages: summary, analysis, scoring, unlike free-form CoT.",
+          "Training data are over 38k samples from OpenReview (ICLR and NeurIPS 2022-2025), with review fields as golden answers per stage, fine-tuned with LoRA.",
+          "Multiple reviewer agents score 1-10, a threshold of 5 separates promising ideas, and a majority vote decides."
+        ]
+      },
+      {
+        "label": "idea-studio",
+        "title": "Idea Studio: the demonstration application",
+        "start_page": 6,
+        "end_page": 6,
+        "key_points": [
+          "Students get a topic, study GoAI's trends and learning paths, then propose original ideas.",
+          "Ideas are evaluated and iteratively refined with GoAI-CoT-Reviewer.",
+          "The authors also present this as an empirical test of GoAI's practical utility."
+        ]
+      },
+      {
+        "label": "experiments-results",
+        "title": "Experimental setup and results",
+        "start_page": 7,
+        "end_page": 7,
+        "key_points": [
+          "Backend LLM is Deepseek-V3; the reviewer is Llama 3.1-8B-Instruct with LoRA rank 8 on A100 GPUs.",
+          "Reviewer-human agreement: structured thinking 0.6810, multi-turn dialogue 0.4251, direct generation 0.0058.",
+          "Study design: 9 AI students in three between-subjects groups (web, LLM assistant, GoAI), two tasks in two hours: Frontier Mapping and Creative Ideation.",
+          "SUS is similar for LLM (85.33) and GoAI (87.67); GoAI has lower mental (5.33) and temporal (3.67) load and average NASA-TLX 6.06, and the highest idea score (7.33).",
+          "Caveats to note: only 3 students per group, no statistical tests reported, and the paper does not describe who scored ideas or how, so strong conclusions are not supported."
+        ]
+      }
+    ]
+  }
+}

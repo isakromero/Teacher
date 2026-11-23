@@ -1,0 +1,648 @@
+{
+  "extractor": "claude-concepts-v1",
+  "trigger": "generation",
+  "model": "claude-sonnet-5-5",
+  "embedding_model": "text-embedding-3-small",
+  "source": {
+    "slug": "1-000-true-fans",
+    "title": "1,000 True Fans"
+  },
+  "calls": [
+    {
+      "step": "concepts",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFNMMU1h43XZ3gWZ4vJ",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 1035,
+        "cache_creation_input_tokens": 10072,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 2341
+      }
+    }
+  ],
+  "stale_embedded": 0,
+  "removed_links": 0,
+  "candidates": [
+    {
+      "number": 1,
+      "name": "1,000 true fans",
+      "aliases": [
+        "thousand true fans model"
+      ],
+      "summary": "A strategy in which a creator earns a living from a small base of devoted fans who each spend a meaningful sum annually, rather than seeking mass audiences or stardom. The core number is a rough order of magnitude, adjusted to income needs and spend per fan.",
+      "role": "introduces",
+      "evidence": "you need only thousands of true fans"
+    },
+    {
+      "number": 2,
+      "name": "true fan",
+      "aliases": [
+        "superfan",
+        "super fan",
+        "diehard fan"
+      ],
+      "summary": "A highly devoted fan who will buy nearly everything a creator produces and actively supports them. Such fans are the core of a creator's income and word-of-mouth marketing.",
+      "role": "introduces",
+      "evidence": "A true fan is defined as a fan that will buy anything you produce."
+    },
+    {
+      "number": 3,
+      "name": "direct relationship with customers",
+      "aliases": [
+        "direct-to-fan sales",
+        "disintermediation"
+      ],
+      "summary": "Selling straight to customers without intermediaries such as labels, publishers or retailers, so the creator keeps the full payment and knows who their customers are. This lowers the audience size needed to earn a living.",
+      "role": "uses",
+      "evidence": "you must have a direct relationship with your fans. That is, they must pay you directly."
+    },
+    {
+      "number": 4,
+      "name": "long tail",
+      "aliases": [
+        "the long tail"
+      ],
+      "summary": "The sales distribution in which a few bestsellers form a tall head and a huge number of niche items form a long tail whose combined sales can equal or exceed the head. It is enabled by cheap distribution and search/recommendation over large catalogs.",
+      "role": "uses",
+      "evidence": "Chris Anderson (my successor at Wired) named this effect “The Long Tail,”"
+    },
+    {
+      "number": 5,
+      "name": "intermediary",
+      "aliases": [
+        "middleman",
+        "aggregator"
+      ],
+      "summary": "A third party such as a label, publisher, studio or retailer that stands between creator and consumer and takes a share of revenue. Intermediaries also tend to hold the customer relationship.",
+      "role": "uses",
+      "evidence": "the small percent of their fees you might get from a music label, publisher, studio, retailer, or other intermediate"
+    },
+    {
+      "number": 6,
+      "name": "average annual revenue per fan",
+      "aliases": [
+        "per-fan spend",
+        "one day's wages per year"
+      ],
+      "summary": "The average profit or spending a creator earns from each supporter per year. Dividing target income by this figure gives the number of fans needed.",
+      "role": "uses",
+      "evidence": "earn, on average, $100 profit from each true fan"
+    },
+    {
+      "number": 7,
+      "name": "order of magnitude estimate",
+      "aliases": [
+        "rough estimate"
+      ],
+      "summary": "A rough approximation correct to within a power of ten, used to judge feasibility rather than exact values. The claim emphasizes scale, such as thousands versus millions, over precision.",
+      "role": "uses",
+      "evidence": "Its significance is in its rough order of magnitude — three orders less than a million."
+    },
+    {
+      "number": 8,
+      "name": "crowdfunding",
+      "aliases": [
+        "crowd funding"
+      ],
+      "summary": "Raising money for a project from many supporters, usually online, often in exchange for rewards or the finished product. Platforms differ in whether they fund one-off projects or ongoing work.",
+      "role": "uses",
+      "evidence": "One of the many new innovations serving the true fan creator is crowdfunding."
+    },
+    {
+      "number": 9,
+      "name": "all-or-nothing funding",
+      "aliases": [
+        "threshold pledge model",
+        "assurance contract"
+      ],
+      "summary": "A funding model in which backers' money is collected only if a stated minimum goal is reached, and returned otherwise. This protects backers from paying for a project that cannot happen.",
+      "role": "uses",
+      "evidence": "Fundable’s all-or-nothing model ensured that none of her customers would lose money"
+    },
+    {
+      "number": 10,
+      "name": "micro-patronage",
+      "aliases": [
+        "distributed patronage"
+      ],
+      "summary": "Support of a creator by many small contributions from individual patrons, rather than one or a few large patrons or institutions. It lets a modest community sustain creative work.",
+      "role": "uses",
+      "evidence": "Others call this microcelebrity support micro-patronage, or distributed patronage."
+    },
+    {
+      "number": 11,
+      "name": "Street Performer Protocol",
+      "aliases": [],
+      "summary": "A model in which a creator announces that a work will be released publicly once donations reach a target sum. Payers fund the release, and the work then becomes available to everyone, including non-payers.",
+      "role": "uses",
+      "evidence": "They called it the Street Performer Protocol."
+    },
+    {
+      "number": 12,
+      "name": "pre-financing",
+      "aliases": [
+        "pre-selling",
+        "pre-orders"
+      ],
+      "summary": "Funding a project's startup or production costs in advance by selling the product or support before it is made. It reduces the creator's financial risk.",
+      "role": "uses",
+      "evidence": "Another model is pre-financing the startup costs."
+    },
+    {
+      "number": 13,
+      "name": "concentric circles of fans",
+      "aliases": [
+        "fan tiers"
+      ],
+      "summary": "A model of an audience as layers: devoted fans at the center and progressively less committed, occasional buyers around them. The inner group provides core income and helps attract the outer ones.",
+      "role": "uses",
+      "evidence": "Think of concentric circles with true fans at the center and a wider circle of regular fans around them."
+    },
+    {
+      "number": 14,
+      "name": "microcelebrity",
+      "aliases": [
+        "micro-celebrity"
+      ],
+      "summary": "A person who is famous within a small niche audience rather than to the general public. Their fame is limited in size but intense.",
+      "role": "uses",
+      "evidence": "a microcelebrity was someone famous to 1,500 people"
+    },
+    {
+      "number": 15,
+      "name": "network effect",
+      "aliases": [
+        "network effects"
+      ],
+      "summary": "The phenomenon where the value of a network grows as more participants join and connect, often modeled as growing with the square of the number of members (Metcalfe's law).",
+      "role": "uses",
+      "evidence": "follows the standard network effects rule, and increases as the square of the number of Fans"
+    },
+    {
+      "number": 16,
+      "name": "linear versus exponential growth",
+      "aliases": [
+        "linear growth",
+        "geometric proportion"
+      ],
+      "summary": "Linear growth increases by a constant amount or in direct proportion to a driver, whereas exponential growth multiplies at a rate proportional to its current size. Distinguishing them tells how quickly requirements scale.",
+      "role": "uses",
+      "evidence": "This linear growth is in contrast to the exponential growth by which many things in the digital domain inflate."
+    },
+    {
+      "number": 17,
+      "name": "peer-to-peer network",
+      "aliases": [
+        "P2P network"
+      ],
+      "summary": "A network in which participants communicate and exchange directly as peers without a central intermediary. Every node is reachable from every other node with equal ease.",
+      "role": "uses",
+      "evidence": "A fundamental virtue of a peer-to-peer network (like the web) is that the most obscure node is only one click away"
+    },
+    {
+      "number": 18,
+      "name": "recommendation engine",
+      "aliases": [
+        "recommender system"
+      ],
+      "summary": "An algorithmic system that suggests items to users based on their behavior or preferences. It can steer attention toward less popular items.",
+      "role": "uses",
+      "evidence": "They invented recommendation engines and other algorithms to channel attention to the rare creations in the long tail."
+    },
+    {
+      "number": 19,
+      "name": "niche market",
+      "aliases": [
+        "niche audience"
+      ],
+      "summary": "A small, specialized segment of demand with particular interests that mass-market producers tend to ignore. Reaching it is easier when distribution costs are low.",
+      "role": "uses",
+      "evidence": "They are institutionally unable to find and deliver niche audiences and consumers."
+    }
+  ],
+  "resolutions": [
+    {
+      "candidate": 1,
+      "name": "1,000 true fans",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 2,
+      "name": "true fan",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 3,
+      "name": "direct relationship with customers",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 4,
+      "name": "long tail",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 5,
+      "name": "intermediary",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 6,
+      "name": "average annual revenue per fan",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 7,
+      "name": "order of magnitude estimate",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 8,
+      "name": "crowdfunding",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 9,
+      "name": "all-or-nothing funding",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 10,
+      "name": "micro-patronage",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 11,
+      "name": "Street Performer Protocol",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 12,
+      "name": "pre-financing",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 13,
+      "name": "concentric circles of fans",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 14,
+      "name": "microcelebrity",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 15,
+      "name": "network effect",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 16,
+      "name": "linear versus exponential growth",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 17,
+      "name": "peer-to-peer network",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 18,
+      "name": "recommendation engine",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 19,
+      "name": "niche market",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    }
+  ],
+  "output": {
+    "links": [
+      {
+        "slug": "1-000-true-fans",
+        "name": "1,000 true fans",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "1,000 true fans"
+        ],
+        "judge_reason": null,
+        "evidence": "you need only thousands of true fans",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "true-fan",
+        "name": "true fan",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "true fan"
+        ],
+        "judge_reason": null,
+        "evidence": "A true fan is defined as a fan that will buy anything you produce.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "direct-relationship-with-customers",
+        "name": "direct relationship with customers",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "direct relationship with customers"
+        ],
+        "judge_reason": null,
+        "evidence": "you must have a direct relationship with your fans. That is, they must pay you directly.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "long-tail",
+        "name": "long tail",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "long tail"
+        ],
+        "judge_reason": null,
+        "evidence": "Chris Anderson (my successor at Wired) named this effect “The Long Tail,”",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "intermediary",
+        "name": "intermediary",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "intermediary"
+        ],
+        "judge_reason": null,
+        "evidence": "the small percent of their fees you might get from a music label, publisher, studio, retailer, or other intermediate",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "average-annual-revenue-per-fan",
+        "name": "average annual revenue per fan",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "average annual revenue per fan"
+        ],
+        "judge_reason": null,
+        "evidence": "earn, on average, $100 profit from each true fan",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "order-of-magnitude-estimate",
+        "name": "order of magnitude estimate",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "order of magnitude estimate"
+        ],
+        "judge_reason": null,
+        "evidence": "Its significance is in its rough order of magnitude — three orders less than a million.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "crowdfunding",
+        "name": "crowdfunding",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "crowdfunding"
+        ],
+        "judge_reason": null,
+        "evidence": "One of the many new innovations serving the true fan creator is crowdfunding.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "all-or-nothing-funding",
+        "name": "all-or-nothing funding",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "all-or-nothing funding"
+        ],
+        "judge_reason": null,
+        "evidence": "Fundable’s all-or-nothing model ensured that none of her customers would lose money",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "micro-patronage",
+        "name": "micro-patronage",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "micro-patronage"
+        ],
+        "judge_reason": null,
+        "evidence": "Others call this microcelebrity support micro-patronage, or distributed patronage.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "street-performer-protocol",
+        "name": "Street Performer Protocol",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "Street Performer Protocol"
+        ],
+        "judge_reason": null,
+        "evidence": "They called it the Street Performer Protocol.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "pre-financing",
+        "name": "pre-financing",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "pre-financing"
+        ],
+        "judge_reason": null,
+        "evidence": "Another model is pre-financing the startup costs.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "concentric-circles-of-fans",
+        "name": "concentric circles of fans",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "concentric circles of fans"
+        ],
+        "judge_reason": null,
+        "evidence": "Think of concentric circles with true fans at the center and a wider circle of regular fans around them.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "microcelebrity",
+        "name": "microcelebrity",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "microcelebrity"
+        ],
+        "judge_reason": null,
+        "evidence": "a microcelebrity was someone famous to 1,500 people",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "network-effect",
+        "name": "network effect",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "network effect"
+        ],
+        "judge_reason": null,
+        "evidence": "follows the standard network effects rule, and increases as the square of the number of Fans",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "linear-versus-exponential-growth",
+        "name": "linear versus exponential growth",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "linear versus exponential growth"
+        ],
+        "judge_reason": null,
+        "evidence": "This linear growth is in contrast to the exponential growth by which many things in the digital domain inflate.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "peer-to-peer-network",
+        "name": "peer-to-peer network",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "peer-to-peer network"
+        ],
+        "judge_reason": null,
+        "evidence": "A fundamental virtue of a peer-to-peer network (like the web) is that the most obscure node is only one click away",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "recommendation-engine",
+        "name": "recommendation engine",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "recommendation engine"
+        ],
+        "judge_reason": null,
+        "evidence": "They invented recommendation engines and other algorithms to channel attention to the rare creations in the long tail.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "niche-market",
+        "name": "niche market",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "niche market"
+        ],
+        "judge_reason": null,
+        "evidence": "They are institutionally unable to find and deliver niche audiences and consumers.",
+        "aliases_added": [],
+        "slug_note": null
+      }
+    ]
+  }
+}

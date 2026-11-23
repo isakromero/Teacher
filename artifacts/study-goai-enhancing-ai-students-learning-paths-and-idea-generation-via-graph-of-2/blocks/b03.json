@@ -1,0 +1,13 @@
+{
+  "question": "Which of the following is NOT one of the limitations the authors attribute to LLM-based academic assistants?",
+  "options": [
+    "They give only a linear narrative that oversimplifies the structure of research",
+    "They overlook what foundational knowledge must be learned first",
+    "They cannot summarize individual papers accurately",
+    "They fail to capture whether a citation is a baseline, extension or critique"
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "The authors concede that LLM assistants can summarize papers. Their complaint is that the output is linear, lacks prerequisite information, and ignores citation semantics. The tempting wrong options are all stated limitations."
+  }
+}

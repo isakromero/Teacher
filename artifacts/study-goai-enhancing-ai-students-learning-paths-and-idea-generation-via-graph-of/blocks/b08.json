@@ -1,0 +1,21 @@
+{
+  "prompt": "Explain what information a GoAI edge carries beyond \"paper A cites paper B\", and why that extra information matters for helping a student.",
+  "min_words": 25,
+  "private": {
+    "model_answer": "An edge also records the citation position, a proxy for how important the citation is, and one of five semantic labels such as extension, contrast or refutation. This matters because a student needs to know whether a cited paper is a foundation to build on, a baseline to beat, or a critique, so the system can order and choose papers meaningfully.",
+    "rubric": [
+      {
+        "criterion": "Mentions the citation semantics label (e.g., extension, contrast, refutation, mention) as extra information on the edge.",
+        "required": true
+      },
+      {
+        "criterion": "Mentions citation position as a proxy for importance.",
+        "required": false
+      },
+      {
+        "criterion": "Explains that knowing the role of a citation lets the system or student distinguish relationships such as building on versus merely mentioning.",
+        "required": true
+      }
+    ]
+  }
+}

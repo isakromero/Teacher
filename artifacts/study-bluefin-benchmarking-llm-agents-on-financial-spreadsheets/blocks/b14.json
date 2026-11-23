@@ -1,0 +1,61 @@
+{
+  "kind": "bar",
+  "title": "Pass rate by rubric section, selected models",
+  "x_label": "Rubric section",
+  "y_label": "Pass rate (%)",
+  "series": [
+    {
+      "name": "Opus 4.7",
+      "points": [
+        {
+          "x": "Formula Correctness",
+          "y": 59.5
+        },
+        {
+          "x": "Output Validation",
+          "y": 48.1
+        },
+        {
+          "x": "Perturbation",
+          "y": 32.9
+        }
+      ]
+    },
+    {
+      "name": "GPT-5.5",
+      "points": [
+        {
+          "x": "Formula Correctness",
+          "y": 62.7
+        },
+        {
+          "x": "Output Validation",
+          "y": 43.3
+        },
+        {
+          "x": "Perturbation",
+          "y": 37.3
+        }
+      ]
+    },
+    {
+      "name": "Grok 4.20",
+      "points": [
+        {
+          "x": "Formula Correctness",
+          "y": 48.6
+        },
+        {
+          "x": "Output Validation",
+          "y": 20.3
+        },
+        {
+          "x": "Perturbation",
+          "y": 14.8
+        }
+      ]
+    }
+  ],
+  "caption": "Each model drops from static formula checks to computed values and again to perturbation, the dynamic-behavior check.",
+  "source": "Figure 4(a)"
+}

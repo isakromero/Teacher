@@ -1,0 +1,13 @@
+{
+  "question": "Why does the paper say pure RL is hard to scale to tasks like creative writing?",
+  "options": [
+    "There is no verifier as reliable as an answer check, so a model-based reward is needed and can be exploited as training progresses",
+    "Writing tasks have no ground truth, so GRPO's group normalization divides by zero",
+    "Long outputs exceed the 32,768 token limit in every case",
+    "SFT data cannot be gathered for writing tasks"
+  ],
+  "private": {
+    "correct_index": 0,
+    "explanation": "The paper ties pure RL's success to reliable reward signals; for writing, rewards come from models and are susceptible to reward hacking. The other options invent mechanisms, and in fact R1 uses human-annotated SFT data for such tasks."
+  }
+}

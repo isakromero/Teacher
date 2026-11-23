@@ -1,0 +1,110 @@
+{
+  "kind": "bar",
+  "title": "Selected benchmarks across the stages of the DeepSeek-R1 pipeline",
+  "x_label": "Model checkpoint (pipeline stage)",
+  "y_label": "Benchmark score (each benchmark's metric, 0–100)",
+  "series": [
+    {
+      "name": "AIME 2024 (pass@1)",
+      "points": [
+        {
+          "x": "R1-Zero",
+          "y": 77.9
+        },
+        {
+          "x": "R1-Dev1",
+          "y": 59.0
+        },
+        {
+          "x": "R1-Dev2",
+          "y": 74.0
+        },
+        {
+          "x": "R1-Dev3",
+          "y": 78.1
+        },
+        {
+          "x": "R1",
+          "y": 79.8
+        }
+      ]
+    },
+    {
+      "name": "IF-Eval (prompt strict)",
+      "points": [
+        {
+          "x": "R1-Zero",
+          "y": 46.6
+        },
+        {
+          "x": "R1-Dev1",
+          "y": 71.7
+        },
+        {
+          "x": "R1-Dev2",
+          "y": 72.0
+        },
+        {
+          "x": "R1-Dev3",
+          "y": 78.1
+        },
+        {
+          "x": "R1",
+          "y": 83.3
+        }
+      ]
+    },
+    {
+      "name": "AlpacaEval 2.0 (LC win rate)",
+      "points": [
+        {
+          "x": "R1-Zero",
+          "y": 24.7
+        },
+        {
+          "x": "R1-Dev1",
+          "y": 50.1
+        },
+        {
+          "x": "R1-Dev2",
+          "y": 55.8
+        },
+        {
+          "x": "R1-Dev3",
+          "y": 62.1
+        },
+        {
+          "x": "R1",
+          "y": 87.6
+        }
+      ]
+    },
+    {
+      "name": "ArenaHard (GPT-4-1106 judge)",
+      "points": [
+        {
+          "x": "R1-Zero",
+          "y": 53.6
+        },
+        {
+          "x": "R1-Dev1",
+          "y": 77.0
+        },
+        {
+          "x": "R1-Dev2",
+          "y": 73.2
+        },
+        {
+          "x": "R1-Dev3",
+          "y": 75.6
+        },
+        {
+          "x": "R1",
+          "y": 92.3
+        }
+      ]
+    }
+  ],
+  "caption": "Each stage pays off differently. Reasoning (AIME) dips at Dev1 and recovers through RL. Instruction-following and preference scores (IF-Eval, AlpacaEval, ArenaHard) climb steadily, with the biggest jump in the final RL stage.",
+  "source": "Table 3"
+}

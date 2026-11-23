@@ -1,0 +1,44 @@
+{
+  "kind": "bar",
+  "title": "Student study: average idea score and average NASA-TLX load by group",
+  "x_label": "Group",
+  "y_label": "Score (idea score: higher is better; NASA-TLX avg.: lower is better)",
+  "series": [
+    {
+      "name": "Avg. idea score",
+      "points": [
+        {
+          "x": "Group 1 (Web)",
+          "y": 5.67
+        },
+        {
+          "x": "Group 2 (LLM)",
+          "y": 6.33
+        },
+        {
+          "x": "Group 3 (GoAI)",
+          "y": 7.33
+        }
+      ]
+    },
+    {
+      "name": "NASA-TLX avg.",
+      "points": [
+        {
+          "x": "Group 1 (Web)",
+          "y": 13.83
+        },
+        {
+          "x": "Group 2 (LLM)",
+          "y": 7.72
+        },
+        {
+          "x": "Group 3 (GoAI)",
+          "y": 6.06
+        }
+      ]
+    }
+  ],
+  "caption": "The GoAI group had the highest idea score and the lowest overall workload. With only three students per group, these gaps are suggestive rather than conclusive.",
+  "source": "Table 1"
+}

@@ -1,0 +1,3 @@
+{
+  "markdown": "## Overall results\n\nOn the 120 held-out tasks (75 manipulation, 9 synthesis, 36 interrogation), non-completions count as zero. Scores are criteria-weighted percentages. No model clears 50%.\n\nSynthesis is the highest-scoring family for most models. The authors speculate this reflects the flexibility of building from scratch compared with modifying a workbook whose layouts, formulas and references impose brittle integration constraints. That is their interpretation, not a tested finding. Yet manipulation is the bulk of real finance work, and even top models integrate poorly into an existing workbook."
+}

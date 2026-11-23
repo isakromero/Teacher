@@ -1,0 +1,226 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChDMp4iFGCRb76E4DaA1B",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 556,
+    "cache_creation_input_tokens": 232794,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 3756
+  },
+  "source": {
+    "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement",
+    "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+    "media_type": "application/pdf"
+  },
+  "ignored_sources": [],
+  "segments": [
+    {
+      "label": "motivation-overview",
+      "id": 10,
+      "created": true
+    },
+    {
+      "label": "grpo-algorithm",
+      "id": 11,
+      "created": true
+    },
+    {
+      "label": "grpo-vs-ppo",
+      "id": 12,
+      "created": true
+    },
+    {
+      "label": "r1-zero-rewards-results",
+      "id": 13,
+      "created": true
+    },
+    {
+      "label": "r1-pipeline",
+      "id": 5,
+      "created": false
+    },
+    {
+      "label": "data-recipe",
+      "id": 14,
+      "created": true
+    },
+    {
+      "label": "r1-results",
+      "id": 15,
+      "created": true
+    },
+    {
+      "label": "further-analysis",
+      "id": 16,
+      "created": true
+    },
+    {
+      "label": "distillation",
+      "id": 7,
+      "created": false
+    },
+    {
+      "label": "safety",
+      "id": 8,
+      "created": false
+    },
+    {
+      "label": "limits-discussion",
+      "id": 17,
+      "created": true
+    }
+  ],
+  "output": {
+    "summary": "The paper asks whether large language models can learn strong reasoning through reinforcement learning with verifiable rewards, instead of imitating human-written reasoning traces. DeepSeek-R1-Zero applies GRPO directly to a pretrained base model (DeepSeek-V3-Base) with only rule-based accuracy and format rewards, and AIME 2024 pass@1 rises from 15.6% to 77.9% while responses grow longer and show reflection and verification. Because R1-Zero is hard to read, mixes languages and is narrow, the authors build DeepSeek-R1, a multi-stage pipeline of cold-start SFT, reasoning RL with a language-consistency reward, rejection-sampled SFT on about 800K samples, and a second RL stage with preference reward models. R1 is competitive with OpenAI o1-1217 on reasoning benchmarks, and distilling its outputs into smaller models works better than running RL on those small models. The paper also reports limitations, safety evaluations and failed attempts, and argues that reliable verifiers, hard questions and compute are the key ingredients.",
+    "main_claims": [
+      "Reasoning abilities can be incentivized by pure RL on a base model using only rule-based outcome rewards, without human-labeled reasoning trajectories or an SFT stage (DeepSeek-R1-Zero).",
+      "During RL, R1-Zero's responses lengthen and behaviors like reflection, verification and exploring alternatives emerge, including an 'aha moment' with a sudden rise in the word 'wait'.",
+      "A multi-stage pipeline (cold-start SFT, reasoning RL, rejection-sampling SFT, second RL with preference rewards) fixes R1-Zero's readability, language mixing and narrowness, yielding DeepSeek-R1 with performance comparable to OpenAI o1-1217 on math, code and STEM.",
+      "Pure RL depends on reliable reward signals; neural reward models are prone to reward hacking, so rule-based verifiers are used for reasoning and model-based rewards only briefly for general data.",
+      "Distilling DeepSeek-R1's reasoning outputs into smaller models beats both non-reasoning baselines and large-scale RL applied directly to a 32B model, though pushing beyond current capability may still need stronger base models and larger-scale RL.",
+      "R1 has real limitations (tool use, structured output, token efficiency, language mixing, prompt sensitivity, weak software-engineering gains) and moderate intrinsic safety that depends heavily on an external risk control system."
+    ],
+    "background": [
+      "Large language model pretraining versus post-training (SFT, RLHF)",
+      "Chain-of-thought prompting",
+      "Policy-gradient RL basics: policy, reward, advantage, KL penalty",
+      "PPO (clipped objective, value model, GAE)",
+      "Reward models versus rule-based verifiers, and reward hacking",
+      "Benchmark metrics: pass@1, majority-vote cons@k, Elo/percentile ratings",
+      "Knowledge distillation by fine-tuning on a teacher's outputs",
+      "Mixture-of-Experts models (at a high level)"
+    ],
+    "sections": [
+      {
+        "label": "motivation-overview",
+        "title": "Motivation and Overview of the Approach",
+        "start_page": 1,
+        "end_page": 2,
+        "key_points": [
+          "Prior reasoning gains rely on human-annotated reasoning traces, which hinders scalability, adds biases and caps performance at human-provided exemplars.",
+          "The authors hypothesize that human-defined reasoning patterns limit exploration, so they skip SFT and run RL directly on DeepSeek-V3-Base with a reward based only on final-answer correctness.",
+          "R1-Zero reasons well but has poor readability and language mixing and is narrow, motivating the multi-stage DeepSeek-R1 and distilled smaller models."
+        ]
+      },
+      {
+        "label": "grpo-algorithm",
+        "title": "Group Relative Policy Optimization (GRPO)",
+        "start_page": 2,
+        "end_page": 3,
+        "key_points": [
+          "GRPO samples a group of outputs per question and computes each advantage by normalizing its reward against the group mean and standard deviation.",
+          "The objective uses a PPO-style clipped probability ratio plus a KL penalty to a reference policy, so no separate value model is needed.",
+          "Training details for R1-Zero: learning rate 3e-6, KL coefficient 0.001, 16 samples per question, max length raised from 32,768 to 65,536 tokens at step 8.2k, reference model replaced every 400 steps."
+        ]
+      },
+      {
+        "label": "grpo-vs-ppo",
+        "title": "Why GRPO Instead of PPO",
+        "start_page": 14,
+        "end_page": 16,
+        "key_points": [
+          "PPO needs a learned value model of similar size to the policy, adding memory and compute cost.",
+          "Predicting final reward from partial output is especially hard for long CoT with reflection and revision.",
+          "GRPO adds KL directly in the loss, whereas PPO's per-token KL penalty may implicitly discourage longer responses.",
+          "In a MATH experiment PPO is sensitive to the GAE lambda: it lags GRPO at 0.95 and nearly matches it at 1.0."
+        ]
+      },
+      {
+        "label": "r1-zero-rewards-results",
+        "title": "R1-Zero: Rewards, Template and Emergent Behavior",
+        "start_page": 3,
+        "end_page": 5,
+        "key_points": [
+          "Rewards are rule-based: accuracy (final answer in a box, compiler with test cases) plus format (reasoning inside think tags), summed with equal weight.",
+          "Neural outcome or process reward models are avoided because of reward hacking and extra training complexity.",
+          "The template constrains only structure, not reasoning content, to observe natural progression.",
+          "AIME 2024 pass@1 goes from 15.6% to 77.9% (86.7% with self-consistency), above the human average, and response length grows steadily.",
+          "Behavior analysis shows reflective word counts rising 5-7x and the word 'wait' spiking after step 8000, the 'aha moment'."
+        ]
+      },
+      {
+        "label": "r1-pipeline",
+        "title": "The DeepSeek-R1 Multi-Stage Pipeline",
+        "start_page": 6,
+        "end_page": 8,
+        "key_points": [
+          "Stages: cold-start long-CoT SFT, first reasoning RL with a language-consistency reward, rejection sampling plus SFT with reasoning and non-reasoning data, then second RL for helpfulness and harmlessness.",
+          "Helpful and safety reward models are trained from DeepSeek-V3-generated preference pairs (66K) and safe/unsafe labels (106K); helpfulness judges only the final summary while harmlessness judges the whole response.",
+          "The language consistency reward is the fraction of target-language words in the CoT; it slightly lowers performance but improves readability.",
+          "Second-stage RL uses temperature 0.7 over 1,700 steps with preference rewards only in the last 400, since more steps risk reward hacking."
+        ]
+      },
+      {
+        "label": "data-recipe",
+        "title": "Training Data and Cold Start",
+        "start_page": 19,
+        "end_page": 27,
+        "key_points": [
+          "RL data covers math (26K), code (17K), STEM (22K), logic (15K) and general (66K) prompts, all with automatic or reward-model evaluation; math proofs are excluded as hard to verify.",
+          "Cold-start data come from filtered R1-Zero outputs refined by DeepSeek-V3 and human annotators into first-person, readable, language-consistent style.",
+          "The second SFT set has about 800K samples (~600K reasoning from rejection sampling, ~200K non-reasoning), mostly single-turn."
+        ]
+      },
+      {
+        "label": "r1-results",
+        "title": "Stage-by-Stage and Main Benchmark Results",
+        "start_page": 8,
+        "end_page": 9,
+        "key_points": [
+          "Dev1 improves instruction following but loses some reasoning (e.g., AIME) due to the small cold-start set; Dev2 restores reasoning gains.",
+          "Dev3 (SFT with non-reasoning data) boosts AlpacaEval and Aider; final RL mainly improves instruction-following and preference benchmarks (AlpacaEval 2.0 +25%, ArenaHard +17%).",
+          "Final R1 reaches AIME 2024 79.8% and Codeforces rating 2029, on par with o1-1217 on math, behind o1 on Aider, comparable on SWE Verified.",
+          "Evaluation uses pass@1 averaged over sampled responses at temperature 0.6, with decontamination via 10-gram filtering whose limits the authors acknowledge."
+        ]
+      },
+      {
+        "label": "further-analysis",
+        "title": "Further Analysis: V3 Comparison, Test-Time Compute, Generalization",
+        "start_page": 54,
+        "end_page": 60,
+        "key_points": [
+          "R1 gains most over DeepSeek-V3 on STEM, competitive programming and long-context tasks, while V3 is better at instruction following.",
+          "On post-cutoff AIME 2025 and AMC 12 2024, R1 scores close to o1, indicating some generalization beyond contamination worries.",
+          "R1 allocates more thinking tokens to harder problems; majority voting helps non-reasoning models little, while R1 pass@64 (90.0%) and cons@64 (86.7%) exceed pass@1 (79.8%)."
+        ]
+      },
+      {
+        "label": "distillation",
+        "title": "Distillation to Smaller Models",
+        "start_page": 60,
+        "end_page": 62,
+        "key_points": [
+          "Qwen and Llama base models (1.5B to 70B) are fine-tuned with SFT only on the 800K R1-generated samples, with no RL stage.",
+          "Even the 1.5B distilled model surpasses GPT-4o and Claude-3.5-Sonnet on math benchmarks, and performance rises with size.",
+          "Distilled Qwen-32B clearly beats Qwen2.5-32B-Zero trained with over 10K RL steps, so distillation is cheaper and more effective for small models, though frontier progress may still need stronger bases and larger RL."
+        ]
+      },
+      {
+        "label": "safety",
+        "title": "Safety Evaluation and Risk Control",
+        "start_page": 10,
+        "end_page": 10,
+        "key_points": [
+          "The ethics statement notes jailbreak risk and that an open model can be fine-tuned to remove protections.",
+          "Intrinsic safety is judged generally moderate, comparable to GPT-4o, and higher with an external risk control system.",
+          "Jailbreak attacks sharply raise R1's unsafe rate without risk control (25.2% to 85.9%), while the risk control system lowers it but raises refusals.",
+          "Safety was tested on six public benchmarks, an in-house 28-subcategory taxonomy and 50 languages."
+        ]
+      },
+      {
+        "label": "limits-discussion",
+        "title": "Limitations, Failed Attempts and Lessons",
+        "start_page": 10,
+        "end_page": 11,
+        "key_points": [
+          "Limitations: weak structured output and no tool use, overthinking on easy questions, language mixing outside Chinese/English, sensitivity to few-shot prompts, little gain on software engineering.",
+          "Reward hacking makes pure RL hard for tasks without reliable verifiers such as writing, so R1 uses SFT and short model-based RL for those.",
+          "Key findings: base checkpoint capacity matters (small models failed to benefit), verifiers matter, and both SFT and RL are needed in the pipeline.",
+          "Process reward models and MCTS were tried and set aside due to step-definition, reward-hacking, search-space and value-model difficulties."
+        ]
+      }
+    ]
+  }
+}

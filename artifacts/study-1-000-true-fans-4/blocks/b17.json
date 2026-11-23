@@ -1,0 +1,23 @@
+{
+  "kind": "bar",
+  "title": "Illustrative comparison: average Kickstarter funders versus the 1,000 true-fan benchmark",
+  "x_label": "Group",
+  "y_label": "Number of people",
+  "series": [
+    {
+      "name": "People",
+      "points": [
+        {
+          "x": "Avg funders, successful Kickstarter project",
+          "y": 241.0
+        },
+        {
+          "x": "True fans in Kelly's formula",
+          "y": 1000.0
+        }
+      ]
+    }
+  ],
+  "caption": "Only the 241 is a reported figure; the 1,000 is Kelly's rule-of-thumb target, shown for comparison. Even so, it is well above what a typical successful campaign needed.",
+  "source": "Crowdfunding paragraph: 241 funders on average; 1,000 is the essay's benchmark, not a measured count."
+}

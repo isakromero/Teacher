@@ -1,0 +1,21 @@
+{
+  "prompt": "Explain why DeepSeek-R1 adds a cold-start SFT stage and a second RL stage with reward models, given that R1-Zero reached strong reasoning scores with pure RL.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "R1-Zero had poor readability, mixed languages and was weak outside reasoning, such as writing and open-domain QA. Cold-start SFT gives a readable, human-aligned thinking style to start RL from, and later SFT adds non-reasoning data. The second RL stage uses reward models to align with helpfulness and harmlessness, but only briefly because model-based rewards risk reward hacking.",
+    "rubric": [
+      {
+        "criterion": "Names at least one R1-Zero weakness being fixed (readability, language mixing, or narrow capability beyond reasoning).",
+        "required": true
+      },
+      {
+        "criterion": "Connects the cold-start/SFT data to readability or to broadening beyond reasoning tasks.",
+        "required": true
+      },
+      {
+        "criterion": "Explains that the second RL stage adds helpfulness/harmlessness via reward models and is limited because of reward hacking risk.",
+        "required": false
+      }
+    ]
+  }
+}

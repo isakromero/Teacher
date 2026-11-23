@@ -1,0 +1,13 @@
+{
+  "question": "Why do the authors deliberately skip the usual supervised fine-tuning stage before RL when training DeepSeek-R1-Zero?",
+  "options": [
+    "SFT on a 671B-parameter model would be too computationally expensive to run before RL.",
+    "They hypothesise that human-written reasoning traces would constrain exploration, since such traces often omit reflection and verification and tie the model to human-like reasoning.",
+    "Their rule-based reward cannot be computed on a model that has already been fine-tuned with SFT.",
+    "The base model already writes clean, readable chains of thought, so SFT would add nothing."
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The authors' stated reason is that human-defined reasoning patterns may limit exploration, whereas unrestricted RL can let new strategies emerge. Cost is not the argument they make. The last option is tempting but wrong: R1-Zero's output turned out to be hard to read and to mix languages, which is exactly why DeepSeek-R1 later adds a cold-start SFT stage."
+  }
+}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ static('vendor/katex-0.16.22/katex.min.css') }}">
+{% endblock %}
+{% block page_class %}page-artifact{% endblock %}
+{% block content %}
+<div id="artifact-layout" class="artifact-layout">
+<div id="artifact-page" data-page="artifact" data-slug="{{ slug }}" data-status="{{ status }}">
+  <div id="reader-progress" class="reader-progress" hidden>
+    <div class="progress-track"><div class="progress-fill"></div></div>
+    <p class="progress-label"></p>
+  </div>
+
+  <header class="artifact-header">
+    <p class="crumbs"><a href="/library">Library</a></p>
+    <h1 id="artifact-title">{{ title }}</h1>
+    <p id="artifact-meta" class="muted"></p>
+    <p id="artifact-study-time" class="muted small" hidden></p>
+    <div id="artifact-notices"></div>
+    <div id="artifact-actions" class="artifact-actions" hidden>
+      <button id="regenerate-study-button" type="button" class="button compact" aria-expanded="false" aria-controls="regenerate-confirm">Regenerate study page</button>
+      <div id="regenerate-confirm" class="notice regenerate-confirm" hidden>
+        <p>This writes a new version of this study page from the same source, which takes a few minutes and several model calls. This version, and your answers on it, are kept and stay reachable from the new one; the new version starts with no answers.</p>
+        <div id="regenerate-study-model-field" class="field model-field" hidden>
+          <label for="regenerate-study-model">Model</label>
+          <select id="regenerate-study-model" name="model"></select>
+        </div>
+        <div class="actions">
+          <button id="regenerate-study-confirm" type="button" class="button primary">Regenerate</button>
+          <button id="regenerate-study-cancel" type="button" class="button">Cancel</button>
+        </div>
+      </div>
+      <div id="regenerate-study-error" class="error" role="alert" hidden></div>
+    </div>
+  </header>
+
+  <section id="state-generating" class="status-panel" aria-labelledby="generating-heading"
+           {% if status != "generating" %}hidden{% endif %}>
+    <h2 id="generating-heading">Generating study page</h2>
+    <p class="muted">This page updates by itself as each stage finishes.</p>
+    <ol id="generating-stages" class="stages" aria-live="polite"></ol>
+    <div id="generating-error" class="error" role="alert" hidden></div>
+  </section>
+
+  <section id="state-failed" class="status-panel failed" aria-labelledby="failed-heading"
+           {% if status != "failed" %}hidden{% endif %}>
+    <h2 id="failed-heading">Generation failed</h2>
+    <div id="failed-summary"></div>
+    <div id="regenerate-model-field" class="field model-field" hidden>
+          <label for="regenerate-model">Model</label>
+          <select id="regenerate-model" name="model"></select>
+        </div>
+    <div class="actions">
+      <button id="regenerate-button" type="button" class="button primary">Regenerate</button>
+    </div>
+    <div id="regenerate-error" class="error" role="alert" hidden></div>
+    <details class="stage-details">
+      <summary>All stages</summary>
+      <ol id="failed-stages" class="stages"></ol>
+    </details>
+  </section>
+
+  <section id="state-ready" class="reader" aria-label="Study page"
+           {% if status != "ready" %}hidden{% endif %}>
+    <details id="glossary" class="glossary" hidden>
+      <summary class="glossary-summary">
+        <span class="glossary-title">Glossary</span>
+        <span id="glossary-count" class="glossary-count"></span>
+      </summary>
+      <div class="glossary-body">
+        <p class="glossary-hint muted">Terms on this page that may be new to you. Hover over, focus or tap a dotted term in the text to see its definition there.</p>
+        <div id="glossary-build" class="glossary-build" hidden>
+          <p>No glossary has been built for this page.</p>
+          <button id="glossary-build-button" type="button" class="button compact">Build glossary</button>
+        </div>
+        <p id="glossary-build-status" class="glossary-status" aria-live="polite"></p>
+        <div id="glossary-error" class="error" role="alert" hidden></div>
+        <p id="glossary-empty" class="muted" hidden>No glossary terms appear in the part of the page you can see yet.</p>
+        <dl id="glossary-list" class="glossary-list" hidden></dl>
+      </div>
+    </details>
+    <div id="blocks" class="blocks"></div>
+    <div id="reader-footer" class="reader-footer" aria-live="polite"></div>
+
+    <section id="study-labs" class="study-labs" aria-labelledby="study-labs-heading" hidden>
+      <h2 id="study-labs-heading">Hands-on lab</h2>
+      <p class="muted">A lab turns this page into a short programming exercise: a brief, a few small Python files that run as they are, and steps that ask you to run, change and complete the code, some of them checked automatically. The code runs in your browser. Making a lab takes a few minutes and several model calls; its page shows the progress.</p>
+      <div id="study-lab-list" aria-live="polite"></div>
+      <div id="create-lab-model-field" class="field model-field" hidden>
+        <label for="create-lab-model">Model</label>
+        <select id="create-lab-model" name="model"></select>
+      </div>
+      <div class="actions">
+        <button id="create-lab-button" type="button" class="button">Create a lab</button>
+      </div>
+      <div id="create-lab-error" class="error" role="alert" hidden></div>
+    </section>
+  </section>
+
+  <div id="artifact-error" class="error" role="alert" hidden></div>
+</div>
+
+<aside id="tutor" class="tutor" aria-labelledby="tutor-heading" hidden>
+  <header class="tutor-header">
+    <h2 id="tutor-heading">Tutor</h2>
+    <button id="tutor-new" type="button" class="button compact">New conversation</button>
+    <button id="tutor-toggle" type="button" class="button compact" aria-controls="tutor">Hide</button>
+  </header>
+  <div id="tutor-messages" class="tutor-messages" role="log" aria-live="off" aria-label="Conversation with the tutor" tabindex="0">
+    <div id="tutor-empty" class="tutor-empty">
+      <p>Ask the tutor anything about this study page.</p>
+      <p>To ask about a particular passage, select its text in the page and choose <strong>Ask about this</strong>: the passage is attached to your next message.</p>
+      <p><strong>Check my understanding</strong> has the tutor ask you a question about what you have read, or about the passages you attached.</p>
+    </div>
+  </div>
+  <p id="tutor-status" class="visually-hidden" aria-live="polite"></p>
+  <form id="tutor-composer" class="tutor-composer" novalidate>
+    <ul id="tutor-refs" class="tutor-refs" aria-label="Attached passages" hidden></ul>
+    <p id="tutor-hint" class="tutor-hint" aria-live="polite" hidden></p>
+    <label for="tutor-input" class="visually-hidden">Message to the tutor</label>
+    <textarea id="tutor-input" name="text" rows="1" placeholder="Ask the tutor..." aria-describedby="tutor-keys"></textarea>
+    <p id="tutor-keys" class="tutor-keys">Enter sends, Shift+Enter starts a new line.</p>
+    <div class="tutor-actions">
+      <button id="tutor-check" type="button" class="button">Check my understanding</button>
+      <button id="tutor-send" type="submit" class="button primary">Send</button>
+    </div>
+  </form>
+</aside>
+
+<button id="tutor-open" type="button" class="button primary tutor-fab" aria-controls="tutor" aria-expanded="false" hidden>Tutor</button>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/artifact.js') }}"></script>
+{% endblock %}

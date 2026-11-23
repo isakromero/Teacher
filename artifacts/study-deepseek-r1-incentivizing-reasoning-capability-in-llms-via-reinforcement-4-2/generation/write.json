@@ -1,0 +1,260 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-opus-5-5",
+  "message_id": "msg_011ChGc6cXm8JKTeh9euGmpB",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 7885,
+    "cache_creation_input_tokens": 234767,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 14234
+  },
+  "source": {
+    "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement",
+    "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+    "media_type": "application/pdf"
+  },
+  "depth": "standard",
+  "output": {
+    "blocks": [
+      {
+        "type": "prose",
+        "section": null,
+        "markdown": "## What this paper is about\n\nLanguage models got better at maths and code mostly by imitating people. They were shown worked solutions, or prompted to \"think step by step\", and trained to copy that style. **DeepSeek-R1** asks a sharper question: can a model *learn* to reason if we never show it how, and only tell it whether its final answer was right?\n\nThe authors' answer is yes, given a large enough base model. They take DeepSeek-V3-Base and train it with reinforcement learning (RL), where the reward checks only answer correctness and output format. The result, **DeepSeek-R1-Zero**, lifts its AIME 2024 accuracy from 15.6% to 77.9% during training. Along the way it starts writing longer reasoning, re-checking its steps and backtracking.\n\nR1-Zero is hard to read and weak at general tasks, so the authors then build **DeepSeek-R1** with a multi-stage pipeline. They also *distil* it into small open models.\n\nThis page covers, in order:\n\n- the motivation;\n- the RL algorithm (GRPO);\n- how reasoning emerged in R1-Zero;\n- the R1 pipeline and its data;\n- the results, distillation and lessons learned;\n- safety and limitations.\n\nAlong the way, watch for one recurring theme: everything hinges on having a *reliable verifier*."
+      },
+      {
+        "type": "prose",
+        "section": "motivation-and-overview",
+        "markdown": "### Why not just imitate humans?\n\nTwo earlier routes improved LLM reasoning:\n\n- **Chain-of-thought (CoT) prompting:** few-shot examples, or a phrase like \"Let's think step by step\", gets the model to write intermediate steps.\n- **Training on reasoning traces:** fine-tuning on high-quality, human-annotated multi-step solutions during post-training.\n\nThe authors see three problems with relying on human traces:\n\n1. They are expensive to collect, so they don't scale.\n2. They carry human cognitive biases.\n3. A model trained to copy them is capped by its exemplars. It can't discover better, \"non-human-like\" reasoning paths.\n\nThe usual post-training recipe (as in InstructGPT) is supervised fine-tuning (SFT) first, then RL. The appendix argues that SFT targets \"often omit critical reasoning components such as explicit reflection and verification steps.\"\n\nSo the authors try something deliberately bare: **skip SFT entirely**. They run RL directly on the base model and reward only the correctness of the final answer, placing no constraints on how the model reasons. Their hypothesis is that human-defined reasoning patterns may *limit exploration*, and that unrestricted RL can let new strategies emerge."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "motivation-and-overview",
+        "question": "What is the authors' main reason for bypassing the supervised fine-tuning (SFT) stage before RL when training DeepSeek-R1-Zero?",
+        "options": [
+          "SFT is computationally more expensive than RL on a model of this size, so dropping it was mainly a cost saving.",
+          "They hypothesise that imitating human-written reasoning restricts what the model explores, while outcome-only RL lets new reasoning strategies emerge.",
+          "RL cannot be applied to a model that has already been supervised fine-tuned, so SFT had to be dropped.",
+          "DeepSeek-V3-Base had already been fine-tuned on reasoning traces, so another SFT stage would be redundant."
+        ],
+        "correct_index": 1,
+        "explanation": "The paper states the hypothesis directly: human-defined reasoning patterns may limit model exploration, whereas unrestricted RL can better incentivise novel reasoning. Cost is a tempting answer because the paper does complain that human annotation doesn't scale. But that concerns collecting labels, not SFT's compute, and it isn't the stated reason for skipping SFT. The final DeepSeek-R1 does combine SFT with RL, so the two are clearly compatible."
+      },
+      {
+        "type": "prose",
+        "section": "grpo-algorithm",
+        "markdown": "### GRPO: how the model is updated\n\nThe RL algorithm is **Group Relative Policy Optimization (GRPO)**. For each question $q$, the current (\"old\") policy samples a *group* of $G$ answers $o_1,\\dots,o_G$; R1-Zero used $G=16$. Each answer gets a reward $r_i$. The **advantage** of an answer, meaning how much better than expected it was, is just its reward standardised within the group:\n\n$$A_i = \\frac{r_i - \\text{mean}(r_1,\\dots,r_G)}{\\text{std}(r_1,\\dots,r_G)}$$\n\nThe policy is then trained to make high-advantage answers more likely and low-advantage ones less likely. Two safeguards are built into the objective:\n\n$$\\frac{1}{G}\\sum_i\\Big(\\min\\big(\\rho_i A_i,\\ \\text{clip}(\\rho_i,1-\\varepsilon,1+\\varepsilon)A_i\\big) - \\beta\\, D_{KL}(\\pi_\\theta\\|\\pi_{ref})\\Big),\\quad \\rho_i=\\frac{\\pi_\\theta(o_i|q)}{\\pi_{\\theta_{old}}(o_i|q)}$$\n\n- **Clipping** limits how far a single update can push the probability ratio $\\rho_i$, as in PPO.\n- **The KL term** keeps the policy near a reference policy $\\pi_{ref}$. For R1-Zero its coefficient was $\\beta = 0.001$.\n\nThe key idea is that \"good\" is defined *relative to the group*. An answer is rewarded for beating its siblings on the same question, so no separate model is needed to predict what reward to expect. The widget below lets you see this."
+      },
+      {
+        "type": "interactable",
+        "section": "grpo-algorithm",
+        "title": "Group-relative advantages for one question",
+        "instructions": "Each button is one of 16 sampled answers to a single question. Click to toggle an answer between **correct (reward 1)** and **wrong (reward 0)**, mirroring the paper's binary accuracy reward for maths. The bars show each answer's advantage $A_i$ = (reward − group mean) / group std.\n\nThings to try:\n\n- Make only **one** answer correct. Its advantage becomes large, because a rare success is a strong signal.\n- Make **15** correct. Now the lone wrong answer is pushed down hard, while the correct ones barely move.\n- Make **all** answers correct, or all wrong. The group gives no relative signal.\n\nThe reward patterns are made-up examples, not the paper's data. The widget uses the population standard deviation. The paper does not say how it handles a group whose std is 0, so the widget simply shows zero advantages in that case.",
+        "html": "<div id='w'><div id='grid'></div><div class='row'><button id='allw'>All wrong</button><button id='one'>One correct</button><button id='four'>Four correct</button><button id='allr'>All correct</button></div><svg id='chart' viewBox='0 0 640 230' width='100%' role='img' aria-label='Advantage of each output'></svg><p>Correct answers: <output id='cnt'></output> of 16 &nbsp; Mean reward: <output id='mean'></output> &nbsp; Std: <output id='std'></output></p><p id='msg'></p></div><style>#w{font-size:14px;color:var(--fg)}#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:4px;margin-bottom:8px}#grid button{padding:4px 2px;font-size:13px}.row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}#msg{color:var(--muted)}</style><script>(function(){var N=16,r=[];for(var i=0;i<N;i++)r.push(i<4?1:0);var grid=document.getElementById('grid');var btns=[];for(var j=0;j<N;j++){(function(k){var b=document.createElement('button');b.setAttribute('aria-label','Toggle output '+(k+1));b.onclick=function(){r[k]=1-r[k];upd();};grid.appendChild(b);btns.push(b);})(j);}function setN(c){for(var i=0;i<N;i++)r[i]=i<c?1:0;upd();}document.getElementById('allw').onclick=function(){setN(0);};document.getElementById('one').onclick=function(){setN(1);};document.getElementById('four').onclick=function(){setN(4);};document.getElementById('allr').onclick=function(){setN(16);};var ns='http://www.w3.org/2000/svg';function el(t,a){var e=document.createElementNS(ns,t);for(var k in a)e.setAttribute(k,a[k]);return e;}function upd(){var c=0;for(var i=0;i<N;i++)c+=r[i];var m=c/N;var v=0;for(var i=0;i<N;i++)v+=(r[i]-m)*(r[i]-m);v/=N;var s=Math.sqrt(v);var A=[];for(var i=0;i<N;i++)A.push(s>1e-12?(r[i]-m)/s:0);for(var i=0;i<N;i++){btns[i].textContent='o'+(i+1)+(r[i]?' ✓':' ✗');btns[i].setAttribute('aria-pressed',r[i]?'true':'false');}document.getElementById('cnt').textContent=c;document.getElementById('mean').textContent=m.toFixed(3);document.getElementById('std').textContent=s.toFixed(3);var svg=document.getElementById('chart');while(svg.firstChild)svg.removeChild(svg.firstChild);var W=640,mid=115,sc=24,bw=W/N;svg.appendChild(el('line',{x1:0,x2:W,y1:mid,y2:mid,style:'stroke:var(--border);stroke-width:1'}));for(var i=0;i<N;i++){var h=Math.abs(A[i])*sc;var y=A[i]>=0?mid-h:mid;svg.appendChild(el('rect',{x:i*bw+4,y:y,width:bw-8,height:Math.max(h,1),style:'fill:'+(A[i]>=0?'var(--series-1)':'var(--series-2)')}));var t=el('text',{x:i*bw+bw/2,y:A[i]>=0?y-4:y+h+12,'text-anchor':'middle','font-size':'10',style:'fill:var(--fg)'});t.textContent=A[i].toFixed(2);svg.appendChild(t);}var msg=document.getElementById('msg');if(s<=1e-12){msg.textContent='All rewards are equal, so no answer beats its siblings: every advantage is 0 and this question gives no learning signal.';}else{var ac=(1-m)/s,aw=(0-m)/s;msg.textContent='Each correct answer gets advantage '+ac.toFixed(2)+' and each wrong answer '+aw.toFixed(2)+'. The rarer the success, the bigger its push.';}}upd();})();</script>"
+      },
+      {
+        "type": "prose",
+        "section": "grpo-algorithm",
+        "markdown": "### Why not plain PPO?\n\nPPO, the standard RL algorithm for LLMs, computes advantages differently. It uses Generalized Advantage Estimation (GAE), which relies on a learned **value model**: a network that predicts, at each token, the reward still to come. The paper gives three reasons this is a poor fit here:\n\n1. **Cost.** The value model is usually as large as the policy, which adds major memory and compute overhead.\n2. **Prediction is especially hard for long CoT.** When the only reward arrives at the end, the value model must guess the final outcome from a *partial* response. Long reasoning models revise and contradict their earlier content, so the partial text is a weak predictor of the final reward.\n3. **The KL penalty interferes with length.** PPO adds a per-token KL penalty as a reward at every token. Summed over a response, this \"may implicitly penalize the length of the response\", which works against the long thinking the authors wanted. GRPO adds the KL term directly to the loss instead.\n\nIn a comparison on the MATH task with a 16B MoE model, PPO with its default GAE $\\lambda = 0.95$ did considerably worse than GRPO. Only with $\\lambda$ tuned to 1.0 did it come close. Because thousands of steps let the policy drift far, the reference policy is also reset to the latest policy every 400 steps."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "grpo-algorithm",
+        "question": "According to the paper, why is a learned value model particularly ill-suited to training long chain-of-thought reasoning models?",
+        "options": [
+          "Because the value model must predict the final reward from a partial response, and long reasoning often revises or contradicts what came earlier.",
+          "Because a value model cannot be combined with a KL penalty to a reference policy.",
+          "Because value models need human-labelled reasoning steps, which the authors wanted to avoid.",
+          "Because a value model removes the need for clipping, which makes training unstable."
+        ],
+        "correct_index": 0,
+        "explanation": "The paper explains that a value model predicts expected reward from the tokens so far. With only a final outcome reward, and with reflection and revision that can overturn earlier content, this prediction becomes even less feasible. PPO does use a KL penalty alongside its value model, so the second option is false. Value models are trained from rewards, not from human step labels; that describes process reward models, a different idea."
+      },
+      {
+        "type": "prose",
+        "section": "r1-zero-rewards-and-emergence",
+        "markdown": "### R1-Zero's reward: two simple rules\n\nThe reward is the equally weighted sum of two rule-based parts:\n\n$$\\text{Reward}_{rule} = \\text{Reward}_{acc} + \\text{Reward}_{format}$$\n\n- **Accuracy reward.** Maths answers must appear in a specified format, such as inside a box, so a rule can check them against the ground truth. Code is compiled and run against predefined test cases.\n- **Format reward.** The model is rewarded for putting its reasoning inside `<think>...</think>` tags.\n\nThe prompt template is equally minimal. It describes a conversation in which the assistant \"first thinks about the reasoning process in the mind and then provides the user with the answer\", in think and answer tags. It gives no hints about *how* to reason. The authors kept constraints purely structural so they could watch the model's \"natural progression\".\n\nWhat is deliberately left out matters just as much. The authors use **no neural reward model**, neither outcome-based nor process-based, for reasoning tasks. They observed that neural reward models are \"susceptible to reward hacking during large-scale reinforcement learning\": the policy learns to please the scorer rather than to be right. Retraining such models also costs substantial compute and complicates the pipeline. A rule that checks the answer cannot be fooled in that way."
+      },
+      {
+        "type": "prose",
+        "section": "r1-zero-rewards-and-emergence",
+        "markdown": "### What emerged\n\nTraining ran for 10,400 steps, each with 32 questions and 16 samples per question. Over that run, R1-Zero's **AIME 2024 pass@1 rose from 15.6% to 77.9%**. With self-consistency (majority voting over 16 samples) it reached 86.7%, above the average human AIME competitor. The authors report strong results on coding competitions and graduate-level science too.\n\nThe more striking finding is *behavioural*. The average response length on training questions grew steadily, with no instruction to think longer. The model came to spend hundreds to thousands of tokens exploring, checking and trying alternative approaches.\n\nThe paper highlights an **\"aha moment\"** in an intermediate checkpoint. Partway through solving an equation, the model writes \"Wait, wait. Wait. That's an aha moment I can flag here\" and re-evaluates its steps from the beginning.\n\nOne caution worth noting: the maximum response length was raised from 32,768 to 65,536 tokens at step 8.2k. The paper says both performance and response length \"exhibit a significant jump\" at that step as a result. So part of the growth in length reflects a change the authors made, not only the model's own adaptation."
+      },
+      {
+        "type": "prose",
+        "section": "self-evolution-analysis",
+        "markdown": "### Measuring the self-evolution\n\nThe appendix backs the story with two analyses of R1-Zero during training.\n\n**Accuracy by difficulty.** On MATH, easy problems (levels 1–3) reach 0.90–0.95 accuracy early and stay there. Hard problems improve the most: level 4 rises from about 0.78 to 0.95, and level 5 from about 0.55 to 0.90. Sometimes harder levels slightly beat level 1, and the authors attribute this to dataset quirks:\n\n- Level 1 has only 43 of the 500 questions, so 1–2 misses move its score noticeably.\n- The mix of categories differs across levels.\n- The difficulty levels reflect human perception of difficulty.\n\n**Reflective words.** Three human experts compiled a list of reflective words: \"wait\", \"mistake\", \"however\", \"but\", \"retry\", \"error\", \"verify\", \"wrong\", \"evaluate\" and \"check\". Their count rose **5- to 7-fold** over training. \"Wait\" by itself has a distinctive timeline: nearly absent early, occasional between steps 4000 and 7000, then large spikes after step 8000. The authors read this as different forms of reflection emerging at specific stages.\n\nBear in mind what these analyses measure. Word counts are a proxy for reflection, not a direct measurement of it."
+      },
+      {
+        "type": "blurb",
+        "section": "r1-zero-rewards-and-emergence",
+        "prompt": "In your own words, describe how DeepSeek-R1-Zero's training reward was computed, and explain why the authors chose rule-based checks instead of a neural reward model.",
+        "min_words": 30,
+        "model_answer": "The reward was the sum of an accuracy reward and a format reward. The accuracy reward checked the final answer with rules, such as matching a boxed maths answer or running code against test cases. The format reward checked that the reasoning was wrapped in think tags. They avoided neural reward models because the policy can learn to exploit them (reward hacking), and because retraining them adds compute and complexity. A rule that checks correctness cannot be gamed this way.",
+        "rubric": [
+          {
+            "criterion": "States that the reward checks the correctness of the final answer by rules or verification, for example answer matching or code test cases.",
+            "required": true
+          },
+          {
+            "criterion": "Mentions the format reward for putting the reasoning in think tags.",
+            "required": false
+          },
+          {
+            "criterion": "Explains that neural reward models are vulnerable to reward hacking, meaning the policy exploits the scorer instead of becoming correct.",
+            "required": true
+          },
+          {
+            "criterion": "Notes the extra compute or pipeline complexity of training and retraining neural reward models.",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": "prose",
+        "section": "r1-pipeline",
+        "markdown": "### From R1-Zero to R1: four stages\n\nR1-Zero reasons well but is poor to use. Its output is hard to read, it mixes English and Chinese within one chain of thought, and it is weak at writing and open-domain questions. The authors trace the language mixing to the base model, which was trained mostly on those two languages. R1 fixes these issues in four stages:\n\n1. **Cold-start SFT.** Fine-tune on thousands of long-CoT examples written in a conversational, first-person style. These come from R1-Zero outputs filtered for correct answers and readability, refined by DeepSeek-V3 and checked by humans.\n2. **Reasoning RL.** Same setup as R1-Zero, plus a **language-consistency reward**: the fraction of chain-of-thought words in the target language. It slightly lowers performance but makes output more readable. The GRPO clip ratio here was $\\varepsilon=10$. The authors note that too low a value truncates many tokens' gradients, while too high a value destabilises training.\n3. **Rejection sampling + SFT.** Sample from the stage-2 checkpoint and keep only correct, readable answers, about 600k reasoning samples. Some are judged by DeepSeek-V3 against the reference answer. Add about 200k non-reasoning samples (writing, QA, translation), then fine-tune.\n4. **General RL.** Use rule-based rewards for reasoning data, and reward models for helpfulness and safety on general data. The helpfulness model is trained on 66k preference pairs; the safety model is trained point-wise on 106k labelled responses. The temperature is lowered to 0.7, and preference rewards are used only in the last 400 of 1,700 steps."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "r1-pipeline",
+        "question": "In the final RL stage, general instruction data and preference-based rewards were used only in the last 400 of 1,700 steps. What reason does the paper give?",
+        "options": [
+          "Preference data was only collected after most of the training had finished.",
+          "The language-consistency reward conflicted with the preference reward, so the two could not run together for long.",
+          "Training longer with the model-based preference reward risked reward hacking.",
+          "The rule-based reasoning reward had to converge first, because the two kinds of reward cannot be added together."
+        ],
+        "correct_index": 2,
+        "explanation": "The paper says that more training steps with the model-based preference reward may lead to reward hacking, documented in its appendix. This echoes the earlier choice to avoid neural reward models for reasoning altogether. The last option is wrong because the paper does add the rewards: the stage-4 reward is the reasoning reward plus the general reward plus the language reward."
+      },
+      {
+        "type": "prose",
+        "section": "training-data-and-cost",
+        "markdown": "### Data, cost, and the reward-hacking evidence\n\n**RL prompts** span 26K maths, 17K code, 22K STEM multiple-choice, 15K logic and 66K general questions, all in Chinese or English. Each one was chosen so it can be checked automatically. Maths answers earn a reward of 1 or 0 depending on whether they match the reference, and proofs are excluded because their correctness is hard to judge. Code test cases were generated by DeepSeek-V2.5 and filtered using known-correct and known-incorrect submissions. The final **SFT set** has about 805k samples, mostly single-turn, which the authors note may limit multi-turn conversation.\n\n**Cost.** About 147K H800 GPU hours in total, or roughly \\$294K at \\$2 per hour: 101K hours for R1-Zero, 41K for R1 and 5K for creating SFT data.\n\n**Reward hacking, observed.** When the authors trained with the helpfulness reward model, the reward score kept rising while CodeForces pass@1 fell. The policy was learning what the reward model liked, not what actually helped. This is the concrete evidence behind their caution with learned rewards.\n\n**Language-consistency ablation.** This was run on a distilled 7B model. Without the language-consistency reward, language consistency deteriorated as training went on. With it, consistency stayed stable, maths performance stayed comparable and coding dropped slightly."
+      },
+      {
+        "type": "prose",
+        "section": "results-stages-and-benchmarks",
+        "markdown": "### What each stage bought\n\nThe paper evaluates every intermediate checkpoint, so you can see what each stage contributed (chart below):\n\n- **Dev1 (after cold-start SFT)** follows instructions much better: IF-Eval jumps from 46.6 to 71.7. But it *loses* reasoning, with AIME falling from 77.9 to 59.0. The authors attribute this to the small cold-start dataset.\n- **Dev2 (reasoning RL)** restores reasoning, bringing AIME back to 74.0, but barely moves preference benchmarks like AlpacaEval 2.0.\n- **Dev3 (mixed SFT)** improves AlpacaEval 2.0 and Aider-Polyglot, thanks to the added non-reasoning and code-engineering data.\n- **Final R1 (general RL)** changes maths and code only marginally. Its big gains are AlpacaEval 2.0, up to 87.6, and ArenaHard, up to 92.3.\n\nAgainst other models, final R1 scores 79.8 on AIME 2024, 97.3 on MATH-500 and a 2029 Codeforces rating. That is roughly on par with OpenAI-o1-1217 (79.2, 96.4, 2061), though R1 trails it on GPQA Diamond (71.5 vs 75.7) and Aider (53.3 vs 61.7).\n\nOn contamination: the authors filtered training data by 10-gram overlap with test sets, but admit this cannot catch paraphrases. As a check, they tested on **AIME 2025**, released after training, where R1 solved 75%."
+      },
+      {
+        "type": "chart",
+        "section": "results-stages-and-benchmarks",
+        "kind": "bar",
+        "title": "Benchmark scores at each stage of the DeepSeek-R1 pipeline",
+        "x_label": "Benchmark",
+        "y_label": "Score (benchmark's own metric, 0–100)",
+        "series": [
+          {
+            "name": "R1-Zero",
+            "points": [
+              {
+                "x": "AIME 2024 (Pass@1)",
+                "y": 77.9
+              },
+              {
+                "x": "IF-Eval (Prompt Strict)",
+                "y": 46.6
+              },
+              {
+                "x": "AlpacaEval2.0 (LC-winrate)",
+                "y": 24.7
+              },
+              {
+                "x": "ArenaHard",
+                "y": 53.6
+              }
+            ]
+          },
+          {
+            "name": "R1-Dev1",
+            "points": [
+              {
+                "x": "AIME 2024 (Pass@1)",
+                "y": 59.0
+              },
+              {
+                "x": "IF-Eval (Prompt Strict)",
+                "y": 71.7
+              },
+              {
+                "x": "AlpacaEval2.0 (LC-winrate)",
+                "y": 50.1
+              },
+              {
+                "x": "ArenaHard",
+                "y": 77.0
+              }
+            ]
+          },
+          {
+            "name": "R1-Dev2",
+            "points": [
+              {
+                "x": "AIME 2024 (Pass@1)",
+                "y": 74.0
+              },
+              {
+                "x": "IF-Eval (Prompt Strict)",
+                "y": 72.0
+              },
+              {
+                "x": "AlpacaEval2.0 (LC-winrate)",
+                "y": 55.8
+              },
+              {
+                "x": "ArenaHard",
+                "y": 73.2
+              }
+            ]
+          },
+          {
+            "name": "R1-Dev3",
+            "points": [
+              {
+                "x": "AIME 2024 (Pass@1)",
+                "y": 78.1
+              },
+              {
+                "x": "IF-Eval (Prompt Strict)",
+                "y": 78.1
+              },
+              {
+                "x": "AlpacaEval2.0 (LC-winrate)",
+                "y": 62.1
+              },
+              {
+                "x": "ArenaHard",
+                "y": 75.6
+              }
+            ]
+          },
+          {
+            "name": "R1",
+            "points": [
+              {
+                "x": "AIME 2024 (Pass@1)",
+                "y": 79.8
+              },
+              {
+                "x": "IF-Eval (Prompt Strict)",
+                "y": 83.3
+              },
+              {
+                "x": "AlpacaEval2.0 (LC-winrate)",
+                "y": 87.6
+              },
+              {
+                "x": "ArenaHard",
+                "y": 92.3
+              }
+            ]
+          }
+        ],
+        "caption": "",
+        "source": "Table 3"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "prompt": "Name two limitations of the paper's evidence or design, and explain why each should make you cautious about the conclusions.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "First, the user study had only nine students, about three per group, with no reported statistical tests, so the differences in load and idea scores could easily be chance. Second, the graph's citation labels are assigned by an LLM and the paper reports no accuracy check, and how human judgments and idea scores were obtained is not detailed, so the pipeline's reliability is not well established.",
+    "rubric": [
+      {
+        "criterion": "Identifies the small sample size or absence of statistical tests in the user study and links it to uncertainty about the results.",
+        "required": true
+      },
+      {
+        "criterion": "Identifies a second distinct limitation, such as unverified LLM citation labelling or unexplained scoring and human-judgment procedures.",
+        "required": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,431 @@
+{
+  "stage": "question_check",
+  "round": 0,
+  "model": "claude-sonnet-5-5",
+  "judge_model": "claude-haiku-5-5",
+  "source": {
+    "slug": "1-000-true-fans",
+    "title": "1,000 True Fans"
+  },
+  "rule_violations": [
+    "block 4 (multiple_choice \"Why does Kelly stress that a true fan buys 'anything you…\"): the explanation refers to an option by its letter, number or position ('last option'); the options are shuffled before the reader sees them, so name the idea instead",
+    "block 11 (prediction 'Kelly says the web helps creators in two ways. One is…'): the correct option (87 characters) is more than 30% longer than the longest wrong option (50 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+    "block 13 (multiple_choice 'The 2008 essay calls the long tail a mixed blessing for…'): the correct option (111 characters) is more than 30% longer than the longest wrong option (79 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+    "block 15 (multiple_choice 'Watt-Evans gets by on an estimated 200 true fans, well…'): the correct option (80 characters) is more than 30% longer than the longest wrong option (61 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+    "block 20 (multiple_choice 'Which statement best captures how the web changes the…'): the correct option (141 characters) is more than 30% longer than the longest wrong option (87 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+    "block 22 (multiple_choice \"Kelly says 'the actual number is not critical'. What does…\"): the correct option (108 characters) is more than 30% longer than the longest wrong option (74 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly"
+  ],
+  "open_book": [
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFFnNR8CvBZmpHJBjHH",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 1983,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 103
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        4
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 4,
+            "reasoning": "The page says a true fan buys anything you produce, and that roughly a thousand such people let you make a living. That ties the buy-everything habit to a small group's income being enough to live on. The other options aren't supported by the page.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFG1Gp87tTaFoYFDcDn",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 1280,
+        "cache_read_input_tokens": 1983,
+        "output_tokens": 85
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        7
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 7,
+            "reasoning": "The page's arithmetic is fans = income needed / spend per fan when she keeps the full price. $60,000 / $120 = 500, which matches the first option.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFG9MEW1mbG8sjUX8AM",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 189,
+        "cache_creation_input_tokens": 623,
+        "cache_read_input_tokens": 3263,
+        "output_tokens": 194
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        10
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 10,
+            "reasoning": "Block 9 says a manager or helper for fan-wrangling raises the number of true fans needed, and indirect income (revenue kept by an intermediary) also requires many more true fans; the more direct, the fewer needed.",
+            "choice": null,
+            "answer": "Both choices raise the number of true fans she needs. The manager's pay is a cost that the income must cover, so more fans are needed. The streaming service keeps most revenue, so she keeps less per fan and needs many more fans, though still far fewer than a blockbuster would take.}"
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFGcj1tC8euU92eDcxS",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 707,
+        "cache_read_input_tokens": 3886,
+        "output_tokens": 145
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        13
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 13,
+            "reasoning": "The page never says the long tail is a mixed blessing, and it doesn't explain why the tail alone is insufficient. It only says the challenge is having fans find you, and that aggregators built recommendation engines. Option 0 fits best as a guess, though the page doesn't mention price pressure or competition. The other options contradict the page or are unsupported.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFGtzKGcy2xbbwPaaKw",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 600,
+        "cache_read_input_tokens": 4593,
+        "output_tokens": 121
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        15
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 15,
+            "reasoning": "Block 14 says Watt-Evans gets by on an estimated 200 true fans 'because he also publishes traditionally', so option 0 matches. The 'supported by thousands of lesser fans' detail is not stated, but the other options contradict or are absent from the page.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFH4P7fuQ3R94s9G2td",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 315,
+        "cache_creation_input_tokens": 1663,
+        "cache_read_input_tokens": 5193,
+        "output_tokens": 368
+      },
+      "source": {
+        "slug": "1-000-true-fans",
+        "title": "1,000 True Fans",
+        "media_type": "text/markdown"
+      },
+      "blocks": [
+        20,
+        21,
+        22
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 20,
+            "reasoning": "Block 12 says directness lets creators keep full payment, reducing fans needed, and the long tail makes niche audiences reachable. Option 0 matches both points.",
+            "choice": 0,
+            "answer": null
+          },
+          {
+            "block": 21,
+            "reasoning": "The page gives the math (600 x $100 = $60,000, short of $100,000 unless needs are lower), plus adjustments for team size, fan-wrangling and indirect income, and the critique about how fans are found.",
+            "choice": null,
+            "answer": "Her 600 fans at $100 each bring in $60,000 a year, so it works if that covers her living costs, since Kelly says the number depends on the income needed. It fails if she needs $100,000, shares income with a team, or pays intermediaries. She must also keep finding and serving fans, which is time-consuming."
+          },
+          {
+            "block": 22,
+            "reasoning": "The page says the 1,000 figure is a rough order of magnitude that shifts with income needed, spend per fan, team size, medium and intermediaries, and that the true number is found by trying (block 9).",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    }
+  ],
+  "judged": [
+    {
+      "block": 10,
+      "answer": "Both choices raise the number of true fans she needs. The manager's pay is a cost that the income must cover, so more fans are needed. The streaming service keeps most revenue, so she keeps less per fan and needs many more fans, though still far fewer than a blockbuster would take.}",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "States that a helper or manager raises the number of fans needed",
+          "required": true,
+          "met": true,
+          "justification": "The learner states that the manager's pay is a cost the income must cover, so more fans are needed. This meets the criterion."
+        },
+        {
+          "criterion": "Explains that an intermediary taking a share reduces income per fan, so more fans are needed",
+          "required": true,
+          "met": true,
+          "justification": "The learner explains that the streaming service keeps most revenue, so she keeps less per fan and needs many more fans. This meets the criterion."
+        },
+        {
+          "criterion": "Notes that the number still stays far below blockbuster levels",
+          "required": false,
+          "met": true,
+          "justification": "The learner notes the number still stays far fewer than a blockbuster would need, which matches the optional point."
+        }
+      ],
+      "feedback": "You correctly explain that the manager's pay is a cost that raises the number of fans needed, and that a streaming service keeping most revenue means she keeps less per fan. You also usefully note that the required number remains far below blockbuster levels. Your answer covers everything the question asks for."
+    },
+    {
+      "block": 21,
+      "answer": "Her 600 fans at $100 each bring in $60,000 a year, so it works if that covers her living costs, since Kelly says the number depends on the income needed. It fails if she needs $100,000, shares income with a team, or pays intermediaries. She must also keep finding and serving fans, which is time-consuming.",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "Computes or reasons that 600 fans at $100 give about $60,000 and compares it to income needs",
+          "required": true,
+          "met": true,
+          "justification": "The learner states 600 fans at $100 bring in $60,000 a year and ties viability to whether that covers living costs, referencing that the required income is the deciding comparison. This meets the computation and comparison criterion."
+        },
+        {
+          "criterion": "Names an extra lever or risk such as regular fans, intermediaries, higher spend per fan, or the time cost of tending fans",
+          "required": true,
+          "met": true,
+          "justification": "The learner names intermediaries and the time cost of finding and serving fans as risks, which satisfies the requirement to name an extra lever or risk."
+        }
+      ],
+      "feedback": "You correctly multiplied 600 fans by $100 to get $60,000 and framed the outcome around whether that covers her income needs. You also named useful risks, including intermediaries and the ongoing time cost of serving fans. Next time, you could also say what other income sources or per-fan spending changes might close a gap."
+    }
+  ],
+  "closed_book": {
+    "generator": "claude-study-v1",
+    "model": "claude-sonnet-5-5",
+    "message_id": "msg_011ChLFHY4VxwgjvGazmSp5m",
+    "stop_reason": "end_turn",
+    "usage": {
+      "input_tokens": 1742,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 142
+    },
+    "source": {
+      "slug": "1-000-true-fans",
+      "title": "1,000 True Fans",
+      "media_type": "text/markdown"
+    },
+    "blocks": [
+      4,
+      7,
+      13,
+      15,
+      20,
+      22
+    ],
+    "correct_by_guess": [],
+    "output": {
+      "answers": [
+        {
+          "block": 4,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 7,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 13,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 15,
+          "choice": 0,
+          "basis": "options"
+        },
+        {
+          "block": 20,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 22,
+          "choice": 0,
+          "basis": "options"
+        }
+      ]
+    }
+  },
+  "issues": [
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 4,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option \"Because the buying-everything habit is what makes a small group's income large enough to live on\" from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 7,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'About 500' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 13,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'It mainly benefits aggregators and consumers, while adding competition and downward price pressure for creators' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 15,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'He also earns from traditional publishing, supported by thousands of lesser fans' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 20,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'Direct sales let creators keep the full payment, and the long tail makes niche fans reachable, so fewer fans are needed and they are findable' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 22,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'It depends on income, spend per fan, medium, team and intermediaries, and can only be found by attempting it' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    }
+  ],
+  "must_fix_remaining": [
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 4 (multiple_choice \"Why does Kelly stress that a true fan buys 'anything you…\"): the explanation refers to an option by its letter, number or position ('last option'); the options are shuffled before the reader sees them, so name the idea instead",
+      "suggestion": ""
+    },
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 11 (prediction 'Kelly says the web helps creators in two ways. One is…'): the correct option (87 characters) is more than 30% longer than the longest wrong option (50 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+      "suggestion": ""
+    },
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 13 (multiple_choice 'The 2008 essay calls the long tail a mixed blessing for…'): the correct option (111 characters) is more than 30% longer than the longest wrong option (79 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+      "suggestion": ""
+    },
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 15 (multiple_choice 'Watt-Evans gets by on an estimated 200 true fans, well…'): the correct option (80 characters) is more than 30% longer than the longest wrong option (61 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+      "suggestion": ""
+    },
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 20 (multiple_choice 'Which statement best captures how the web changes the…'): the correct option (141 characters) is more than 30% longer than the longest wrong option (87 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+      "suggestion": ""
+    },
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 22 (multiple_choice \"Kelly says 'the actual number is not critical'. What does…\"): the correct option (108 characters) is more than 30% longer than the longest wrong option (74 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+      "suggestion": ""
+    }
+  ],
+  "note": null
+}

@@ -1,0 +1,13 @@
+{
+  "question": "How should a careful reader treat the paper's claim that GoAI \"significantly\" reduces cognitive load and improves idea quality?",
+  "options": [
+    "As firmly established, because GoAI had the best number in every NASA-TLX column.",
+    "As suggestive but weak, because there were only about three students per group and the paper reports no statistical tests.",
+    "As invalid, because the study had no control group.",
+    "As proven by the 0.68 Pearson correlation of the reviewer."
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "With nine participants and no reported significance tests, the differences are suggestive only. GoAI was also not best in every column (for example, the LLM group had a lower frustration score and equal performance score). There were control-like comparison groups, and the Pearson result concerns the reviewer's agreement with humans, not the user study."
+  }
+}

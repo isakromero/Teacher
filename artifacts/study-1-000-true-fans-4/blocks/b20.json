@@ -1,0 +1,19 @@
+{
+  "question": "Which statement best captures how the web changes the true-fan arithmetic in Kelly's account?",
+  "options": [
+    "Aggregators pay creators higher shares, so a few hundred fans suffice",
+    "Creators keep the full payment and niche fans become findable",
+    "Cheaper purchases mean a fan no longer needs to spend a day's wages",
+    "Crowdfunding platforms ensure any project reaches its funding goal"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "Two separate effects combine: keeping the full price (reduces fans needed) and long-tail reachability (makes the fans findable). The other options invent guarantees the essay does not make.",
+    "option_explanations": [
+      "Aggregators are described as beneficiaries, not payers of higher shares.",
+      "Right: directness lowers the fans needed, and the tail makes the niche audience findable.",
+      "The one-day-wage assumption stays; the web changes who keeps the money and who can find whom.",
+      "Kelly says campaign success depends on what you ask of fans."
+    ]
+  }
+}

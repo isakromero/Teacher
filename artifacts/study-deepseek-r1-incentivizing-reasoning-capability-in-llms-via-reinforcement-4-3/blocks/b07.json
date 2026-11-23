@@ -1,0 +1,25 @@
+{
+  "prompt": "In your own words, explain why GRPO's way of computing advantages suits the training of long chain-of-thought models better than PPO's value-model approach.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "PPO needs a learned value model that predicts the final reward from a partially written response. In long chains of thought the model often reflects and revises, so early text says little about the final outcome, and that prediction is very hard. GRPO skips the value model. It scores each sampled answer against the mean and spread of rewards in its group, which also saves memory and compute.",
+    "rubric": [
+      {
+        "criterion": "States that PPO relies on a learned value model that predicts the eventual reward from a partial response.",
+        "required": true
+      },
+      {
+        "criterion": "Explains that in long chains of thought, later reflection or revision makes predicting the final reward from partial text especially hard.",
+        "required": true
+      },
+      {
+        "criterion": "Explains that GRPO instead computes each output's advantage relative to the rewards of the other outputs sampled for the same question, with no value model.",
+        "required": true
+      },
+      {
+        "criterion": "Mentions the memory or compute saved by not training a policy-sized value model.",
+        "required": false
+      }
+    ]
+  }
+}

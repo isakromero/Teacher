@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}{% if concept_name %}{{ concept_name }} - Concepts{% else %}Concepts{% endif %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ static('vendor/katex-0.16.22/katex.min.css') }}">
+<link rel="stylesheet" href="{{ static('css/standing.css') }}">
+{% endblock %}
+{% block page_class %}page-graph{% endblock %}
+{% block content %}
+<div id="graph-page" class="graph-page" data-page="graph" data-concept="{{ concept or '' }}">
+  <div class="graph-toolbar">
+    <h1 class="graph-heading">Concepts</h1>
+    <form id="graph-search" class="graph-search" role="search" novalidate>
+      <label for="graph-search-input" class="visually-hidden">Find a concept</label>
+      <input id="graph-search-input" name="q" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Find a concept by name or meaning" aria-controls="graph-search-results"
+             aria-describedby="graph-search-status">
+      <button id="graph-search-submit" type="submit" class="button compact">Search</button>
+      <p id="graph-search-status" class="status-text graph-search-status" role="status"
+         aria-live="polite"></p>
+      <p id="graph-search-notice" class="graph-search-notice" role="status" hidden></p>
+      <ul id="graph-search-results" class="graph-search-results" aria-label="Search results"
+          hidden></ul>
+    </form>
+  </div>
+  <div id="graph-error" class="error graph-error" role="alert" hidden></div>
+  <p id="graph-status" class="status-text graph-status" role="status" aria-live="polite"></p>
+
+  <p id="graph-loading" class="muted graph-loading" role="status">Loading the concept graph...</p>
+
+  <section id="graph-empty" class="panel graph-empty" aria-labelledby="graph-empty-heading" hidden>
+    <h2 id="graph-empty-heading">No concepts yet</h2>
+    <p>
+      The concept graph is empty: no concepts or relations have been added yet. Once they are,
+      they appear here as a graph you can explore.
+    </p>
+  </section>
+
+  <div id="graph-view" class="graph-view" hidden>
+    <div id="graph-canvas" class="graph-canvas">
+      <svg id="graph-svg" class="graph-svg" role="img" aria-labelledby="graph-svg-label"></svg>
+      <p id="graph-svg-label" class="visually-hidden">
+        Concept graph. Use the search box, or the lists in the side panel, to reach concepts with
+        the keyboard.
+      </p>
+      <p id="graph-note" class="graph-note" hidden></p>
+      <ul id="graph-origin-legend" class="node-legend small" aria-label="Concept colours"></ul>
+      <div class="zoom-controls" role="group" aria-label="Zoom">
+        <button id="graph-zoom-in" type="button" aria-label="Zoom in" title="Zoom in"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button id="graph-zoom-out" type="button" aria-label="Zoom out" title="Zoom out"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14"/></svg></button>
+        <button id="graph-fit" type="button" aria-label="Fit the graph to the view"
+                title="Fit to view"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
+      </div>
+    </div>
+    <aside id="graph-inspector" class="inspector" aria-label="Inspector" tabindex="-1"></aside>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{# d3-force and its dependencies are UMD builds: classic scripts that put window.d3 in place
+   before the page module runs (module scripts run after parsing). Order matters: the three
+   dependencies first. Only js/d3_force.js reads the global. #}
+<script src="{{ static('vendor/d3-dispatch-3.0.2/d3-dispatch.js') }}"></script>
+<script src="{{ static('vendor/d3-quadtree-3.0.2/d3-quadtree.js') }}"></script>
+<script src="{{ static('vendor/d3-timer-3.0.2/d3-timer.js') }}"></script>
+<script src="{{ static('vendor/d3-force-3.0.0/d3-force.js') }}"></script>
+<script type="module" src="{{ static('js/graph.js') }}"></script>
+{% endblock %}

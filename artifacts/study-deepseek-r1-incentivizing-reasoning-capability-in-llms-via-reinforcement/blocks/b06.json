@@ -1,0 +1,13 @@
+{
+  "question": "In GRPO, what plays the role that PPO's learned value model plays when computing an output's advantage?",
+  "options": [
+    "The statistics (mean and standard deviation) of rewards across a group of outputs sampled for the same question",
+    "A separate frozen reference model that scores each token",
+    "The KL divergence between the new and old policy",
+    "A neural reward model trained on human preferences"
+  ],
+  "private": {
+    "correct_index": 0,
+    "explanation": "GRPO normalizes each output's reward by its group's mean and standard deviation. The reference model only enters via the KL penalty, the clip handles update size, and R1-Zero deliberately uses no neural reward model."
+  }
+}

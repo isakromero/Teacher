@@ -1,0 +1,21 @@
+{
+  "prompt": "Explain the difference between an Output Validation criterion and a Perturbation criterion, and why a workbook could pass the first while failing the second.",
+  "min_words": 25,
+  "private": {
+    "model_answer": "Output Validation checks that a key output matches a reference value within tolerance in the workbook as delivered. Perturbation changes an input, recalculates, and checks the output updates correctly. A model could hardcode the right number and pass the first but fail the second because the value no longer responds to the input.",
+    "rubric": [
+      {
+        "criterion": "States that Output Validation checks an output value against a reference within a tolerance",
+        "required": true
+      },
+      {
+        "criterion": "States that Perturbation changes an input and checks the dependent output recomputes",
+        "required": true
+      },
+      {
+        "criterion": "Explains that a hardcoded or non-linked value can be correct as delivered yet fail when inputs change",
+        "required": true
+      }
+    ]
+  }
+}

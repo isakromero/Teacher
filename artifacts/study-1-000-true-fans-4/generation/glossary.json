@@ -1,0 +1,204 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChLFRHgXq5sKMCmm5N8mg",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 8989,
+    "cache_creation_input_tokens": 10059,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 1505
+  },
+  "source": {
+    "slug": "1-000-true-fans",
+    "title": "1,000 True Fans",
+    "media_type": "text/markdown"
+  },
+  "trigger": "generation",
+  "proposed": 18,
+  "dropped": [],
+  "merged": [],
+  "dropped_aliases": [
+    {
+      "term": "intermediaries",
+      "alias": "intermediates",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "aggregators",
+      "alias": "aggregator",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "micro-patronage",
+      "alias": "distributed patronage",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "pre-financed",
+      "alias": "pre-financing",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "pre-financed",
+      "alias": "pre-sold",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "crowdfunding",
+      "alias": "crowdfunder",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "all-or-nothing",
+      "alias": "all or nothing",
+      "reason": "does not occur in the study page text"
+    }
+  ],
+  "output": {
+    "terms": [
+      {
+        "term": "true fan",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In Kelly's essay, a devoted supporter defined by buying behaviour, someone who will pay for whatever a particular creator produces. It is distinguished from a casual or regular fan.",
+        "aliases": [
+          "true fans",
+          "true-fan"
+        ]
+      },
+      {
+        "term": "regular fans",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Fans who buy a creator's work only occasionally, or perhaps only once. They sit in a wider circle around the core of devoted fans.",
+        "aliases": [
+          "regular fan",
+          "lesser fans"
+        ]
+      },
+      {
+        "term": "order of magnitude",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rough scale of size measured in powers of ten. Two numbers are in the same order of magnitude if they are within about a factor of ten of each other.",
+        "aliases": [
+          "orders below a million"
+        ]
+      },
+      {
+        "term": "intermediaries",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Middle parties such as labels, publishers, studios and retailers that sit between a creator and the buyer. They typically keep a share of each sale.",
+        "aliases": [
+          "intermediary"
+        ]
+      },
+      {
+        "term": "peer-to-peer",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A network design in which any participant can connect directly with any other, without a central gatekeeper in between. Kelly uses it to describe the web.",
+        "aliases": []
+      },
+      {
+        "term": "long tail",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The shape of a sales distribution in which a few bestsellers form a tall head and a great many low-selling items form a long thin tail. The term was coined by Chris Anderson.",
+        "aliases": [
+          "tail"
+        ]
+      },
+      {
+        "term": "aggregators",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Large platforms such as Amazon or Netflix that collect huge catalogues of other people's products and sell them in one place.",
+        "aliases": []
+      },
+      {
+        "term": "recommendation engines",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Software that suggests items to a user based on data about their behaviour or about similar users. Platforms use them to steer attention toward less popular items.",
+        "aliases": []
+      },
+      {
+        "term": "niche",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A small, specialised segment of an audience or market with particular tastes.",
+        "aliases": [
+          "niches"
+        ]
+      },
+      {
+        "term": "microcelebrity",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A person who is famous only to a small audience. In the 2008 essay, Carl Steadman's version is someone known to about 1,500 people.",
+        "aliases": []
+      },
+      {
+        "term": "micro-patronage",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Support of a creator by many small individual patrons, rather than by a few large sponsors or by a company.",
+        "aliases": []
+      },
+      {
+        "term": "Street Performer Protocol",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A model proposed in 1999 in which an author asks the public for donations toward a target before publishing, then releases the work freely once the target is met. It is named after street performers who ask for money directly from the crowd.",
+        "aliases": []
+      },
+      {
+        "term": "pre-financed",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Paid for in advance by supporters before the work is produced, instead of being funded by the creator or sold after completion.",
+        "aliases": [
+          "pre-orders"
+        ]
+      },
+      {
+        "term": "crowdfunding",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Raising money for a project from many people, usually through an online platform, often in return for rewards or early copies.",
+        "aliases": []
+      },
+      {
+        "term": "all-or-nothing",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A crowdfunding rule under which backers are charged only if the full funding goal is reached; otherwise the money is returned.",
+        "aliases": []
+      },
+      {
+        "term": "Patreon",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A crowdfunding platform where supporters pay recurring amounts to fund a creator's ongoing work, such as a magazine, a video series or a salary.",
+        "aliases": []
+      },
+      {
+        "term": "Kickstarter",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The largest crowdfunding platform, where creators set a funding goal for a project and backers pledge money toward it.",
+        "aliases": []
+      },
+      {
+        "term": "Fundable",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A web service that let people raise a fixed sum for a project, holding backers' money until the goal was met and returning it otherwise.",
+        "aliases": []
+      }
+    ]
+  }
+}

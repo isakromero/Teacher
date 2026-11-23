@@ -1,0 +1,19 @@
+{
+  "question": "Why does Kelly define a true fan by willingness to buy 'anything you produce' rather than by how much they admire your work?",
+  "options": [
+    "Because each fan's total yearly spending is what lets a small group add up to a living",
+    "Because fans who buy everything usually end up working for the creator as helpers",
+    "Because regular fans buy only once, so their purchases add nothing to income",
+    "Because admiration cannot be measured, while purchases can be audited by the creator"
+  ],
+  "private": {
+    "correct_index": 0,
+    "explanation": "The definition is built around spending because the math depends on revenue per fan. Regular fans do contribute, so the idea that they add nothing overstates the case.",
+    "option_explanations": [
+      "Right: income depends on how much each fan spends, so a small group that buys everything can add up to a living.",
+      "Nothing in the essay says fans work for the creator, though they do act as a marketing force.",
+      "Kelly says regular fans buy occasionally and add income; they are less central, not worthless.",
+      "Kelly does not make a measurement argument; the point is about how much revenue each fan brings."
+    ]
+  }
+}

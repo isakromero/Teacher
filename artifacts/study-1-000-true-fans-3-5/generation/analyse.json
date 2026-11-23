@@ -1,0 +1,127 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChLD7mMSEuxHpeAuCfj7W",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 492,
+    "cache_creation_input_tokens": 10236,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 2667
+  },
+  "source": {
+    "slug": "1-000-true-fans",
+    "title": "1,000 True Fans",
+    "media_type": "text/markdown"
+  },
+  "ignored_sources": [],
+  "segments": "none: a plain-text source has no pages, so no locator fits",
+  "output": {
+    "summary": "Kevin Kelly argues that creators do not need blockbuster success or millions of fans to make a living; roughly 1,000 'true fans', people who will buy anything the creator makes, can sustain a creator if each spends about $100 a year and pays the creator directly. He frames this as an alternative to stardom and to the poverty of the long tail, where creators face heavy competition and low sales. He explains why the web makes this path newly possible (direct sales and payment, long-tail discovery, crowdfunding), adjusts the formula for different incomes, teams and media, notes that fan work is demanding and not for everyone, and cites earlier precedents such as the Street Performer Protocol, Lawrence Watt-Evans, Fundable and Jill Sobule. The idea matters because it gives creators a concrete, achievable target between obscurity and fame.",
+    "main_claims": [
+      "A creator can make a living with about 1,000 true fans, defined as fans who will buy anything the creator produces, rather than needing millions of fans or a hit.",
+      "The math rests on two conditions: earning about $100 profit per true fan per year (roughly one day's wages), and keeping the whole amount through a direct relationship with the fan.",
+      "The number 1,000 is an order-of-magnitude estimate that must be adjusted for the creator's income needs, revenue per fan, team size and medium, and it can only really be found by trying.",
+      "The web makes this path possible by enabling direct sales and payment without intermediaries, and by the long tail, which makes any niche reachable, so a one-in-a-million appeal can still find 1,000 fans.",
+      "The path is not for everyone: cultivating fans is time-consuming, can be delegated to a helper at the cost of needing more fans, and can be combined with traditional intermediaries.",
+      "Fan-funded models such as micro-patronage, the Street Performer Protocol, pre-financing and crowdfunding show that true fans can support creators beyond what their numbers alone suggest."
+    ],
+    "background": [
+      "The Long Tail: the sales distribution with a few bestsellers (the head) and many low-selling items (the tail)",
+      "The role of intermediaries such as publishers, labels, studios and retailers in selling creative work",
+      "Basic percentage and per-person revenue arithmetic",
+      "Crowdfunding platforms such as Kickstarter and Patreon at a general level",
+      "Network effects, in the sense that network value grows faster than linearly with its size"
+    ],
+    "sections": [
+      {
+        "label": "true-fan-defined",
+        "title": "What a true fan is and the core claim",
+        "start_page": null,
+        "end_page": null,
+        "key_points": [
+          "A creator needs only thousands of true fans, not millions of customers, to make a living, provided they are content with a living and not a fortune.",
+          "A true fan will buy anything you produce, such as the hardback, paperback and audio versions, or driving 200 miles to see you perform.",
+          "The essay's main alternative is to stardom: a path to a living that is more feasible and more likely to be reached.",
+          "Regular or lesser fans sit in concentric circles around true fans and add income, perhaps 50% more, while true fans also act as the chief marketing force for them."
+        ]
+      },
+      {
+        "label": "the-math",
+        "title": "How the math works",
+        "start_page": null,
+        "end_page": null,
+        "key_points": [
+          "Two criteria: earn about $100 profit per true fan per year, and have a direct relationship so the creator keeps all of it.",
+          "1,000 fans times $100 equals $100,000 a year, a living for most people.",
+          "The $100 can be understood as one day's wages per year from each fan, treated as a conservative average.",
+          "1,000 is a feasible target: adding one fan a day would take about three years.",
+          "Making more for existing fans is easier and better than finding new ones."
+        ]
+      },
+      {
+        "label": "adjusting-the-number",
+        "title": "Adjusting the number: income, teams, media and indirect sales",
+        "start_page": null,
+        "end_page": null,
+        "key_points": [
+          "The number is about order of magnitude: $50 per fan means 2,000 fans, $200 means 500, and a lower income need means fewer.",
+          "Duets and teams need proportionally more fans; growth is linear (33% more people means 33% more fans), not exponential.",
+          "The original essay speculates that the value of the fan network might grow as the square of the number of fans through network effects, as fans connect with each other.",
+          "Indirect revenue (advertising for bloggers, publishers taking most revenue) inflates the number needed, but not to blockbuster levels.",
+          "The number may vary by medium (the author suggests perhaps 500 for a painter and 5,000 for a videomaker), and can only be found by attempting it; the formula could be off by an order of magnitude."
+        ]
+      },
+      {
+        "label": "why-now-technology",
+        "title": "Why this is newly possible: direct relationships and the long tail",
+        "start_page": null,
+        "end_page": null,
+        "key_points": [
+          "Intermediaries in the last century meant creators lacked direct contact with consumers, and even publishers did not know their readers' names, so creators needed much larger audiences.",
+          "Peer-to-peer communication and payment on the web let creators sell directly to anyone worldwide and keep the full payment, which reduces the number of fans needed.",
+          "In the web's network the most obscure item is one click from the most popular; aggregators and search engines found the long tail's total sales rivaled the head and built recommendation tools that reduced obscurity.",
+          "Anything with one-in-a-million appeal can find about 1,000 fans among roughly 7,000 people in a population of that size, though the hard part is having them find you.",
+          "Big corporations and intermediaries are ill-suited to serve niche audiences, which leaves that space open to creators."
+        ]
+      },
+      {
+        "label": "long-tail-problem",
+        "title": "The original problem: the long tail is a mixed blessing for creators",
+        "start_page": null,
+        "end_page": null,
+        "key_points": [
+          "The long tail benefits aggregators like Amazon and Netflix and consumers, but for creators it adds competition and downward price pressure without raising sales much.",
+          "The original essay asks what an artist can do to escape the long tail other than aiming for a blockbuster.",
+          "The proposal is a middle place between the obscure tail and the bestseller head, where a creator can make a living by converting lesser fans into true fans.",
+          "Alternative to this path is often poverty, citing a 1995 survey by Ruth Towse in Britain finding artists earned below subsistence on average."
+        ]
+      },
+      {
+        "label": "crowdfunding-and-patronage",
+        "title": "Fan-funded models: micro-patronage, crowdfunding and precedents",
+        "start_page": null,
+        "end_page": null,
+        "key_points": [
+          "True fans enable new models of support: purchasing more per person, spending directly, and funding in advance (micro-patronage, pre-financing).",
+          "Crowdfunding platforms vary: all-or-nothing versus partial funding, completed versus ongoing projects (Patreon); Kickstarter's average successful project has 241 funders, fewer than 1,000, so a true-fan base could support a campaign.",
+          "The Street Performer Protocol (Kelsey and Schneier, 1999) has an author publish once a donation target is reached, with the work then free to everyone.",
+          "Examples: Lawrence Watt-Evans (about 200 true fans plus traditional publishing), Greg Stolze's pre-financed games, Amelia on Fundable, and Jill Sobule's fan-financed album with tiered pledges.",
+          "Earlier ideas such as Carl Steadman's microcelebrity (about 1,500 people) point to the same scale."
+        ]
+      },
+      {
+        "label": "costs-and-caveats",
+        "title": "Costs, caveats and combining paths",
+        "start_page": null,
+        "end_page": null,
+        "key_points": [
+          "Cultivating true fans is time-consuming, nerve-racking and not for everyone; it can be a full-time or part-time job requiring ongoing skills.",
+          "Creators who dislike dealing with fans can hire a helper or manager, which increases the fans needed; handing it to labels or publishers is usually worse.",
+          "The approach is not exclusive: the author uses publishers, self-publishing and Kickstarter, and cultivating true fans enriches each route.",
+          "The updates point to critical responses, including a disclosure of one artist's finances and a survey titled 'The Case Against 1000 True Fans', which the document mentions but does not reproduce."
+        ]
+      }
+    ]
+  }
+}

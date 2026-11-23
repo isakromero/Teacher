@@ -1,0 +1,3 @@
+{
+  "markdown": "## Idea Studio\n\n**Idea Studio** is the paper's demonstration application. A student is given a topic, such as \"Enhancing the Reasoning Ability of Large Language Models\". GoAI produces trends, key literature and a personalized learning path. The student studies the prerequisites and papers, proposes original ideas informed by the trends, and gets them evaluated by GoAI-CoT-Reviewer. The student then refines them iteratively.\n\nThe authors frame this twice over: as a pedagogical tool for everyday learning and research, and as the empirical test of whether GoAI is practically useful. That second role is why the user study in the next section uses Idea Studio as the \"GoAI\" condition."
+}

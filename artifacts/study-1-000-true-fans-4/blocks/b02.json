@@ -1,0 +1,12 @@
+{
+  "prompt": "Kelly says a creator can make a living with a modest number of devoted fans. Before reading his definition, what do you think makes someone a 'true fan'?",
+  "options": [
+    "Someone who has bought from the creator at least once in the past year",
+    "Someone who will buy anything the creator produces",
+    "Someone who follows the creator on social media and shares their posts"
+  ],
+  "private": {
+    "correct_index": 1,
+    "resolution": "Kelly defines a true fan by buying behaviour: they will buy anything you produce. Following or buying once makes someone a regular fan, not a true one."
+  }
+}

@@ -1,0 +1,841 @@
+{
+  "extractor": "claude-concepts-v1",
+  "trigger": "generation",
+  "model": "claude-sonnet-5-5",
+  "embedding_model": "text-embedding-3-small",
+  "source": {
+    "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+    "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets"
+  },
+  "calls": [
+    {
+      "step": "concepts",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChJPgGCpjnQgYNw7SKzUf",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 1035,
+        "cache_creation_input_tokens": 81219,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 2927
+      }
+    },
+    {
+      "step": "concept judge",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChJPi7mP5kgtwFJC1qtr6",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 1994,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 223
+      }
+    }
+  ],
+  "stale_embedded": 0,
+  "removed_links": 0,
+  "candidates": [
+    {
+      "number": 1,
+      "name": "LLM-as-a-judge",
+      "aliases": [
+        "LM judge",
+        "agentic LLM judge"
+      ],
+      "summary": "Using a language model to grade another model's outputs against criteria or a rubric. The judge may be given tools to inspect the artifact being graded, and its reliability is checked against human labels.",
+      "role": "uses",
+      "evidence": "an agentic LLM judge that interacts with the output workbook through the same 20-tool spreadsheet environment"
+    },
+    {
+      "number": 2,
+      "name": "rubric-based evaluation",
+      "aliases": [
+        "granular rubric criteria",
+        "binary rubric criteria"
+      ],
+      "summary": "Scoring a complex output with many fine-grained, weighted yes/no criteria written by experts. The score is the weighted share of points earned, which suits tasks that cannot be checked programmatically.",
+      "role": "introduces",
+      "evidence": "3,225 granular rubric criteria"
+    },
+    {
+      "number": 3,
+      "name": "inter-annotator agreement",
+      "aliases": [
+        "inter-rater reliability",
+        "IRR"
+      ],
+      "summary": "The degree to which independent raters assign the same labels to the same items. It is used to validate annotation quality and to calibrate automated judges against human consensus.",
+      "role": "uses",
+      "evidence": "inter-annotator alignment study over 384 binary criteria"
+    },
+    {
+      "number": 4,
+      "name": "Krippendorff's alpha",
+      "aliases": [
+        "Krippendorff's α"
+      ],
+      "summary": "A chance-corrected reliability coefficient for agreement among raters that handles different data types and missing ratings. A value of 1 means perfect agreement and 0 means agreement no better than chance.",
+      "role": "uses",
+      "evidence": "we observed a Krippendorff's Alpha of 0.826"
+    },
+    {
+      "number": 5,
+      "name": "macro-averaged F1 score",
+      "aliases": [
+        "macro-F1"
+      ],
+      "summary": "The F1 score (harmonic mean of precision and recall) computed separately for each class and then averaged with equal weight. It is used to compare classifiers, including judges against human labels.",
+      "role": "uses",
+      "evidence": "macro-F1 score of 0.839"
+    },
+    {
+      "number": 6,
+      "name": "agentic evaluation harness",
+      "aliases": [
+        "agent harness",
+        "tool-use scaffold"
+      ],
+      "summary": "The software environment that gives a language-model agent a set of tools, an instruction prompt and a loop for acting and observing, so that its task performance can be measured reproducibly.",
+      "role": "uses",
+      "evidence": "an agentic harness of 20 tools organized into six categories"
+    },
+    {
+      "number": 7,
+      "name": "LLM agent",
+      "aliases": [
+        "language model agent",
+        "tool-using agent"
+      ],
+      "summary": "A language model that works toward a goal over multiple steps by calling tools, reading results and deciding on further actions until it declares itself finished.",
+      "role": "assumes",
+      "evidence": "tasks LLM agents with synthesis, manipulation, and comprehension tasks"
+    },
+    {
+      "number": 8,
+      "name": "perturbation testing",
+      "aliases": [
+        "perturbation criterion",
+        "input mutation test"
+      ],
+      "summary": "Checking that a model or program behaves correctly by changing an input, recomputing, and verifying that the dependent outputs move to the expected new values. It reveals hardcoded values and broken dependencies.",
+      "role": "uses",
+      "evidence": "A perturbation criterion specifies an input mutation ... and an expected output shift"
+    },
+    {
+      "number": 9,
+      "name": "hardcoding versus formula-driven spreadsheet modeling",
+      "aliases": [
+        "hardcoded values",
+        "dynamic formulas"
+      ],
+      "summary": "Spreadsheets stay dynamic when cells compute from formulas that reference inputs. Typing in computed constants (hardcoding) breaks the dependency chain, so changes to inputs no longer propagate.",
+      "role": "uses",
+      "evidence": "Do not hardcode computed values when a formula can produce the result."
+    },
+    {
+      "number": 10,
+      "name": "financial modeling",
+      "aliases": [
+        "financial model"
+      ],
+      "summary": "Building spreadsheet representations of a company's or deal's finances, linking assumptions to projected statements and valuation outputs. Standard conventions govern layout, linking and auditability.",
+      "role": "assumes",
+      "evidence": "building financial models from scratch, modifying existing models"
+    },
+    {
+      "number": 11,
+      "name": "discounted cash flow valuation",
+      "aliases": [
+        "DCF"
+      ],
+      "summary": "A valuation method that projects future free cash flows and discounts them to present value at a rate such as WACC, adding a terminal value to estimate enterprise value.",
+      "role": "assumes",
+      "evidence": "building a model so I can value the company using a DCF"
+    },
+    {
+      "number": 12,
+      "name": "weighted average cost of capital",
+      "aliases": [
+        "WACC"
+      ],
+      "summary": "The blended required return on a firm's debt and equity financing, weighted by their proportions and adjusted for the tax shield on debt. It serves as the discount rate in DCF valuation.",
+      "role": "assumes",
+      "evidence": "change WACC from 8.5% to 10%"
+    },
+    {
+      "number": 13,
+      "name": "debt schedule",
+      "aliases": [
+        "debt build",
+        "revolver and term loan schedule"
+      ],
+      "summary": "A model section tracking each debt tranche's balance, interest, amortization and cash sweep over time. It often creates circular references because interest depends on balances that depend on cash flow.",
+      "role": "uses",
+      "evidence": "Build a debt schedule section at the bottom of the uploaded worksheet"
+    },
+    {
+      "number": 14,
+      "name": "circular reference in spreadsheets",
+      "aliases": [
+        "circularity",
+        "iterative calculation"
+      ],
+      "summary": "A cell formula that depends on its own result through a chain of other cells. Spreadsheets handle these with iterative calculation until values converge or fail to.",
+      "role": "uses",
+      "evidence": "iterative-calc enabled so debt schedules and LBO-style circular references converge correctly"
+    },
+    {
+      "number": 15,
+      "name": "benchmark contamination",
+      "aliases": [
+        "test set leakage",
+        "data leakage"
+      ],
+      "summary": "The risk that evaluation items appear in a model's training data or are otherwise exposed, inflating scores. Keeping a private held-out set is a common safeguard.",
+      "role": "uses",
+      "evidence": "We retain a private set primarily out of potential leakage concerns"
+    },
+    {
+      "number": 16,
+      "name": "held-out test set",
+      "aliases": [
+        "hidden test set",
+        "private evaluation set"
+      ],
+      "summary": "A portion of evaluation data not publicly released, used to measure model performance without the risk of tuning to or training on it.",
+      "role": "uses",
+      "evidence": "held-out portion of BLUEFIN (120 tasks"
+    },
+    {
+      "number": 17,
+      "name": "minimal-elicitation prompting",
+      "aliases": [
+        "minimal system prompt"
+      ],
+      "summary": "Giving a model a very short prompt without workflow prescriptions or tool preferences, so evaluation measures raw capability rather than instruction-following or prompt engineering.",
+      "role": "uses",
+      "evidence": "we adopt a minimal-elicitation prompt (61 words"
+    },
+    {
+      "number": 18,
+      "name": "Pareto frontier of cost and performance",
+      "aliases": [
+        "cost-performance Pareto frontier"
+      ],
+      "summary": "The set of options for which no other option is both cheaper and better. Dominated options are those another option beats on both cost and score.",
+      "role": "uses",
+      "evidence": "The Pareto frontier traces Grok 4.20 → Gemini 3.1 Pro → GPT-5.5"
+    },
+    {
+      "number": 19,
+      "name": "sandboxed code execution",
+      "aliases": [
+        "execution sandbox"
+      ],
+      "summary": "Running untrusted or model-generated code in a restricted environment with limited builtins, an import allow-list and timeouts, preventing file, network and system access.",
+      "role": "uses",
+      "evidence": "restricted built-ins and a tight import whitelist (no file I/O, no network)"
+    },
+    {
+      "number": 20,
+      "name": "spreadsheet task taxonomy: synthesis, manipulation and interrogation",
+      "aliases": [
+        "synthesis, manipulation, interrogation tasks"
+      ],
+      "summary": "A division of spreadsheet work into creating a workbook from a prompt, modifying an existing workbook, and answering questions about a workbook.",
+      "role": "introduces",
+      "evidence": "10 end-to-end synthesis tasks ... 82 patch-based manipulation tasks ... 39 interrogation tasks"
+    },
+    {
+      "number": 21,
+      "name": "expert annotation and review pipeline",
+      "aliases": [
+        "expert-in-the-loop data curation"
+      ],
+      "summary": "Building a dataset by having vetted domain experts author items, then passing them through staged review and rework loops, often with AI-drafted candidate labels or rubrics that humans validate.",
+      "role": "uses",
+      "evidence": "hundreds of domain expert hours across task creation, annotation, refinement, and review"
+    },
+    {
+      "number": 22,
+      "name": "programmatic verifiability",
+      "aliases": [
+        "automatic verification"
+      ],
+      "summary": "Whether a task's correctness can be checked by executable tests or exact-answer matching. Benchmarks for code are often verifiable this way, while complex professional artifacts often are not.",
+      "role": "uses",
+      "evidence": "difficult to verify programmatically but can be reliably evaluated by an LM judge"
+    },
+    {
+      "number": 23,
+      "name": "numeric tolerance matching",
+      "aliases": [
+        "tolerance-based output validation"
+      ],
+      "summary": "Accepting a computed value as correct if it falls within a stated relative or absolute margin of a reference value, to allow for valid alternative methods and rounding.",
+      "role": "uses",
+      "evidence": "within ±2% of $380.88"
+    }
+  ],
+  "resolutions": [
+    {
+      "candidate": 1,
+      "name": "LLM-as-a-judge",
+      "verdict": "exact",
+      "concept": {
+        "id": 18,
+        "slug": "llm-as-a-judge",
+        "name": "LLM-as-a-judge"
+      },
+      "matched_text": "LLM-as-a-judge",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 2,
+      "name": "rubric-based evaluation",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 3,
+      "name": "inter-annotator agreement",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 4,
+      "name": "Krippendorff's alpha",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 5,
+      "name": "macro-averaged F1 score",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 6,
+      "name": "agentic evaluation harness",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 7,
+      "name": "LLM agent",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": "An LLM agent that acts over multiple steps with tools is a different idea from judging model outputs or from RL training of language models.",
+      "shortlist": [
+        {
+          "id": 18,
+          "slug": "llm-as-a-judge",
+          "name": "LLM-as-a-judge",
+          "found_by": [
+            "embedding 0.667"
+          ]
+        },
+        {
+          "id": 25,
+          "slug": "reinforcement-learning-for-language-models",
+          "name": "Reinforcement learning for language models",
+          "found_by": [
+            "embedding 0.565"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 8,
+      "name": "perturbation testing",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 9,
+      "name": "hardcoding versus formula-driven spreadsheet modeling",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 10,
+      "name": "financial modeling",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 11,
+      "name": "discounted cash flow valuation",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 12,
+      "name": "weighted average cost of capital",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 13,
+      "name": "debt schedule",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 14,
+      "name": "circular reference in spreadsheets",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 15,
+      "name": "benchmark contamination",
+      "verdict": "judged",
+      "concept": {
+        "id": 21,
+        "slug": "benchmark-data-contamination",
+        "name": "benchmark data contamination"
+      },
+      "matched_text": null,
+      "reason": "Both describe evaluation data overlapping with or leaking into training data and inflating benchmark scores, so they are synonyms.",
+      "shortlist": [
+        {
+          "id": 21,
+          "slug": "benchmark-data-contamination",
+          "name": "benchmark data contamination",
+          "found_by": [
+            "search word 'benchmark contamination'",
+            "embedding 0.757"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 16,
+      "name": "held-out test set",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 17,
+      "name": "minimal-elicitation prompting",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 18,
+      "name": "Pareto frontier of cost and performance",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 19,
+      "name": "sandboxed code execution",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 20,
+      "name": "spreadsheet task taxonomy: synthesis, manipulation and interrogation",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 21,
+      "name": "expert annotation and review pipeline",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 22,
+      "name": "programmatic verifiability",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": "Programmatic verifiability is a property of a task, while a rule-based reward is a mechanism that uses such checks, so they are related but different.",
+      "shortlist": [
+        {
+          "id": 6,
+          "slug": "rule-based-reward",
+          "name": "rule-based reward",
+          "found_by": [
+            "embedding 0.513"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 23,
+      "name": "numeric tolerance matching",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    }
+  ],
+  "output": {
+    "links": [
+      {
+        "slug": "llm-as-a-judge",
+        "name": "LLM-as-a-judge",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "LLM-as-a-judge"
+        ],
+        "judge_reason": null,
+        "evidence": "an agentic LLM judge that interacts with the output workbook through the same 20-tool spreadsheet environment",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "rubric-based-evaluation",
+        "name": "rubric-based evaluation",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "rubric-based evaluation"
+        ],
+        "judge_reason": null,
+        "evidence": "3,225 granular rubric criteria",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "inter-annotator-agreement",
+        "name": "inter-annotator agreement",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "inter-annotator agreement"
+        ],
+        "judge_reason": null,
+        "evidence": "inter-annotator alignment study over 384 binary criteria",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "krippendorff-s-alpha",
+        "name": "Krippendorff's alpha",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "Krippendorff's alpha"
+        ],
+        "judge_reason": null,
+        "evidence": "we observed a Krippendorff's Alpha of 0.826",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "macro-averaged-f1-score",
+        "name": "macro-averaged F1 score",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "macro-averaged F1 score"
+        ],
+        "judge_reason": null,
+        "evidence": "macro-F1 score of 0.839",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "agentic-evaluation-harness",
+        "name": "agentic evaluation harness",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "agentic evaluation harness"
+        ],
+        "judge_reason": null,
+        "evidence": "an agentic harness of 20 tools organized into six categories",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "llm-agent",
+        "name": "LLM agent",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "LLM agent"
+        ],
+        "judge_reason": null,
+        "evidence": "tasks LLM agents with synthesis, manipulation, and comprehension tasks",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "perturbation-testing",
+        "name": "perturbation testing",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "perturbation testing"
+        ],
+        "judge_reason": null,
+        "evidence": "A perturbation criterion specifies an input mutation ... and an expected output shift",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "hardcoding-versus-formula-driven-spreadsheet-modeling",
+        "name": "hardcoding versus formula-driven spreadsheet modeling",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "hardcoding versus formula-driven spreadsheet modeling"
+        ],
+        "judge_reason": null,
+        "evidence": "Do not hardcode computed values when a formula can produce the result.",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "financial-modeling",
+        "name": "financial modeling",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "financial modeling"
+        ],
+        "judge_reason": null,
+        "evidence": "building financial models from scratch, modifying existing models",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "discounted-cash-flow-valuation",
+        "name": "discounted cash flow valuation",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "discounted cash flow valuation"
+        ],
+        "judge_reason": null,
+        "evidence": "building a model so I can value the company using a DCF",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "weighted-average-cost-of-capital",
+        "name": "weighted average cost of capital",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "weighted average cost of capital"
+        ],
+        "judge_reason": null,
+        "evidence": "change WACC from 8.5% to 10%",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "debt-schedule",
+        "name": "debt schedule",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "debt schedule"
+        ],
+        "judge_reason": null,
+        "evidence": "Build a debt schedule section at the bottom of the uploaded worksheet",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "circular-reference-in-spreadsheets",
+        "name": "circular reference in spreadsheets",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "circular reference in spreadsheets"
+        ],
+        "judge_reason": null,
+        "evidence": "iterative-calc enabled so debt schedules and LBO-style circular references converge correctly",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "benchmark-data-contamination",
+        "name": "benchmark data contamination",
+        "role": "uses",
+        "resolution": "judged",
+        "candidates": [
+          "benchmark contamination"
+        ],
+        "judge_reason": "Both describe evaluation data overlapping with or leaking into training data and inflating benchmark scores, so they are synonyms.",
+        "evidence": "We retain a private set primarily out of potential leakage concerns",
+        "aliases_added": [
+          "benchmark contamination",
+          "test set leakage",
+          "data leakage"
+        ],
+        "slug_note": null
+      },
+      {
+        "slug": "held-out-test-set",
+        "name": "held-out test set",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "held-out test set"
+        ],
+        "judge_reason": null,
+        "evidence": "held-out portion of BLUEFIN (120 tasks",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "minimal-elicitation-prompting",
+        "name": "minimal-elicitation prompting",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "minimal-elicitation prompting"
+        ],
+        "judge_reason": null,
+        "evidence": "we adopt a minimal-elicitation prompt (61 words",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "pareto-frontier-of-cost-and-performance",
+        "name": "Pareto frontier of cost and performance",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "Pareto frontier of cost and performance"
+        ],
+        "judge_reason": null,
+        "evidence": "The Pareto frontier traces Grok 4.20 → Gemini 3.1 Pro → GPT-5.5",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "sandboxed-code-execution",
+        "name": "sandboxed code execution",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "sandboxed code execution"
+        ],
+        "judge_reason": null,
+        "evidence": "restricted built-ins and a tight import whitelist (no file I/O, no network)",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "spreadsheet-task-taxonomy-synthesis-manipulation-and-interrogation",
+        "name": "spreadsheet task taxonomy: synthesis, manipulation and interrogation",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "spreadsheet task taxonomy: synthesis, manipulation and interrogation"
+        ],
+        "judge_reason": null,
+        "evidence": "10 end-to-end synthesis tasks ... 82 patch-based manipulation tasks ... 39 interrogation tasks",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "expert-annotation-and-review-pipeline",
+        "name": "expert annotation and review pipeline",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "expert annotation and review pipeline"
+        ],
+        "judge_reason": null,
+        "evidence": "hundreds of domain expert hours across task creation, annotation, refinement, and review",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "programmatic-verifiability",
+        "name": "programmatic verifiability",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "programmatic verifiability"
+        ],
+        "judge_reason": null,
+        "evidence": "difficult to verify programmatically but can be reliably evaluated by an LM judge",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "numeric-tolerance-matching",
+        "name": "numeric tolerance matching",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "numeric tolerance matching"
+        ],
+        "judge_reason": null,
+        "evidence": "within ±2% of $380.88",
+        "aliases_added": [],
+        "slug_note": null
+      }
+    ]
+  }
+}

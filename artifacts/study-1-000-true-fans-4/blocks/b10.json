@@ -1,0 +1,21 @@
+{
+  "prompt": "Suppose a musician hires a manager to handle fans and also sells partly through an intermediary that keeps most of the revenue. Explain how each choice changes the number of true fans she needs.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "Hiring a manager to deal with fans skews her formula and increases the number of true fans she needs. Selling through an intermediary that keeps most of the revenue means she keeps less per fan, so she needs many more fans to reach the same income.",
+    "rubric": [
+      {
+        "criterion": "States that a helper or manager raises the number of fans needed",
+        "required": true
+      },
+      {
+        "criterion": "Explains that an intermediary taking a share reduces income per fan, so more fans are needed",
+        "required": true
+      },
+      {
+        "criterion": "Notes that the number still stays far below blockbuster levels",
+        "required": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,1095 @@
+{
+  "tagger": "claude-block-concepts-v1",
+  "trigger": "generation",
+  "model": "claude-sonnet-5-5",
+  "page": null,
+  "calls": [
+    {
+      "step": "block concepts",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChLFPhdPKjUCFehKiSa9n",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 12171,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 3644
+      }
+    }
+  ],
+  "concepts": [
+    {
+      "id": 49,
+      "slug": "1-000-true-fans",
+      "name": "1,000 true fans",
+      "in_source": "introduces",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "introduces"
+        ]
+      ]
+    },
+    {
+      "id": 57,
+      "slug": "all-or-nothing-funding",
+      "name": "all-or-nothing funding",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 54,
+      "slug": "average-annual-revenue-per-fan",
+      "name": "average annual revenue per fan",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 61,
+      "slug": "concentric-circles-of-fans",
+      "name": "concentric circles of fans",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 56,
+      "slug": "crowdfunding",
+      "name": "crowdfunding",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 51,
+      "slug": "direct-relationship-with-customers",
+      "name": "direct relationship with customers",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 53,
+      "slug": "intermediary",
+      "name": "intermediary",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 64,
+      "slug": "linear-versus-exponential-growth",
+      "name": "linear versus exponential growth",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 52,
+      "slug": "long-tail",
+      "name": "long tail",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 58,
+      "slug": "micro-patronage",
+      "name": "micro-patronage",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 62,
+      "slug": "microcelebrity",
+      "name": "microcelebrity",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 63,
+      "slug": "network-effect",
+      "name": "network effect",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 67,
+      "slug": "niche-market",
+      "name": "niche market",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 55,
+      "slug": "order-of-magnitude-estimate",
+      "name": "order of magnitude estimate",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 65,
+      "slug": "peer-to-peer-network",
+      "name": "peer-to-peer network",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 60,
+      "slug": "pre-financing",
+      "name": "pre-financing",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 66,
+      "slug": "recommendation-engine",
+      "name": "recommendation engine",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 59,
+      "slug": "street-performer-protocol",
+      "name": "Street Performer Protocol",
+      "in_source": "uses",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 50,
+      "slug": "true-fan",
+      "name": "true fan",
+      "in_source": "introduces",
+      "sources": [
+        [
+          "1-000-true-fans",
+          "introduces"
+        ]
+      ]
+    }
+  ],
+  "output": {
+    "counts": {
+      "blocks": 22,
+      "questions": 8,
+      "tags": 84,
+      "main": 49,
+      "incidental": 35,
+      "concepts_used": 19,
+      "concepts_offered": 19,
+      "blocks_untagged": 0,
+      "questions_with_main": 8
+    },
+    "blocks": [
+      {
+        "number": 1,
+        "key": "b01",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Introduces the essay's claim that about a thousand devoted fans can support a creator."
+          },
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Mentions that fans pay the creator directly."
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "key": "b02",
+        "type": "prediction",
+        "concepts": [
+          {
+            "id": 50,
+            "slug": "true-fan",
+            "name": "true fan",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "The prediction is about what defines a true fan: someone who buys anything the creator produces."
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "key": "b03",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 50,
+            "slug": "true-fan",
+            "name": "true fan",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Defines a true fan as someone who will buy anything the creator produces, with examples."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Presents the claim that roughly a thousand such fans give a living, not a fortune."
+          },
+          {
+            "id": 62,
+            "slug": "microcelebrity",
+            "name": "microcelebrity",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "The alternative to stardom is implicitly a small-scale following."
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "key": "b04",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 50,
+            "slug": "true-fan",
+            "name": "true fan",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Tests why a true fan is defined by buying everything."
+          },
+          {
+            "id": 54,
+            "slug": "average-annual-revenue-per-fan",
+            "name": "average annual revenue per fan",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "The answer rests on each fan's yearly spend adding up to income."
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "key": "b05",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 54,
+            "slug": "average-annual-revenue-per-fan",
+            "name": "average annual revenue per fan",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Sets $100 profit per fan per year (one day's wages) as the per-fan revenue assumption."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Gives the 1,000 fans times $100 arithmetic and how to adjust it."
+          },
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "The second criterion is a direct relationship so the creator keeps all payment."
+          },
+          {
+            "id": 55,
+            "slug": "order-of-magnitude-estimate",
+            "name": "order of magnitude estimate",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Says 1,000 is a rough order of magnitude, not a sacred number."
+          },
+          {
+            "id": 53,
+            "slug": "intermediary",
+            "name": "intermediary",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Labels, publishers and retailers are the intermediaries that take a share."
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "key": "b06",
+        "type": "interactable",
+        "concepts": [
+          {
+            "id": 54,
+            "slug": "average-annual-revenue-per-fan",
+            "name": "average annual revenue per fan",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "The slider changes spend per fan."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "The calculator shows how many fans are needed for the target income."
+          },
+          {
+            "id": 55,
+            "slug": "order-of-magnitude-estimate",
+            "name": "order of magnitude estimate",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "The illustrative cases show the number is adjustable and approximate."
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "key": "b07",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 54,
+            "slug": "average-annual-revenue-per-fan",
+            "name": "average annual revenue per fan",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Requires dividing income needed by spend per fan."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Adjusts the 1,000-fan default to a specific income and spend."
+          },
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Stipulates she keeps the full price of every sale."
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "key": "b08",
+        "type": "prediction",
+        "concepts": [
+          {
+            "id": 64,
+            "slug": "linear-versus-exponential-growth",
+            "name": "linear versus exponential growth",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Asks whether fans needed grow linearly with team size, rather than exponentially."
+          },
+          {
+            "id": 63,
+            "slug": "network-effect",
+            "name": "network effect",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "One option invokes network effects as a distractor."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "The number of true fans needed is the quantity changing."
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "key": "b09",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 64,
+            "slug": "linear-versus-exponential-growth",
+            "name": "linear versus exponential growth",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Contrasts fans needed growing in direct proportion to team size with exponential digital growth."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Lists the adjustments to the number of fans needed."
+          },
+          {
+            "id": 53,
+            "slug": "intermediary",
+            "name": "intermediary",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Handing fan dealings to labels, publishers or retailers is said to be worse."
+          },
+          {
+            "id": 61,
+            "slug": "concentric-circles-of-fans",
+            "name": "concentric circles of fans",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes regular fans around true fans who add about 50% income."
+          },
+          {
+            "id": 55,
+            "slug": "order-of-magnitude-estimate",
+            "name": "order of magnitude estimate",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Notes the number may be off by an order of magnitude."
+          },
+          {
+            "id": 50,
+            "slug": "true-fan",
+            "name": "true fan",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "True fans act as the marketing force toward regular fans."
+          },
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Indirect income needs more fans; the more direct, the fewer."
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "key": "b10",
+        "type": "blurb",
+        "concepts": [
+          {
+            "id": 53,
+            "slug": "intermediary",
+            "name": "intermediary",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "An intermediary keeping most revenue means more fans are needed."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Asks how choices change the number of true fans required."
+          },
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Indirect sales contrast with the direct relationship the formula assumes."
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "key": "b11",
+        "type": "prediction",
+        "concepts": [
+          {
+            "id": 52,
+            "slug": "long-tail",
+            "name": "long tail",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "The second benefit is obscure items being one click from bestsellers, the long tail."
+          },
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Selling directly worldwide is given as the first benefit."
+          },
+          {
+            "id": 65,
+            "slug": "peer-to-peer-network",
+            "name": "peer-to-peer network",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "The network structure makes the obscure item one click away."
+          },
+          {
+            "id": 67,
+            "slug": "niche-market",
+            "name": "niche market",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Niche fans finding the creator is the outcome."
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "key": "b12",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Explains directness: no intermediaries, the creator keeps the full payment."
+          },
+          {
+            "id": 52,
+            "slug": "long-tail",
+            "name": "long tail",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Explains Anderson's long tail and its mixed benefits."
+          },
+          {
+            "id": 65,
+            "slug": "peer-to-peer-network",
+            "name": "peer-to-peer network",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Peer-to-peer communication and payment put every node a click apart."
+          },
+          {
+            "id": 66,
+            "slug": "recommendation-engine",
+            "name": "recommendation engine",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Amazon and Netflix recommendation engines push attention into the tail."
+          },
+          {
+            "id": 53,
+            "slug": "intermediary",
+            "name": "intermediary",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Last century intermediaries kept creators from knowing their consumers."
+          },
+          {
+            "id": 67,
+            "slug": "niche-market",
+            "name": "niche market",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Big corporations are ill suited to niches, which stay open to creators."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "One in a million of the world's people is still enough for 1,000 true fans."
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "key": "b13",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 52,
+            "slug": "long-tail",
+            "name": "long tail",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Tests why the long tail is a mixed blessing for creators."
+          },
+          {
+            "id": 53,
+            "slug": "intermediary",
+            "name": "intermediary",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Aggregators are the beneficiaries in the options."
+          },
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Direct true-fan relationships are the way out."
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "key": "b14",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 62,
+            "slug": "microcelebrity",
+            "name": "microcelebrity",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Defines microcelebrity as someone famous to 1,500 people."
+          },
+          {
+            "id": 58,
+            "slug": "micro-patronage",
+            "name": "micro-patronage",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Names micro-patronage as support from many small patrons."
+          },
+          {
+            "id": 59,
+            "slug": "street-performer-protocol",
+            "name": "Street Performer Protocol",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes the Street Performer Protocol of releasing a novel free once donations reach a target."
+          },
+          {
+            "id": 60,
+            "slug": "pre-financing",
+            "name": "pre-financing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Stolze's pre-financed games and pre-sales fund production before it is made."
+          },
+          {
+            "id": 57,
+            "slug": "all-or-nothing-funding",
+            "name": "all-or-nothing funding",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Fundable holds money until the goal is met."
+          },
+          {
+            "id": 56,
+            "slug": "crowdfunding",
+            "name": "crowdfunding",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Sobule's recording funded by fan pledges is a crowdfunding example."
+          },
+          {
+            "id": 50,
+            "slug": "true-fan",
+            "name": "true fan",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Examples show true fans funding creators."
+          },
+          {
+            "id": 54,
+            "slug": "average-annual-revenue-per-fan",
+            "name": "average annual revenue per fan",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "The estimate of 200 true fans for Watt-Evans uses per-fan payments."
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "key": "b15",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Tests why fewer than 1,000 true fans can suffice for Watt-Evans."
+          },
+          {
+            "id": 53,
+            "slug": "intermediary",
+            "name": "intermediary",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Traditional publishing supplements his income."
+          },
+          {
+            "id": 61,
+            "slug": "concentric-circles-of-fans",
+            "name": "concentric circles of fans",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Thousands of lesser fans back the publisher advances."
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "key": "b16",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 56,
+            "slug": "crowdfunding",
+            "name": "crowdfunding",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Explains crowdfunding platforms and Kickstarter results."
+          },
+          {
+            "id": 57,
+            "slug": "all-or-nothing-funding",
+            "name": "all-or-nothing funding",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Notes some platforms are all-or-nothing."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Compares 241 average funders with 1,000 true fans."
+          },
+          {
+            "id": 50,
+            "slug": "true-fan",
+            "name": "true fan",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "A true fan will by definition become a funder."
+          }
+        ]
+      },
+      {
+        "number": 17,
+        "key": "b17",
+        "type": "chart",
+        "concepts": [
+          {
+            "id": 56,
+            "slug": "crowdfunding",
+            "name": "crowdfunding",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Compares average Kickstarter funders with the benchmark."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Shows the 1,000 true-fan benchmark."
+          }
+        ]
+      },
+      {
+        "number": 18,
+        "key": "b18",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Discusses the costs and takeaway of cultivating a thousand true fans."
+          },
+          {
+            "id": 50,
+            "slug": "true-fan",
+            "name": "true fan",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Cultivating true fans is the effort discussed."
+          },
+          {
+            "id": 56,
+            "slug": "crowdfunding",
+            "name": "crowdfunding",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Mentions Kickstarter as one route."
+          },
+          {
+            "id": 53,
+            "slug": "intermediary",
+            "name": "intermediary",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Mentions big publishers as an alternative route."
+          }
+        ]
+      },
+      {
+        "number": 19,
+        "key": "b19",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Critiques the assumptions and evidence behind the 1,000 true fans claim."
+          },
+          {
+            "id": 54,
+            "slug": "average-annual-revenue-per-fan",
+            "name": "average annual revenue per fan",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Notes the $100 per fan figure is assumed, not measured."
+          },
+          {
+            "id": 50,
+            "slug": "true-fan",
+            "name": "true fan",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Questions how long it takes to gain a true fan."
+          },
+          {
+            "id": 67,
+            "slug": "niche-market",
+            "name": "niche market",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "The one in a million niche argument still requires finding the niche."
+          }
+        ]
+      },
+      {
+        "number": 20,
+        "key": "b20",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Keeping the full payment is one web effect on the arithmetic."
+          },
+          {
+            "id": 52,
+            "slug": "long-tail",
+            "name": "long tail",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Niche fans becoming findable reflects the long tail."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "The question concerns how the web changes the true-fan arithmetic."
+          },
+          {
+            "id": 56,
+            "slug": "crowdfunding",
+            "name": "crowdfunding",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "A distractor concerns crowdfunding guarantees."
+          }
+        ]
+      },
+      {
+        "number": 21,
+        "key": "b21",
+        "type": "blurb",
+        "concepts": [
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Requires adjusting the 1,000-fan figure to her case."
+          },
+          {
+            "id": 54,
+            "slug": "average-annual-revenue-per-fan",
+            "name": "average annual revenue per fan",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Uses $100 per fan to compute her income."
+          },
+          {
+            "id": 61,
+            "slug": "concentric-circles-of-fans",
+            "name": "concentric circles of fans",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Regular fans could add income."
+          },
+          {
+            "id": 53,
+            "slug": "intermediary",
+            "name": "intermediary",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Intermediaries or publishers could add income."
+          },
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "She sells directly."
+          }
+        ]
+      },
+      {
+        "number": 22,
+        "key": "b22",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 55,
+            "slug": "order-of-magnitude-estimate",
+            "name": "order of magnitude estimate",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Treats 1,000 as a rough default to adjust, within the same order of magnitude."
+          },
+          {
+            "id": 54,
+            "slug": "average-annual-revenue-per-fan",
+            "name": "average annual revenue per fan",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "At $50 per fan she needs 2,000 fans."
+          },
+          {
+            "id": 49,
+            "slug": "1-000-true-fans",
+            "name": "1,000 true fans",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Applies the adjustable true-fan formula."
+          },
+          {
+            "id": 51,
+            "slug": "direct-relationship-with-customers",
+            "name": "direct relationship with customers",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "She keeps the full price."
+          }
+        ]
+      }
+    ],
+    "tokens": {
+      "input": 12171,
+      "output": 3644
+    }
+  }
+}

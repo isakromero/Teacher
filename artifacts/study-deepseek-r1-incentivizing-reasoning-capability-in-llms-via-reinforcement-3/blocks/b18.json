@@ -1,0 +1,21 @@
+{
+  "prompt": "Explain why the authors say pure RL is hard to scale to tasks like writing, and how DeepSeek-R1 handles such tasks instead.",
+  "min_words": 25,
+  "private": {
+    "model_answer": "Pure RL depends on a reliable reward signal. For math and code, rules or test cases give one, but for writing no dependable rule-based reward exists, and a model-based reward can be exploited by the policy, which finds shortcuts that score high without being truly better. So R1 uses human-annotated supervised data for such tasks and runs only a few hundred RL steps.",
+    "rubric": [
+      {
+        "criterion": "Says pure RL requires a reliable reward or verifier, which is hard to build for writing",
+        "required": true
+      },
+      {
+        "criterion": "Mentions that model-based rewards can be exploited (reward hacking)",
+        "required": true
+      },
+      {
+        "criterion": "States that R1 relies on human-annotated SFT data and only brief RL for such tasks",
+        "required": false
+      }
+    ]
+  }
+}

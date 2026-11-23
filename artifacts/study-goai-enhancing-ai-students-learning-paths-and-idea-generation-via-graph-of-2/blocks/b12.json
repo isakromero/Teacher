@@ -1,0 +1,13 @@
+{
+  "question": "How is the final judgment of whether a Hint Idea is promising reached?",
+  "options": [
+    "A single reviewer averages its scores over the summary, analysis and scoring stages",
+    "Several reviewer agents each score from 1 to 10 against a threshold of 5, and a majority vote decides",
+    "The idea is compared by cosine similarity to accepted OpenReview papers",
+    "Human students vote on the idea after reading the reviewer's analysis"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The paper describes multiple GoAI-CoT-Reviewer agents, each scoring 1–10 with 5 as the promising/unpromising threshold, and then a majority vote. The three stages are steps within one reviewer's reasoning, not separate scores to average."
+  }
+}

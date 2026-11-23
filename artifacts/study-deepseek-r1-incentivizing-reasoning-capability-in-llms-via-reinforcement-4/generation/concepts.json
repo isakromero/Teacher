@@ -1,0 +1,814 @@
+{
+  "extractor": "claude-concepts-v1",
+  "trigger": "generation",
+  "model": "claude-sonnet-5-5",
+  "embedding_model": "text-embedding-3-small",
+  "source": {
+    "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement",
+    "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning"
+  },
+  "calls": [
+    {
+      "step": "concepts",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChGCnzszATvzJm3TbjmVT",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 1035,
+        "cache_creation_input_tokens": 232719,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 3013
+      }
+    }
+  ],
+  "stale_embedded": 0,
+  "removed_links": 0,
+  "candidates": [
+    {
+      "number": 1,
+      "name": "reinforcement learning",
+      "aliases": [
+        "RL"
+      ],
+      "summary": "A learning paradigm in which an agent takes actions and optimizes its behavior to maximize cumulative reward received from an environment. Feedback is a scalar signal rather than labeled target outputs.",
+      "role": "uses",
+      "evidence": "the reasoning abilities of LLMs can be incentivized through pure reinforcement learning (RL)"
+    },
+    {
+      "number": 2,
+      "name": "Group Relative Policy Optimization",
+      "aliases": [
+        "GRPO"
+      ],
+      "summary": "A policy-gradient algorithm that samples a group of outputs per prompt and computes each output's advantage by normalizing its reward against the group's mean and standard deviation. It removes the need for a learned value model and uses PPO-style clipping and a KL penalty.",
+      "role": "uses",
+      "evidence": "GRPO samples a group of outputs {o1, o2, · · · , oG} from the old policy"
+    },
+    {
+      "number": 3,
+      "name": "Proximal Policy Optimization",
+      "aliases": [
+        "PPO"
+      ],
+      "summary": "A policy-gradient reinforcement learning algorithm that limits each update by clipping the ratio between new and old policy probabilities. It typically uses a learned value model and generalized advantage estimation.",
+      "role": "uses",
+      "evidence": "Proximal Policy Optimization (PPO) (Schulman et al., 2017), which is widely used in the RL stage of LLMs"
+    },
+    {
+      "number": 4,
+      "name": "advantage estimation",
+      "aliases": [
+        "advantage function",
+        "generalized advantage estimation",
+        "GAE"
+      ],
+      "summary": "The advantage measures how much better an action or output is than a baseline expectation, reducing variance in policy-gradient updates. It can be computed with a learned value function (as in GAE) or from group-normalized rewards.",
+      "role": "uses",
+      "evidence": "the advantage is typically computed by applying the Generalized Advantage Estimation (GAE)"
+    },
+    {
+      "number": 5,
+      "name": "Kullback-Leibler divergence",
+      "aliases": [
+        "KL divergence",
+        "KL"
+      ],
+      "summary": "A measure of how one probability distribution differs from a reference distribution. In RL fine-tuning it is used as a penalty to keep the trained policy close to a reference policy.",
+      "role": "uses",
+      "evidence": "an unbiased estimator of the KL divergence (Schulman, 2020) is directly added in the loss"
+    },
+    {
+      "number": 6,
+      "name": "rule-based reward",
+      "aliases": [
+        "verifiable reward",
+        "rule-based reward model"
+      ],
+      "summary": "A reward computed by deterministic checks such as answer matching, compiler tests or format checks, rather than by a learned model. It gives objective feedback on tasks with verifiable outcomes.",
+      "role": "uses",
+      "evidence": "we employ rule-based rewards to deliver precise feedback for data in mathematical, coding, and logical reasoning domains"
+    },
+    {
+      "number": 7,
+      "name": "reward hacking",
+      "aliases": [
+        "reward gaming",
+        "reward overoptimization"
+      ],
+      "summary": "When a policy exploits flaws or biases in a reward function to obtain high reward without achieving the intended goal. It is more likely with learned reward models as optimization proceeds.",
+      "role": "uses",
+      "evidence": "neural reward models are susceptible to reward hacking during large-scale reinforcement learning"
+    },
+    {
+      "number": 8,
+      "name": "chain-of-thought reasoning",
+      "aliases": [
+        "chain of thought",
+        "CoT"
+      ],
+      "summary": "Having a language model produce intermediate reasoning steps before its final answer, which improves performance on complex tasks. It can be elicited by few-shot examples or prompts like 'think step by step'.",
+      "role": "assumes",
+      "evidence": "chain-of-thought (CoT) prompting"
+    },
+    {
+      "number": 9,
+      "name": "supervised fine-tuning",
+      "aliases": [
+        "SFT"
+      ],
+      "summary": "Further training a pretrained model on curated input-output pairs with a supervised (cross-entropy) objective so it imitates the desired outputs.",
+      "role": "uses",
+      "evidence": "we bypass the conventional supervised fine-tuning (SFT) phase before RL training"
+    },
+    {
+      "number": 10,
+      "name": "knowledge distillation",
+      "aliases": [
+        "model distillation",
+        "distillation"
+      ],
+      "summary": "Training a smaller student model to reproduce the behavior of a larger teacher, here by fine-tuning on outputs generated by the teacher.",
+      "role": "uses",
+      "evidence": "we adopt a model distillation approach, a well-established technique for efficient knowledge transfer"
+    },
+    {
+      "number": 11,
+      "name": "rejection sampling",
+      "aliases": [],
+      "summary": "Generating many candidate outputs and keeping only those that pass a filter, such as correctness or readability checks, to build a training set.",
+      "role": "uses",
+      "evidence": "performing rejection sampling from the checkpoint of the first-stage RL training"
+    },
+    {
+      "number": 12,
+      "name": "test-time compute scaling",
+      "aliases": [
+        "inference-time scaling",
+        "test-time scaling"
+      ],
+      "summary": "Improving model performance by spending more computation at inference, for example by generating longer reasoning or sampling multiple answers.",
+      "role": "uses",
+      "evidence": "Scaling Inference-time Compute"
+    },
+    {
+      "number": 13,
+      "name": "self-consistency decoding",
+      "aliases": [
+        "majority voting",
+        "consensus voting",
+        "cons@k"
+      ],
+      "summary": "Sampling several reasoning paths for a question and choosing the most frequent final answer to improve accuracy.",
+      "role": "uses",
+      "evidence": "by leveraging the self-consistency decoding (Wang et al., 2023c)"
+    },
+    {
+      "number": 14,
+      "name": "pass@k evaluation",
+      "aliases": [
+        "pass@1"
+      ],
+      "summary": "A metric that samples k responses per problem and measures correctness; pass@1 averages the correctness of individual samples, while pass@k counts a problem solved if any of k samples is correct.",
+      "role": "uses",
+      "evidence": "pass@1 = 1/k Σ p_i, where p_i denotes the correctness of the i-th response"
+    },
+    {
+      "number": 15,
+      "name": "process reward model",
+      "aliases": [
+        "PRM",
+        "process-based reward model"
+      ],
+      "summary": "A learned reward model that scores intermediate reasoning steps rather than only the final outcome.",
+      "role": "uses",
+      "evidence": "Process Reward Model (PRM) PRM is a reasonable method to guide the model toward better approaches"
+    },
+    {
+      "number": 16,
+      "name": "Monte Carlo tree search",
+      "aliases": [
+        "MCTS"
+      ],
+      "summary": "A search algorithm that explores a decision tree by sampling simulated rollouts and using their results to guide further expansion, often with a value model.",
+      "role": "uses",
+      "evidence": "we explored using Monte Carlo Tree Search (MCTS) to enhance test-time compute scalability"
+    },
+    {
+      "number": 17,
+      "name": "mixture-of-experts",
+      "aliases": [
+        "MoE"
+      ],
+      "summary": "A neural architecture where a router activates only a subset of expert sub-networks per token, so total parameters greatly exceed those used per token.",
+      "role": "assumes",
+      "evidence": "Built on a Mixture-of-Experts (MoE) architecture, DeepSeek V3 has 671 billion total parameters, with 37 billion activated per token"
+    },
+    {
+      "number": 18,
+      "name": "LLM-as-a-judge",
+      "aliases": [
+        "generative reward model"
+      ],
+      "summary": "Using a language model to evaluate or grade other model outputs, for example scoring correctness or comparing two responses.",
+      "role": "uses",
+      "evidence": "employing LLM as judges"
+    },
+    {
+      "number": 19,
+      "name": "preference reward model",
+      "aliases": [
+        "helpfulness reward model",
+        "pairwise reward model"
+      ],
+      "summary": "A model trained on pairs of responses ranked by preference to output a scalar score approximating human preference, used as an RL reward.",
+      "role": "uses",
+      "evidence": "we first generate preference pairs by prompting DeepSeek-V3 using the arena-hard prompt format"
+    },
+    {
+      "number": 20,
+      "name": "reinforcement learning from human feedback",
+      "aliases": [
+        "RLHF"
+      ],
+      "summary": "Aligning a language model by training a reward model on human preference data and optimizing the model against it with RL.",
+      "role": "assumes",
+      "evidence": "A prominent instantiation of this approach is Reinforcement Learning from Human Feedback (RLHF)"
+    },
+    {
+      "number": 21,
+      "name": "benchmark data contamination",
+      "aliases": [
+        "decontamination",
+        "test set contamination"
+      ],
+      "summary": "Overlap between training data and evaluation data that inflates benchmark scores. It is mitigated by filtering, for example removing texts with n-gram matches to test questions.",
+      "role": "uses",
+      "evidence": "we implemented comprehensive decontamination procedures for both pre-training and post-training data"
+    },
+    {
+      "number": 22,
+      "name": "emergent reasoning behavior",
+      "aliases": [
+        "self-evolution",
+        "aha moment"
+      ],
+      "summary": "Capabilities such as reflection, verification and exploring alternatives that appear during training without being explicitly taught, often alongside longer outputs.",
+      "role": "introduces",
+      "evidence": "DeepSeek-R1-Zero exhibits an “aha moment” (Table 2)"
+    },
+    {
+      "number": 23,
+      "name": "language consistency reward",
+      "aliases": [
+        "language mixing mitigation reward"
+      ],
+      "summary": "A reward term giving the fraction of words in a reasoning chain that are in the target language, used to discourage mixing languages.",
+      "role": "introduces",
+      "evidence": "calculated as the proportion of target language words in the CoT"
+    },
+    {
+      "number": 24,
+      "name": "jailbreak attack",
+      "aliases": [
+        "jailbreaking"
+      ],
+      "summary": "A prompting technique that tries to circumvent a model's safety alignment to elicit harmful output.",
+      "role": "uses",
+      "evidence": "Robustness against Jailbreaking"
+    }
+  ],
+  "resolutions": [
+    {
+      "candidate": 1,
+      "name": "reinforcement learning",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 2,
+      "name": "Group Relative Policy Optimization",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 3,
+      "name": "Proximal Policy Optimization",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 4,
+      "name": "advantage estimation",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 5,
+      "name": "Kullback-Leibler divergence",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 6,
+      "name": "rule-based reward",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 7,
+      "name": "reward hacking",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 8,
+      "name": "chain-of-thought reasoning",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 9,
+      "name": "supervised fine-tuning",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 10,
+      "name": "knowledge distillation",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 11,
+      "name": "rejection sampling",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 12,
+      "name": "test-time compute scaling",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 13,
+      "name": "self-consistency decoding",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 14,
+      "name": "pass@k evaluation",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 15,
+      "name": "process reward model",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 16,
+      "name": "Monte Carlo tree search",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 17,
+      "name": "mixture-of-experts",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 18,
+      "name": "LLM-as-a-judge",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 19,
+      "name": "preference reward model",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 20,
+      "name": "reinforcement learning from human feedback",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 21,
+      "name": "benchmark data contamination",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 22,
+      "name": "emergent reasoning behavior",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 23,
+      "name": "language consistency reward",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 24,
+      "name": "jailbreak attack",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    }
+  ],
+  "output": {
+    "links": [
+      {
+        "slug": "reinforcement-learning",
+        "name": "reinforcement learning",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "reinforcement learning"
+        ],
+        "judge_reason": null,
+        "evidence": "the reasoning abilities of LLMs can be incentivized through pure reinforcement learning (RL)",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "group-relative-policy-optimization",
+        "name": "Group Relative Policy Optimization",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "Group Relative Policy Optimization"
+        ],
+        "judge_reason": null,
+        "evidence": "GRPO samples a group of outputs {o1, o2, · · · , oG} from the old policy",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "proximal-policy-optimization",
+        "name": "Proximal Policy Optimization",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "Proximal Policy Optimization"
+        ],
+        "judge_reason": null,
+        "evidence": "Proximal Policy Optimization (PPO) (Schulman et al., 2017), which is widely used in the RL stage of LLMs",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "advantage-estimation",
+        "name": "advantage estimation",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "advantage estimation"
+        ],
+        "judge_reason": null,
+        "evidence": "the advantage is typically computed by applying the Generalized Advantage Estimation (GAE)",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "kullback-leibler-divergence",
+        "name": "Kullback-Leibler divergence",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "Kullback-Leibler divergence"
+        ],
+        "judge_reason": null,
+        "evidence": "an unbiased estimator of the KL divergence (Schulman, 2020) is directly added in the loss",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "rule-based-reward",
+        "name": "rule-based reward",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "rule-based reward"
+        ],
+        "judge_reason": null,
+        "evidence": "we employ rule-based rewards to deliver precise feedback for data in mathematical, coding, and logical reasoning domains",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "reward-hacking",
+        "name": "reward hacking",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "reward hacking"
+        ],
+        "judge_reason": null,
+        "evidence": "neural reward models are susceptible to reward hacking during large-scale reinforcement learning",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "chain-of-thought-reasoning",
+        "name": "chain-of-thought reasoning",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "chain-of-thought reasoning"
+        ],
+        "judge_reason": null,
+        "evidence": "chain-of-thought (CoT) prompting",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "supervised-fine-tuning",
+        "name": "supervised fine-tuning",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "supervised fine-tuning"
+        ],
+        "judge_reason": null,
+        "evidence": "we bypass the conventional supervised fine-tuning (SFT) phase before RL training",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "knowledge-distillation",
+        "name": "knowledge distillation",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "knowledge distillation"
+        ],
+        "judge_reason": null,
+        "evidence": "we adopt a model distillation approach, a well-established technique for efficient knowledge transfer",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "rejection-sampling",
+        "name": "rejection sampling",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "rejection sampling"
+        ],
+        "judge_reason": null,
+        "evidence": "performing rejection sampling from the checkpoint of the first-stage RL training",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "test-time-compute-scaling",
+        "name": "test-time compute scaling",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "test-time compute scaling"
+        ],
+        "judge_reason": null,
+        "evidence": "Scaling Inference-time Compute",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "self-consistency-decoding",
+        "name": "self-consistency decoding",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "self-consistency decoding"
+        ],
+        "judge_reason": null,
+        "evidence": "by leveraging the self-consistency decoding (Wang et al., 2023c)",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "pass-k-evaluation",
+        "name": "pass@k evaluation",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "pass@k evaluation"
+        ],
+        "judge_reason": null,
+        "evidence": "pass@1 = 1/k Σ p_i, where p_i denotes the correctness of the i-th response",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "process-reward-model",
+        "name": "process reward model",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "process reward model"
+        ],
+        "judge_reason": null,
+        "evidence": "Process Reward Model (PRM) PRM is a reasonable method to guide the model toward better approaches",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "monte-carlo-tree-search",
+        "name": "Monte Carlo tree search",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "Monte Carlo tree search"
+        ],
+        "judge_reason": null,
+        "evidence": "we explored using Monte Carlo Tree Search (MCTS) to enhance test-time compute scalability",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "mixture-of-experts",
+        "name": "mixture-of-experts",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "mixture-of-experts"
+        ],
+        "judge_reason": null,
+        "evidence": "Built on a Mixture-of-Experts (MoE) architecture, DeepSeek V3 has 671 billion total parameters, with 37 billion activated per token",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "llm-as-a-judge",
+        "name": "LLM-as-a-judge",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "LLM-as-a-judge"
+        ],
+        "judge_reason": null,
+        "evidence": "employing LLM as judges",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "preference-reward-model",
+        "name": "preference reward model",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "preference reward model"
+        ],
+        "judge_reason": null,
+        "evidence": "we first generate preference pairs by prompting DeepSeek-V3 using the arena-hard prompt format",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "reinforcement-learning-from-human-feedback",
+        "name": "reinforcement learning from human feedback",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "reinforcement learning from human feedback"
+        ],
+        "judge_reason": null,
+        "evidence": "A prominent instantiation of this approach is Reinforcement Learning from Human Feedback (RLHF)",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "benchmark-data-contamination",
+        "name": "benchmark data contamination",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "benchmark data contamination"
+        ],
+        "judge_reason": null,
+        "evidence": "we implemented comprehensive decontamination procedures for both pre-training and post-training data",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "emergent-reasoning-behavior",
+        "name": "emergent reasoning behavior",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "emergent reasoning behavior"
+        ],
+        "judge_reason": null,
+        "evidence": "DeepSeek-R1-Zero exhibits an “aha moment” (Table 2)",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "language-consistency-reward",
+        "name": "language consistency reward",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "language consistency reward"
+        ],
+        "judge_reason": null,
+        "evidence": "calculated as the proportion of target language words in the CoT",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "jailbreak-attack",
+        "name": "jailbreak attack",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "jailbreak attack"
+        ],
+        "judge_reason": null,
+        "evidence": "Robustness against Jailbreaking",
+        "aliases_added": [],
+        "slug_note": null
+      }
+    ]
+  }
+}

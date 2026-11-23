@@ -1,0 +1,431 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChDN9Ryh8C6KCWpYaf9Kj",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 7536,
+    "cache_creation_input_tokens": 232617,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 3787
+  },
+  "source": {
+    "slug": "deepseek-r1-incentivizing-reasoning-capability-in-llms-via-reinforcement",
+    "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+    "media_type": "application/pdf"
+  },
+  "trigger": "generation",
+  "proposed": 50,
+  "dropped": [
+    {
+      "term": "β",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "λ",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "process reward model",
+      "reason": "does not occur in the study page text"
+    }
+  ],
+  "merged": [],
+  "dropped_aliases": [
+    {
+      "term": "policy",
+      "alias": "policy model",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "ε",
+      "alias": "clip ratio",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "neural reward models",
+      "alias": "RM",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "MCTS",
+      "alias": "Monte Carlo Tree Search",
+      "reason": "does not occur in the study page text"
+    }
+  ],
+  "output": {
+    "terms": [
+      {
+        "term": "chain-of-thought",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A technique where a language model writes out intermediate reasoning steps before giving its final answer. It tends to improve performance on multi-step problems.",
+        "aliases": [
+          "CoT"
+        ]
+      },
+      {
+        "term": "supervised fine-tuning",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Further training of a pre-trained model on curated input-output examples, so it learns to imitate the desired responses.",
+        "aliases": [
+          "SFT"
+        ]
+      },
+      {
+        "term": "reinforcement learning",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A way of training in which a model generates outputs, receives a reward score for them, and is adjusted to make higher-reward outputs more likely.",
+        "aliases": [
+          "RL"
+        ]
+      },
+      {
+        "term": "DeepSeek-V3-Base",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The pre-trained base language model from DeepSeek, before instruction tuning, on which R1-Zero and R1 are trained.",
+        "aliases": []
+      },
+      {
+        "term": "DeepSeek-R1-Zero",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The paper's first model, trained with RL directly on the base model without any supervised fine-tuning stage.",
+        "aliases": [
+          "R1-Zero"
+        ]
+      },
+      {
+        "term": "DeepSeek-R1",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The paper's final model, trained through a multi-stage pipeline combining supervised fine-tuning and reinforcement learning.",
+        "aliases": [
+          "R1"
+        ]
+      },
+      {
+        "term": "distill",
+        "kind": "term",
+        "expansion": null,
+        "definition": "To train a smaller model on the outputs of a larger, stronger model so it inherits some of its abilities.",
+        "aliases": [
+          "distillation",
+          "distilled"
+        ]
+      },
+      {
+        "term": "Group Relative Policy Optimization",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A reinforcement learning algorithm that samples a group of outputs per question and scores each relative to the group, avoiding a separate learned value model.",
+        "aliases": [
+          "GRPO"
+        ]
+      },
+      {
+        "term": "policy",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In RL, the model's rule for choosing outputs; here, the language model itself being optimized.",
+        "aliases": []
+      },
+      {
+        "term": "advantage",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A measure of how much better an output's reward is than a baseline expectation. In GRPO the baseline is the group's average reward.",
+        "aliases": []
+      },
+      {
+        "term": "PPO",
+        "kind": "acronym",
+        "expansion": "Proximal Policy Optimization",
+        "definition": "A widely used RL algorithm for training language models that uses a clipped update and typically a learned value model.",
+        "aliases": []
+      },
+      {
+        "term": "KL",
+        "kind": "acronym",
+        "expansion": "Kullback–Leibler",
+        "definition": "A measure of how different one probability distribution is from another. Here it is penalized to keep the trained policy close to a reference policy.",
+        "aliases": [
+          "KL penalty",
+          "KL divergence"
+        ]
+      },
+      {
+        "term": "ε",
+        "kind": "symbol",
+        "expansion": null,
+        "definition": "A hyperparameter setting how far the policy's probability ratio may move before being clipped in the GRPO/PPO objective.",
+        "aliases": [
+          "clip range"
+        ]
+      },
+      {
+        "term": "value model",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A separate learned model that predicts the expected future reward from a partial output. PPO uses one to estimate advantages.",
+        "aliases": []
+      },
+      {
+        "term": "GAE",
+        "kind": "acronym",
+        "expansion": "Generalized Advantage Estimation",
+        "definition": "A method used in PPO to estimate advantages from rewards and a value model, with a coefficient λ that trades off bias and variance.",
+        "aliases": []
+      },
+      {
+        "term": "rule-based",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Describes rewards computed by fixed programmatic checks, such as answer matching or running test cases, rather than by a learned model.",
+        "aliases": []
+      },
+      {
+        "term": "accuracy reward",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A reward that checks whether a response's final answer is correct, for example by matching a reference answer or passing test cases.",
+        "aliases": []
+      },
+      {
+        "term": "format reward",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A reward given when the response follows the required structure, such as putting reasoning inside think tags.",
+        "aliases": []
+      },
+      {
+        "term": "reward hacking",
+        "kind": "term",
+        "expansion": null,
+        "definition": "When a model exploits flaws in a reward function to score highly without actually doing what the designers intended.",
+        "aliases": []
+      },
+      {
+        "term": "neural reward models",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Learned neural networks that score responses, as opposed to fixed rules. They can be outcome-based (scoring final answers) or process-based (scoring steps).",
+        "aliases": [
+          "reward models",
+          "reward model"
+        ]
+      },
+      {
+        "term": "AIME",
+        "kind": "acronym",
+        "expansion": "American Invitational Mathematics Examination",
+        "definition": "A high-school math competition whose problems have integer answers, used here as a reasoning benchmark.",
+        "aliases": [
+          "AIME 2024",
+          "AIME 2025"
+        ]
+      },
+      {
+        "term": "pass@1",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The expected probability that a single sampled response is correct, estimated by averaging correctness over several sampled responses.",
+        "aliases": []
+      },
+      {
+        "term": "self-consistency",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A decoding method that samples many reasoning paths and takes the most common final answer (majority vote).",
+        "aliases": [
+          "cons@64"
+        ]
+      },
+      {
+        "term": "cold-start",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A small initial set of curated examples used to fine-tune a model before RL begins, giving it a readable starting style.",
+        "aliases": []
+      },
+      {
+        "term": "language-consistency reward",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A reward equal to the proportion of words in the chain of thought that are in the target language, used to reduce language mixing.",
+        "aliases": []
+      },
+      {
+        "term": "rejection sampling",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Generating many candidate responses and keeping only those that pass a filter, such as having a correct final answer.",
+        "aliases": []
+      },
+      {
+        "term": "AlpacaEval 2.0",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An open-ended benchmark in which an LLM judge compares model responses to instructions; prompts are generally less demanding than Arena-Hard.",
+        "aliases": [
+          "AlpacaEval"
+        ]
+      },
+      {
+        "term": "ArenaHard",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A benchmark of challenging open-ended prompts drawn from Chatbot Arena, scored by an LLM judge.",
+        "aliases": []
+      },
+      {
+        "term": "IF-Eval",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A benchmark measuring whether a model follows explicit, verifiable formatting and content instructions.",
+        "aliases": []
+      },
+      {
+        "term": "Aider-Polyglot",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A benchmark of real-world code editing tasks across multiple programming languages.",
+        "aliases": [
+          "Aider"
+        ]
+      },
+      {
+        "term": "SWE Verified",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A human-validated subset of software engineering tasks where a model must resolve real GitHub issues.",
+        "aliases": []
+      },
+      {
+        "term": "MATH",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A dataset of competition-style math problems graded by difficulty level; MATH-500 is a 500-problem evaluation subset.",
+        "aliases": [
+          "MATH-500"
+        ]
+      },
+      {
+        "term": "LiveCodeBench",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A coding benchmark of recent algorithmic contest problems collected over time to limit contamination.",
+        "aliases": []
+      },
+      {
+        "term": "Codeforces",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An online competitive-programming platform; the paper uses its problems and reports a rating and a percentile versus human participants.",
+        "aliases": []
+      },
+      {
+        "term": "GPQA Diamond",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A benchmark of graduate-level multiple-choice science questions in physics, chemistry and biology.",
+        "aliases": [
+          "GPQA"
+        ]
+      },
+      {
+        "term": "MMLU-Pro",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A harder version of the MMLU multi-subject benchmark, with questions needing deeper reasoning.",
+        "aliases": [
+          "MMLU"
+        ]
+      },
+      {
+        "term": "STEM",
+        "kind": "acronym",
+        "expansion": "science, technology, engineering and mathematics",
+        "definition": "A grouping of science, technology, engineering and math subjects.",
+        "aliases": []
+      },
+      {
+        "term": "contamination",
+        "kind": "term",
+        "expansion": null,
+        "definition": "When benchmark questions or close variants appear in a model's training data, which can inflate its test scores.",
+        "aliases": []
+      },
+      {
+        "term": "n-gram",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A contiguous sequence of n tokens or words. Matching n-grams is a way to detect overlap between training text and test questions.",
+        "aliases": [
+          "10-gram"
+        ]
+      },
+      {
+        "term": "temperature",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A sampling setting that controls randomness in generation; lower values make outputs more predictable, higher values more varied.",
+        "aliases": []
+      },
+      {
+        "term": "test-time compute",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The amount of computation, such as number of generated thinking tokens, a model spends when answering a question.",
+        "aliases": []
+      },
+      {
+        "term": "majority voting",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Sampling several independent answers and choosing the most common one.",
+        "aliases": []
+      },
+      {
+        "term": "MCTS",
+        "kind": "acronym",
+        "expansion": "Monte Carlo Tree Search",
+        "definition": "A search method that explores possible continuations as a tree, guided by simulations and a value estimate.",
+        "aliases": []
+      },
+      {
+        "term": "MoE",
+        "kind": "acronym",
+        "expansion": "Mixture-of-Experts",
+        "definition": "A model architecture in which only a subset of specialized sub-networks is activated for each token.",
+        "aliases": []
+      },
+      {
+        "term": "jailbreak",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A prompt crafted to get a model to bypass its safety training and produce content it would normally refuse.",
+        "aliases": [
+          "jailbroken"
+        ]
+      },
+      {
+        "term": "risk control system",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An external layer around the model that flags risky conversations by keywords and has another model review them, adding safety beyond the model's own.",
+        "aliases": []
+      },
+      {
+        "term": "ChatbotArena",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A crowdsourced platform where users vote between anonymous model responses, producing human-preference rankings.",
+        "aliases": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "prompt": "Describe how GoAI-CoT-Reviewer reaches a novelty judgment for a Hint Idea, and what makes its reasoning \"structured\" compared with free-form chain-of-thought.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "The reviewer first summarizes the idea, then analyzes its strengths and weaknesses, and finally gives a numerical novelty score, with tags marking each stage. This imposes a fixed summary-analysis-scoring order mirroring human reviewers, instead of letting the model think freely. Several reviewer agents score from 1 to 10 and a majority vote against a threshold of 5 decides.",
+    "rubric": [
+      {
+        "criterion": "Names the three stages in order: summary, analysis, scoring.",
+        "required": true
+      },
+      {
+        "criterion": "Explains that the structure is a fixed, tagged sequence mirroring human review rather than free-form thinking.",
+        "required": true
+      },
+      {
+        "criterion": "Mentions that multiple agents score and a majority vote with a threshold decides.",
+        "required": false
+      }
+    ]
+  }
+}
