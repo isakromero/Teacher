@@ -1,0 +1,432 @@
+{
+  "stage": "question_check",
+  "round": 0,
+  "model": "claude-opus-5-5",
+  "judge_model": "claude-haiku-5-5",
+  "source": {
+    "slug": "attention-is-all-you-need",
+    "title": "Attention Is All You Need"
+  },
+  "rule_violations": [],
+  "open_book": [
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-opus-5-5",
+      "message_id": "msg_011ChMvxVCywLqTsDuaJUCfU",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 2021,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 92
+      },
+      "source": {
+        "slug": "attention-is-all-you-need",
+        "title": "Attention Is All You Need",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        3
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 3,
+            "reasoning": "Block 1 says h_t is computed from h_{t-1}, so h_50 cannot be computed until h_49 exists, which forces the positions within one example to be processed one after another.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-opus-5-5",
+      "message_id": "msg_011ChMvxfXbr6AUCZY1tg3Co",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 189,
+        "cache_creation_input_tokens": 3138,
+        "cache_read_input_tokens": 2021,
+        "output_tokens": 238
+      },
+      "source": {
+        "slug": "attention-is-all-you-need",
+        "title": "Attention Is All You Need",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        9
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 9,
+            "reasoning": "Block 6 says large dot products push softmax into regions with tiny gradients and that additive attention beat unscaled dot-product attention at large d_k. The widget in block 8 adds that with unit-variance components the raw scores spread out as d_k grows, so the weights collapse onto one key.",
+            "choice": null,
+            "answer": "When d_k is large, raw dot products of random unit-variance vectors grow large and spread widely. Softmax then saturates, putting nearly all weight on one key, and its gradients become tiny, so learning stalls. Dividing by √d_k keeps scores on a similar scale at any dimension, so the softmax stays responsive and trainable."
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-opus-5-5",
+      "message_id": "msg_011ChMvy4bBCjAzGJMq5fTAm",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 977,
+        "cache_read_input_tokens": 5159,
+        "output_tokens": 107
+      },
+      "source": {
+        "slug": "attention-is-all-you-need",
+        "title": "Attention Is All You Need",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        12
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 12,
+            "reasoning": "Blocks 4 and 10 say decoder self-attention is masked by setting illegal connections' scores to −∞ before the softmax, and that the target is fed in shifted right by one, so position i uses only earlier outputs.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-opus-5-5",
+      "message_id": "msg_011ChMvyEx2CPZKEkkQC6eAq",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 820,
+        "cache_read_input_tokens": 6136,
+        "output_tokens": 117
+      },
+      "source": {
+        "slug": "attention-is-all-you-need",
+        "title": "Attention Is All You Need",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        14
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 14,
+            "reasoning": "Block 13 says nothing but positional encoding carries order: attention compares every pair of positions the same way, and the FFN treats each position alike. So without the encodings, \"dog\" gets the same set of inputs in both sentences and therefore the same output vector.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-opus-5-5",
+      "message_id": "msg_011ChMvyNSThGxeT1MxkZgto",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 189,
+        "cache_creation_input_tokens": 744,
+        "cache_read_input_tokens": 6956,
+        "output_tokens": 244
+      },
+      "source": {
+        "slug": "attention-is-all-you-need",
+        "title": "Attention Is All You Need",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        16
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 16,
+            "reasoning": "Block 15's Table 1 gives self-attention cost O(n²·d) versus recurrent O(n·d²), noting self-attention is cheaper only when n<d, and proposes restricting attention to a neighbourhood of size r.",
+            "choice": null,
+            "answer": "Here n = 20,000 far exceeds d = 512, so full self-attention's O(n²·d) cost is roughly n/d ≈ 40 times a recurrent layer's O(n·d²). Self-attention is cheaper only when n < d. The authors propose restricting each position's attention to a neighbourhood of size r, costing O(r·n·d), though the maximum path length grows to O(n/r)."
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-opus-5-5",
+      "message_id": "msg_011ChMvymMrmtGYeQDVz5swK",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 2685,
+        "cache_read_input_tokens": 7700,
+        "output_tokens": 107
+      },
+      "source": {
+        "slug": "attention-is-all-you-need",
+        "title": "Attention Is All You Need",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        24
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 24,
+            "reasoning": "Block 22 and the chart in block 23 show that 1 head scores 24.9, 8–16 heads score 25.8, and 32 heads drop to 25.4. Several heads beat one, but very small heads hurt again.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-opus-5-5",
+      "message_id": "msg_011ChMvywaGTdLamLDShszBf",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 252,
+        "cache_creation_input_tokens": 2015,
+        "cache_read_input_tokens": 10385,
+        "output_tokens": 377
+      },
+      "source": {
+        "slug": "attention-is-all-you-need",
+        "title": "Attention Is All You Need",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        29,
+        30
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 29,
+            "reasoning": "Block 15's Table 1 gives self-attention O(1) sequential operations versus O(n) for recurrence. It also says per-layer cost is lower only when n<d, so the colleague's 'whatever the input' is wrong and parallelism is the better account.",
+            "choice": 0,
+            "answer": null
+          },
+          {
+            "block": 30,
+            "reasoning": "Block 2 names the cost as reduced effective resolution from averaging. Block 10 explains how separate heads attend in different subspaces, and block 22's Table 3 (A) shows one head scoring 24.9 against 25.8 for the best setting.",
+            "choice": null,
+            "answer": "The cost is reduced effective resolution: each attention output is a weighted average of positions, so distinct pieces of information, such as a verb's subject and object, get blurred together. Multi-head attention runs several smaller attentions in parallel, each with its own learned projections, so different heads can focus on different relations in different subspaces. Evidence: in Table 3, a single head scored 24.9 BLEU, 0.9 below the best multi-head setting (25.8), at equal computation."
+          }
+        ]
+      }
+    }
+  ],
+  "judged": [
+    {
+      "block": 9,
+      "answer": "When d_k is large, raw dot products of random unit-variance vectors grow large and spread widely. Softmax then saturates, putting nearly all weight on one key, and its gradients become tiny, so learning stalls. Dividing by √d_k keeps scores on a similar scale at any dimension, so the softmax stays responsive and trainable.",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "Explains that the dot products grow in magnitude (or variance) as the dimension d_k grows",
+          "required": true,
+          "met": true,
+          "justification": "The learner states that when d_k is large, raw dot products of random unit-variance vectors grow large and spread widely, which captures growth in magnitude with dimension."
+        },
+        {
+          "criterion": "Explains that large scores push the softmax into a saturated region with very small gradients, which hampers learning",
+          "required": true,
+          "met": true,
+          "justification": "The learner explains that softmax saturates, putting nearly all weight on one key, and gradients become tiny so learning stalls, matching the required saturation and gradient point."
+        },
+        {
+          "criterion": "Notes that dividing by √d_k restores a variance of about 1, independent of d_k",
+          "required": false,
+          "met": true,
+          "justification": "The learner says dividing by √d_k keeps scores on a similar scale at any dimension, which is close to restoring a roughly constant variance, though they do not mention variance of about 1 explicitly."
+        }
+      ],
+      "feedback": "You explain well that dot products grow with dimension and that saturated softmax gives tiny gradients that stall learning. Your point that scaling keeps scores on a similar scale across dimensions covers the purpose of the division clearly."
+    },
+    {
+      "block": 16,
+      "answer": "Here n = 20,000 far exceeds d = 512, so full self-attention's O(n²·d) cost is roughly n/d ≈ 40 times a recurrent layer's O(n·d²). Self-attention is cheaper only when n < d. The authors propose restricting each position's attention to a neighbourhood of size r, costing O(r·n·d), though the maximum path length grows to O(n/r).",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "States that because n is much larger than d, self-attention's per-layer cost (n²·d) is now higher than the recurrent layer's (n·d²)",
+          "required": true,
+          "met": true,
+          "justification": "The learner states that with n = 20,000 far exceeding d = 512, self-attention's O(n²·d) cost exceeds the recurrent O(n·d²) cost, with the ratio n/d, which matches the criterion."
+        },
+        {
+          "criterion": "Names restricting self-attention to a local neighbourhood of size r as the authors' proposed remedy",
+          "required": true,
+          "met": true,
+          "justification": "The learner names restricting each position's attention to a neighbourhood of size r as the proposed remedy, which meets the criterion."
+        },
+        {
+          "criterion": "Notes the trade-off that restricted attention increases the maximum path length to O(n/r)",
+          "required": false,
+          "met": true,
+          "justification": "The learner notes that the maximum path length grows to O(n/r) under restricted attention, which matches the optional trade-off."
+        },
+        {
+          "criterion": "Notes that self-attention keeps its advantage of O(1) sequential operations",
+          "required": false,
+          "met": false,
+          "justification": "The learner does not state that self-attention keeps O(1) sequential operations; it only discusses cost and path length, so this optional criterion is not shown."
+        }
+      ],
+      "feedback": "You correctly compared the per-layer costs: with n much larger than d, self-attention's n²·d term dominates the recurrent layer's n·d². You also identified restricting attention to a local neighbourhood of size r as the remedy and noted the resulting longer maximum path length. Consider also stating whether self-attention still has an advantage in the number of sequential operations."
+    },
+    {
+      "block": 30,
+      "answer": "The cost is reduced effective resolution: each attention output is a weighted average of positions, so distinct pieces of information, such as a verb's subject and object, get blurred together. Multi-head attention runs several smaller attentions in parallel, each with its own learned projections, so different heads can focus on different relations in different subspaces. Evidence: in Table 3, a single head scored 24.9 BLEU, 0.9 below the best multi-head setting (25.8), at equal computation.",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "Identifies the cost as reduced effective resolution caused by averaging over attention-weighted positions",
+          "required": true,
+          "met": true,
+          "justification": "The learner names reduced effective resolution caused by averaging over attention-weighted positions, with a concrete example of blurred subject and object information, which matches the criterion."
+        },
+        {
+          "criterion": "Explains that multiple heads, each with its own learned projections, can attend to different information or positions in parallel instead of producing one blended average",
+          "required": false,
+          "met": true,
+          "justification": "The learner explains that several heads with their own learned projections run in parallel and can focus on different relations in different subspaces, meeting the optional criterion."
+        },
+        {
+          "criterion": "Cites evidence from the paper, such as the Table 3 result that one head is 0.9 BLEU worse than the best setting, or the visualizations of heads doing different tasks",
+          "required": true,
+          "met": true,
+          "justification": "The learner cites Table 3: a single head at 24.9 BLEU versus 25.8 for the best multi-head setting, a 0.9 gap, which is the evidence the criterion names."
+        },
+        {
+          "criterion": "Notes that the comparison holds total computation constant, or that too many heads also hurt",
+          "required": false,
+          "met": true,
+          "justification": "The learner states the comparison is at equal computation, which satisfies the constant-computation part of this optional criterion."
+        }
+      ],
+      "feedback": "You identified the cost clearly as blurring from averaging over weighted positions, and you explained how parallel heads with their own projections can attend to different relations. Your cited evidence from Table 3 with the BLEU numbers and the equal-computation point is specific and accurate. This answer covers everything the question asks for."
+    }
+  ],
+  "closed_book": {
+    "generator": "claude-study-v1",
+    "model": "claude-opus-5-5",
+    "message_id": "msg_011ChMvzTBkbEC4LX8hL22FE",
+    "stop_reason": "end_turn",
+    "usage": {
+      "input_tokens": 1828,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 125
+    },
+    "source": {
+      "slug": "attention-is-all-you-need",
+      "title": "Attention Is All You Need",
+      "media_type": "application/pdf"
+    },
+    "blocks": [
+      3,
+      12,
+      14,
+      24,
+      29
+    ],
+    "correct_by_guess": [],
+    "output": {
+      "answers": [
+        {
+          "block": 3,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 12,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 14,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 24,
+          "choice": 0,
+          "basis": "knowledge"
+        },
+        {
+          "block": 29,
+          "choice": 0,
+          "basis": "knowledge"
+        }
+      ]
+    }
+  },
+  "issues": [
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 3,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'Each hidden state h_t needs h_{t−1}, so step t cannot begin until step t−1 has finished.' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 12,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'Scores from position 3 to later positions are set to −∞ before the softmax, and the target is shifted right by one.' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 14,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'The same vector in both sentences, since no attention or feed-forward step depends on word order.' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 24,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'Several heads beat one, but splitting into ever smaller heads eventually hurts again.' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 29,
+      "kind": "closed_book_knowledge",
+      "problem": "without the page or the document, a model chose the correct option 'Its layers need only O(1) sequential steps, so all positions of a sentence are computed in parallel.' from general knowledge.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    }
+  ],
+  "must_fix_remaining": [],
+  "note": null
+}

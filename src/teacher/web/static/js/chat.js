@@ -20,6 +20,11 @@
 // API: /api/artifacts/{slug}/chat/threads[/{id}[/messages]]. The current thread id is kept per
 // artifact in localStorage (created lazily on the first send; a stored id that 404s is dropped).
 // Every failure is shown in the message list with its reason.
+//
+// On wide screens the side bar's left edge is a resize handle: drag it, or focus it and use the
+// arrow keys (Home: widest, End: narrowest); a double click returns to the default width. The
+// width is kept in localStorage for all pages and is limited so that the side bar is at least
+// MIN_WIDTH_PX wide and the page beside it keeps MIN_PAGE_PX.
 
 import { ApiError, api, describeError, detailText, seg } from "./api.js";
 import { renderBlock } from "./blocks/index.js";
@@ -37,6 +42,10 @@ import { createSSEParser } from "./sse.js";
 
 const WIDE_QUERY = "(min-width: 1100px)"; // keep in step with app.css
 const COLLAPSED_KEY = "teacher.tutor.collapsed";
+const WIDTH_KEY = "teacher.tutor.width"; // the side bar's width in px, when the reader set one
+const MIN_WIDTH_PX = 320; // of the side bar
+const MIN_PAGE_PX = 384; // what the page next to the side bar always keeps
+const WIDTH_STEP_PX = 24; // per arrow key press on the resize handle
 const threadKey = (slug) => `teacher.tutor.thread.${slug}`;
 const RENDER_MS = 80; // re-render the streaming markdown at most this often
 const FLASH_MS = 1800;
@@ -957,12 +966,77 @@ export function mountChat(artifact, options = {}) {
     const target = event.target instanceof Element ? event.target.closest(".tutor-quote") : null;
     if (target) showBlock(target.dataset.blockKey);
   });
+  // -- resizing the side bar ------------------------------------------------------------------
+
+  // The reader's chosen width in px, or null for the stylesheet's default (--tutor-w).
+  let chosenWidth = parseId(storage.get(WIDTH_KEY));
+  const resizer = h("div", {
+    class: "tutor-resizer",
+    role: "separator",
+    tabindex: "0",
+    "aria-orientation": "vertical",
+    "aria-label": "Width of the tutor side bar",
+    title: "Drag to resize; double-click to reset",
+  });
+  panel.append(resizer);
+
+  const maxWidth = () =>
+    Math.max(MIN_WIDTH_PX, Math.round(layout.getBoundingClientRect().width) - MIN_PAGE_PX);
+  const clampWidth = (px) => Math.min(maxWidth(), Math.max(MIN_WIDTH_PX, Math.round(px)));
+
+  function paintWidth() {
+    if (chosenWidth === null) layout.style.removeProperty("--tutor-w");
+    else layout.style.setProperty("--tutor-w", `${clampWidth(chosenWidth)}px`);
+    if (!isWide() || panel.hidden) return;
+    resizer.setAttribute("aria-valuemin", String(MIN_WIDTH_PX));
+    resizer.setAttribute("aria-valuemax", String(maxWidth()));
+    resizer.setAttribute("aria-valuenow", String(Math.round(panel.getBoundingClientRect().width)));
+  }
+  function setWidth(px) {
+    chosenWidth = px === null ? null : clampWidth(px);
+    if (chosenWidth === null) storage.remove(WIDTH_KEY);
+    else storage.set(WIDTH_KEY, String(chosenWidth));
+    paintWidth();
+  }
+
+  resizer.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || !isWide()) return;
+    event.preventDefault();
+    resizer.setPointerCapture(event.pointerId);
+    layout.classList.add("is-resizing-tutor");
+    const move = (e) => setWidth(layout.getBoundingClientRect().right - e.clientX);
+    const stop = () => {
+      layout.classList.remove("is-resizing-tutor");
+      resizer.removeEventListener("pointermove", move);
+      resizer.removeEventListener("pointerup", stop);
+      resizer.removeEventListener("pointercancel", stop);
+    };
+    resizer.addEventListener("pointermove", move);
+    resizer.addEventListener("pointerup", stop);
+    resizer.addEventListener("pointercancel", stop);
+  });
+  resizer.addEventListener("dblclick", () => setWidth(null));
+  resizer.addEventListener("keydown", (event) => {
+    const now = panel.getBoundingClientRect().width;
+    // The handle is the side bar's left edge: left makes the side bar wider.
+    if (event.key === "ArrowLeft") setWidth(now + WIDTH_STEP_PX);
+    else if (event.key === "ArrowRight") setWidth(now - WIDTH_STEP_PX);
+    else if (event.key === "Home") setWidth(maxWidth());
+    else if (event.key === "End") setWidth(MIN_WIDTH_PX);
+    else return;
+    event.preventDefault();
+  });
+
   wide.addEventListener("change", () => {
     overlayOpen = false;
     paintLayout();
+    paintWidth();
   });
   window.addEventListener("scroll", queueOffset, { passive: true });
-  window.addEventListener("resize", queueOffset);
+  window.addEventListener("resize", () => {
+    queueOffset();
+    paintWidth();
+  });
 
   if (blocksRoot) setupSelectionButton(blocksRoot, attach);
 
@@ -970,6 +1044,7 @@ export function mountChat(artifact, options = {}) {
   paintRefs();
   setHint(null);
   paintLayout();
+  paintWidth();
   autoGrow();
   loadThread();
 }

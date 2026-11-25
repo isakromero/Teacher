@@ -1,0 +1,9 @@
+{
+  "asset": "figures/figure-1-e137944391.png",
+  "label": "Figure 1",
+  "source_caption": "The Transformer - model architecture.",
+  "page": 3,
+  "width": 448,
+  "height": 654,
+  "caption": "Trace the two stacks. The left one (encoder) is repeated N×. Each layer is attention then feed-forward, each followed by an \"Add & Norm\" box. The right one (decoder) adds a middle attention block whose arrows come from the encoder. Notice also the \"Positional Encoding\" added at the bottom of both stacks and the \"Outputs (shifted right)\" feeding the decoder; both are explained below."
+}

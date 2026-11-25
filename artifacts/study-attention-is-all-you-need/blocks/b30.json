@@ -1,0 +1,25 @@
+{
+  "prompt": "The authors say that relying on attention alone has a cost, which multi-head attention is meant to counteract. Explain what that cost is, how multiple heads address it, and one piece of evidence from the paper that heads help.",
+  "min_words": 40,
+  "private": {
+    "model_answer": "Each attention output is a weighted average of many positions, so a single head blurs them together and loses effective resolution. With several heads, each with its own projections, the model can attend to different subspaces and different positions at once, keeping several relations apart. In Table 3, a single head scored 0.9 BLEU below the best multi-head setting at the same computation, and the visualizations show different heads doing different jobs.",
+    "rubric": [
+      {
+        "criterion": "Identifies the cost as reduced effective resolution caused by averaging over attention-weighted positions",
+        "required": true
+      },
+      {
+        "criterion": "Explains that multiple heads, each with its own learned projections, can attend to different information or positions in parallel instead of producing one blended average",
+        "required": false
+      },
+      {
+        "criterion": "Cites evidence from the paper, such as the Table 3 result that one head is 0.9 BLEU worse than the best setting, or the visualizations of heads doing different tasks",
+        "required": true
+      },
+      {
+        "criterion": "Notes that the comparison holds total computation constant, or that too many heads also hurt",
+        "required": false
+      }
+    ]
+  }
+}

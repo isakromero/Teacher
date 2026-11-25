@@ -1,4 +1,5 @@
-"""Application settings: where Teacher keeps its database and files."""
+"""Application settings: where Teacher keeps its database and files, which models it uses, and
+the YouTube Data API key (`youtube_api_key_from_env`)."""
 
 from __future__ import annotations
 
@@ -117,4 +118,25 @@ def _model_from_env(name: str, default: str) -> str:
         return default
     if not value.strip():
         raise ValueError(f"${name} is set but empty; unset it to use {default!r}")
+    return value.strip()
+
+
+# -- the YouTube Data API -----------------------------------------------------------------
+
+ENV_YOUTUBE_API_KEY = "YOUTUBE_API_KEY"
+
+
+def youtube_api_key_from_env() -> str | None:
+    """`$YOUTUBE_API_KEY`: the YouTube Data API v3 key that reads a video's title, channel, date
+    and description when a YouTube video is added as a source (`teacher.youtube_sources`). The
+    one place the variable is read. None when it is not set (the caller says how to set it); a
+    variable that is set but blank is an error rather than being treated as unset."""
+    value = os.environ.get(ENV_YOUTUBE_API_KEY)
+    if value is None:
+        return None
+    if not value.strip():
+        raise ValueError(
+            f"${ENV_YOUTUBE_API_KEY} is set but empty; put the key after "
+            f"{ENV_YOUTUBE_API_KEY}= in .env and restart the server"
+        )
     return value.strip()

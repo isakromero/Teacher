@@ -1,0 +1,35 @@
+{
+  "kind": "line",
+  "title": "Development-set BLEU as the number of attention heads varies at constant computation",
+  "x_label": "Number of heads h (d_k = d_v = 512/h)",
+  "y_label": "BLEU (newstest2013 dev)",
+  "series": [
+    {
+      "name": "Table 3 rows (A) and base",
+      "points": [
+        {
+          "x": 1.0,
+          "y": 24.9
+        },
+        {
+          "x": 4.0,
+          "y": 25.5
+        },
+        {
+          "x": 8.0,
+          "y": 25.8
+        },
+        {
+          "x": 16.0,
+          "y": 25.8
+        },
+        {
+          "x": 32.0,
+          "y": 25.4
+        }
+      ]
+    }
+  ],
+  "caption": "Splitting attention into several heads helps a lot at first, levels off between 8 and 16, and turns down at 32 heads of only 16 dimensions each. The point at h = 8 is the base model.",
+  "source": "Table 3, rows (A) and the base row"
+}

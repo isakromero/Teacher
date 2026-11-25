@@ -1776,6 +1776,43 @@ p.filter-status {
   height: calc(100dvh - var(--tutor-offset, 0px));
   border-left: 1px solid var(--border);
 }
+/* The side bar's left edge, dragged (or moved with the arrow keys) to resize it: chat.js. */
+.tutor-resizer {
+  display: none;
+}
+.tutor[data-mode="side"] .tutor-resizer {
+  display: block;
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: -5px;
+  width: 9px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.tutor-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 3px;
+  background: transparent;
+  transition: background-color 120ms;
+}
+.tutor-resizer:hover::after,
+.tutor-resizer:focus-visible::after,
+.is-resizing-tutor .tutor-resizer::after {
+  background: var(--accent);
+}
+.tutor-resizer:focus-visible {
+  outline: none;
+}
+.is-resizing-tutor {
+  cursor: col-resize;
+  user-select: none;
+}
 .tutor[data-mode="overlay"] {
   position: fixed;
   z-index: 30;

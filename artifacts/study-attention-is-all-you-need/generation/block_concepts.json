@@ -1,0 +1,1435 @@
+{
+  "tagger": "claude-block-concepts-v1",
+  "trigger": "generation",
+  "model": "claude-sonnet-5-5",
+  "page": null,
+  "calls": [
+    {
+      "step": "block concepts",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChMwGDfMdwxMWjKRxv9HZ",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 18276,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 4187
+      }
+    }
+  ],
+  "concepts": [
+    {
+      "id": 86,
+      "slug": "adam-optimizer",
+      "name": "Adam optimizer",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 69,
+      "slug": "attention-mechanism",
+      "name": "attention mechanism",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 79,
+      "slug": "auto-regressive-generation",
+      "name": "auto-regressive generation",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 90,
+      "slug": "beam-search",
+      "name": "beam search",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 84,
+      "slug": "bleu-score",
+      "name": "BLEU score",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 89,
+      "slug": "byte-pair-encoding",
+      "name": "byte-pair encoding",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 93,
+      "slug": "constituency-parsing",
+      "name": "constituency parsing",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 76,
+      "slug": "convolutional-sequence-model",
+      "name": "convolutional sequence model",
+      "in_source": "assumes",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "assumes"
+        ]
+      ]
+    },
+    {
+      "id": 87,
+      "slug": "dropout",
+      "name": "dropout",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 73,
+      "slug": "encoder-decoder-architecture",
+      "name": "encoder-decoder architecture",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 88,
+      "slug": "label-smoothing",
+      "name": "label smoothing",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 81,
+      "slug": "layer-normalization",
+      "name": "layer normalization",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 85,
+      "slug": "learning-rate-warmup",
+      "name": "learning rate warmup",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 78,
+      "slug": "masked-self-attention",
+      "name": "masked self-attention",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 71,
+      "slug": "multi-head-attention",
+      "name": "multi-head attention",
+      "in_source": "introduces",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "introduces"
+        ]
+      ]
+    },
+    {
+      "id": 91,
+      "slug": "path-length-between-long-range-dependencies",
+      "name": "path length between long-range dependencies",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 82,
+      "slug": "position-wise-feed-forward-network",
+      "name": "position-wise feed-forward network",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 77,
+      "slug": "positional-encoding",
+      "name": "positional encoding",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 75,
+      "slug": "recurrent-neural-network",
+      "name": "recurrent neural network",
+      "in_source": "assumes",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "assumes"
+        ]
+      ]
+    },
+    {
+      "id": 80,
+      "slug": "residual-connection",
+      "name": "residual connection",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 70,
+      "slug": "scaled-dot-product-attention",
+      "name": "scaled dot-product attention",
+      "in_source": "introduces",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "introduces"
+        ]
+      ]
+    },
+    {
+      "id": 68,
+      "slug": "self-attention",
+      "name": "self-attention",
+      "in_source": "introduces",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "introduces"
+        ]
+      ]
+    },
+    {
+      "id": 74,
+      "slug": "sequence-transduction",
+      "name": "sequence transduction",
+      "in_source": "assumes",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "assumes"
+        ]
+      ]
+    },
+    {
+      "id": 83,
+      "slug": "softmax-function",
+      "name": "softmax function",
+      "in_source": "assumes",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "assumes"
+        ]
+      ]
+    },
+    {
+      "id": 72,
+      "slug": "transformer-architecture",
+      "name": "Transformer architecture",
+      "in_source": "introduces",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "introduces"
+        ]
+      ]
+    },
+    {
+      "id": 92,
+      "slug": "weight-tying-of-embeddings",
+      "name": "weight tying of embeddings",
+      "in_source": "uses",
+      "sources": [
+        [
+          "attention-is-all-you-need",
+          "uses"
+        ]
+      ]
+    }
+  ],
+  "output": {
+    "counts": {
+      "blocks": 30,
+      "questions": 8,
+      "tags": 109,
+      "main": 62,
+      "incidental": 47,
+      "concepts_used": 26,
+      "concepts_offered": 26,
+      "blocks_untagged": 0,
+      "questions_with_main": 8
+    },
+    "blocks": [
+      {
+        "number": 1,
+        "key": "b01",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 72,
+            "slug": "transformer-architecture",
+            "name": "Transformer architecture",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Introduces the Transformer as an attention-only encoder-decoder."
+          },
+          {
+            "id": 75,
+            "slug": "recurrent-neural-network",
+            "name": "recurrent neural network",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Explains the sequential hidden-state chain of recurrent networks that blocks parallelism."
+          },
+          {
+            "id": 74,
+            "slug": "sequence-transduction",
+            "name": "sequence transduction",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "Describes translating one sequence into another."
+          },
+          {
+            "id": 73,
+            "slug": "encoder-decoder-architecture",
+            "name": "encoder-decoder architecture",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Mentions recurrent encoder-decoder systems."
+          },
+          {
+            "id": 69,
+            "slug": "attention-mechanism",
+            "name": "attention mechanism",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "States the model is built from attention alone."
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "key": "b02",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Defines self-attention relating positions of a single sequence."
+          },
+          {
+            "id": 76,
+            "slug": "convolutional-sequence-model",
+            "name": "convolutional sequence model",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Discusses convolutional models and why distant positions need stacked layers."
+          },
+          {
+            "id": 91,
+            "slug": "path-length-between-long-range-dependencies",
+            "name": "path length between long-range dependencies",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Compares the number of operations linking distant positions."
+          },
+          {
+            "id": 69,
+            "slug": "attention-mechanism",
+            "name": "attention mechanism",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Notes attention was earlier an add-on to recurrent networks."
+          },
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Previews multi-head attention as the fix for reduced resolution."
+          },
+          {
+            "id": 72,
+            "slug": "transformer-architecture",
+            "name": "Transformer architecture",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Claims first transduction model built on self-attention."
+          },
+          {
+            "id": 74,
+            "slug": "sequence-transduction",
+            "name": "sequence transduction",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "Refers to transduction models."
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "key": "b03",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 75,
+            "slug": "recurrent-neural-network",
+            "name": "recurrent neural network",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Tests why recurrence cannot parallelize within a sentence and why batching helps less for long ones."
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "key": "b04",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 73,
+            "slug": "encoder-decoder-architecture",
+            "name": "encoder-decoder architecture",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes the encoder and decoder stacks."
+          },
+          {
+            "id": 79,
+            "slug": "auto-regressive-generation",
+            "name": "auto-regressive generation",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Decoder generates tokens one at a time, feeding outputs back."
+          },
+          {
+            "id": 78,
+            "slug": "masked-self-attention",
+            "name": "masked self-attention",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Masked decoder self-attention prevents attending to later positions."
+          },
+          {
+            "id": 80,
+            "slug": "residual-connection",
+            "name": "residual connection",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Sub-layers wrapped with residual addition."
+          },
+          {
+            "id": 81,
+            "slug": "layer-normalization",
+            "name": "layer normalization",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "LayerNorm applied after the residual addition."
+          },
+          {
+            "id": 72,
+            "slug": "transformer-architecture",
+            "name": "Transformer architecture",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Lays out the overall architecture."
+          },
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Encoder layers use self-attention."
+          },
+          {
+            "id": 82,
+            "slug": "position-wise-feed-forward-network",
+            "name": "position-wise feed-forward network",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Feed-forward sub-layer mentioned."
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "key": "b05",
+        "type": "figure",
+        "concepts": [
+          {
+            "id": 72,
+            "slug": "transformer-architecture",
+            "name": "Transformer architecture",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Figure shows the model architecture."
+          },
+          {
+            "id": 73,
+            "slug": "encoder-decoder-architecture",
+            "name": "encoder-decoder architecture",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Shows encoder and decoder stacks."
+          },
+          {
+            "id": 77,
+            "slug": "positional-encoding",
+            "name": "positional encoding",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Positional encoding added at the bottom."
+          },
+          {
+            "id": 80,
+            "slug": "residual-connection",
+            "name": "residual connection",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Add & Norm boxes."
+          },
+          {
+            "id": 81,
+            "slug": "layer-normalization",
+            "name": "layer normalization",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Add & Norm boxes include normalization."
+          },
+          {
+            "id": 82,
+            "slug": "position-wise-feed-forward-network",
+            "name": "position-wise feed-forward network",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Feed-forward blocks shown."
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "key": "b06",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 70,
+            "slug": "scaled-dot-product-attention",
+            "name": "scaled dot-product attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Presents the scaled dot-product attention formula and the sqrt(d_k) scaling."
+          },
+          {
+            "id": 69,
+            "slug": "attention-mechanism",
+            "name": "attention mechanism",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes attention as queries, keys, values and weighted sum."
+          },
+          {
+            "id": 83,
+            "slug": "softmax-function",
+            "name": "softmax function",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "Softmax turns scores into weights and saturates for large inputs."
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "key": "b07",
+        "type": "prediction",
+        "concepts": [
+          {
+            "id": 70,
+            "slug": "scaled-dot-product-attention",
+            "name": "scaled dot-product attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "About how unscaled dot products behave as d_k grows."
+          },
+          {
+            "id": 83,
+            "slug": "softmax-function",
+            "name": "softmax function",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Softmax collapses onto one key for widely spread scores."
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "key": "b08",
+        "type": "interactable",
+        "concepts": [
+          {
+            "id": 70,
+            "slug": "scaled-dot-product-attention",
+            "name": "scaled dot-product attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Widget demonstrates the effect of dividing by sqrt(d_k)."
+          },
+          {
+            "id": 83,
+            "slug": "softmax-function",
+            "name": "softmax function",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Shows softmax saturation and vanishing gradient signal."
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "key": "b09",
+        "type": "blurb",
+        "concepts": [
+          {
+            "id": 70,
+            "slug": "scaled-dot-product-attention",
+            "name": "scaled dot-product attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Asks why dot products are scaled by sqrt(d_k)."
+          },
+          {
+            "id": 83,
+            "slug": "softmax-function",
+            "name": "softmax function",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Requires explaining softmax saturation and small gradients."
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "key": "b10",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Defines multi-head attention with per-head projections and concatenation."
+          },
+          {
+            "id": 78,
+            "slug": "masked-self-attention",
+            "name": "masked self-attention",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Explains masking illegal connections with -inf before softmax."
+          },
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Encoder and decoder self-attention uses."
+          },
+          {
+            "id": 69,
+            "slug": "attention-mechanism",
+            "name": "attention mechanism",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Encoder-decoder attention role."
+          },
+          {
+            "id": 73,
+            "slug": "encoder-decoder-architecture",
+            "name": "encoder-decoder architecture",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Encoder-decoder attention connects the stacks."
+          },
+          {
+            "id": 83,
+            "slug": "softmax-function",
+            "name": "softmax function",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "Mask applied before the softmax."
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "key": "b11",
+        "type": "figure",
+        "concepts": [
+          {
+            "id": 70,
+            "slug": "scaled-dot-product-attention",
+            "name": "scaled dot-product attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Left panel shows scaled dot-product attention steps."
+          },
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Right panel shows parallel heads with projections."
+          },
+          {
+            "id": 78,
+            "slug": "masked-self-attention",
+            "name": "masked self-attention",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Optional mask step."
+          },
+          {
+            "id": 83,
+            "slug": "softmax-function",
+            "name": "softmax function",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "SoftMax box."
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "key": "b12",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 78,
+            "slug": "masked-self-attention",
+            "name": "masked self-attention",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Tests masking of later positions with -inf before softmax."
+          },
+          {
+            "id": 79,
+            "slug": "auto-regressive-generation",
+            "name": "auto-regressive generation",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Shifted-right target for auto-regressive prediction."
+          },
+          {
+            "id": 83,
+            "slug": "softmax-function",
+            "name": "softmax function",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "Mask applied before the softmax."
+          },
+          {
+            "id": 77,
+            "slug": "positional-encoding",
+            "name": "positional encoding",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Distractor mentions positional encoding."
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "key": "b13",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 82,
+            "slug": "position-wise-feed-forward-network",
+            "name": "position-wise feed-forward network",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Defines the position-wise FFN."
+          },
+          {
+            "id": 77,
+            "slug": "positional-encoding",
+            "name": "positional encoding",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Explains sinusoidal positional encodings."
+          },
+          {
+            "id": 92,
+            "slug": "weight-tying-of-embeddings",
+            "name": "weight tying of embeddings",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Shared embedding and pre-softmax weights."
+          },
+          {
+            "id": 83,
+            "slug": "softmax-function",
+            "name": "softmax function",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "Pre-softmax layer mentioned."
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "key": "b14",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 77,
+            "slug": "positional-encoding",
+            "name": "positional encoding",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Compares sinusoidal and learned positional encodings for extrapolation."
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "key": "b15",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 91,
+            "slug": "path-length-between-long-range-dependencies",
+            "name": "path length between long-range dependencies",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Compares maximum path lengths."
+          },
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Compares self-attention cost with other layers."
+          },
+          {
+            "id": 75,
+            "slug": "recurrent-neural-network",
+            "name": "recurrent neural network",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Recurrent layer costs and sequential operations."
+          },
+          {
+            "id": 76,
+            "slug": "convolutional-sequence-model",
+            "name": "convolutional sequence model",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Convolutional layer costs and path length."
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "key": "b16",
+        "type": "blurb",
+        "concepts": [
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Quadratic cost of self-attention for long inputs and restricted remedy."
+          },
+          {
+            "id": 75,
+            "slug": "recurrent-neural-network",
+            "name": "recurrent neural network",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Compared with recurrent layer cost."
+          },
+          {
+            "id": 91,
+            "slug": "path-length-between-long-range-dependencies",
+            "name": "path length between long-range dependencies",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Restricted attention raises path length."
+          }
+        ]
+      },
+      {
+        "number": 17,
+        "key": "b17",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 86,
+            "slug": "adam-optimizer",
+            "name": "Adam optimizer",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Adam optimizer settings."
+          },
+          {
+            "id": 85,
+            "slug": "learning-rate-warmup",
+            "name": "learning rate warmup",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Warmup learning rate schedule."
+          },
+          {
+            "id": 87,
+            "slug": "dropout",
+            "name": "dropout",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Residual dropout described."
+          },
+          {
+            "id": 88,
+            "slug": "label-smoothing",
+            "name": "label smoothing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Label smoothing described."
+          },
+          {
+            "id": 89,
+            "slug": "byte-pair-encoding",
+            "name": "byte-pair encoding",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "BPE vocabulary mentioned."
+          },
+          {
+            "id": 84,
+            "slug": "bleu-score",
+            "name": "BLEU score",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "BLEU mentioned."
+          }
+        ]
+      },
+      {
+        "number": 18,
+        "key": "b18",
+        "type": "prediction",
+        "concepts": [
+          {
+            "id": 84,
+            "slug": "bleu-score",
+            "name": "BLEU score",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Comparison measured in BLEU."
+          },
+          {
+            "id": 72,
+            "slug": "transformer-architecture",
+            "name": "Transformer architecture",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Asks about base Transformer performance."
+          }
+        ]
+      },
+      {
+        "number": 19,
+        "key": "b19",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 84,
+            "slug": "bleu-score",
+            "name": "BLEU score",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Results reported in BLEU."
+          },
+          {
+            "id": 90,
+            "slug": "beam-search",
+            "name": "beam search",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Decoding with beam search size 4 and length penalty."
+          },
+          {
+            "id": 87,
+            "slug": "dropout",
+            "name": "dropout",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Dropout rate mentioned."
+          }
+        ]
+      },
+      {
+        "number": 20,
+        "key": "b20",
+        "type": "chart",
+        "concepts": [
+          {
+            "id": 84,
+            "slug": "bleu-score",
+            "name": "BLEU score",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Chart of BLEU scores."
+          },
+          {
+            "id": 72,
+            "slug": "transformer-architecture",
+            "name": "Transformer architecture",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Compares Transformer to earlier systems."
+          }
+        ]
+      },
+      {
+        "number": 21,
+        "key": "b21",
+        "type": "prediction",
+        "concepts": [
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Predicts effect of the number of heads."
+          }
+        ]
+      },
+      {
+        "number": 22,
+        "key": "b22",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Head count ablation results."
+          },
+          {
+            "id": 77,
+            "slug": "positional-encoding",
+            "name": "positional encoding",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Learned vs sinusoidal positions."
+          },
+          {
+            "id": 87,
+            "slug": "dropout",
+            "name": "dropout",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Dropout ablation."
+          },
+          {
+            "id": 70,
+            "slug": "scaled-dot-product-attention",
+            "name": "scaled dot-product attention",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Key size d_k ablation."
+          },
+          {
+            "id": 84,
+            "slug": "bleu-score",
+            "name": "BLEU score",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Scores in BLEU."
+          },
+          {
+            "id": 82,
+            "slug": "position-wise-feed-forward-network",
+            "name": "position-wise feed-forward network",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "d_ff size variation."
+          }
+        ]
+      },
+      {
+        "number": 23,
+        "key": "b23",
+        "type": "chart",
+        "concepts": [
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Chart of BLEU versus number of heads."
+          },
+          {
+            "id": 84,
+            "slug": "bleu-score",
+            "name": "BLEU score",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "BLEU axis."
+          }
+        ]
+      },
+      {
+        "number": 24,
+        "key": "b24",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Why 32 heads underperform given small per-head size."
+          },
+          {
+            "id": 70,
+            "slug": "scaled-dot-product-attention",
+            "name": "scaled dot-product attention",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Per-head d_k and scaling."
+          }
+        ]
+      },
+      {
+        "number": 25,
+        "key": "b25",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 93,
+            "slug": "constituency-parsing",
+            "name": "constituency parsing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "English constituency parsing experiments."
+          },
+          {
+            "id": 72,
+            "slug": "transformer-architecture",
+            "name": "Transformer architecture",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Transformer applied beyond translation."
+          },
+          {
+            "id": 75,
+            "slug": "recurrent-neural-network",
+            "name": "recurrent neural network",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "RNN grammar and sequence-to-sequence comparisons."
+          },
+          {
+            "id": 90,
+            "slug": "beam-search",
+            "name": "beam search",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Beam size tuned."
+          }
+        ]
+      },
+      {
+        "number": 26,
+        "key": "b26",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Heads specialize, attention visualizations."
+          },
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Encoder self-attention inspected."
+          },
+          {
+            "id": 79,
+            "slug": "auto-regressive-generation",
+            "name": "auto-regressive generation",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Decoding remains auto-regressive."
+          },
+          {
+            "id": 72,
+            "slug": "transformer-architecture",
+            "name": "Transformer architecture",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Conclusion about the model."
+          }
+        ]
+      },
+      {
+        "number": 27,
+        "key": "b27",
+        "type": "figure",
+        "concepts": [
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Different heads show sharp anaphora-resolving attention."
+          },
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Self-attention weights from 'its'."
+          }
+        ]
+      },
+      {
+        "number": 28,
+        "key": "b28",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Quadratic cost limitation of self-attention."
+          },
+          {
+            "id": 77,
+            "slug": "positional-encoding",
+            "name": "positional encoding",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Untested extrapolation claim."
+          },
+          {
+            "id": 81,
+            "slug": "layer-normalization",
+            "name": "layer normalization",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Post-residual normalization sensitivity to warmup."
+          },
+          {
+            "id": 80,
+            "slug": "residual-connection",
+            "name": "residual connection",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Residual addition mentioned."
+          },
+          {
+            "id": 85,
+            "slug": "learning-rate-warmup",
+            "name": "learning rate warmup",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Warmup sensitivity."
+          },
+          {
+            "id": 84,
+            "slug": "bleu-score",
+            "name": "BLEU score",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "BLEU as imperfect metric."
+          },
+          {
+            "id": 72,
+            "slug": "transformer-architecture",
+            "name": "Transformer architecture",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Adoption of the architecture."
+          }
+        ]
+      },
+      {
+        "number": 29,
+        "key": "b29",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 75,
+            "slug": "recurrent-neural-network",
+            "name": "recurrent neural network",
+            "in_source": "assumes",
+            "role": "main",
+            "rationale": "Contrasts sequential recurrence with parallel attention."
+          },
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Self-attention costs and sequential ops."
+          },
+          {
+            "id": 91,
+            "slug": "path-length-between-long-range-dependencies",
+            "name": "path length between long-range dependencies",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Path length distractor."
+          }
+        ]
+      },
+      {
+        "number": 30,
+        "key": "b30",
+        "type": "blurb",
+        "concepts": [
+          {
+            "id": 71,
+            "slug": "multi-head-attention",
+            "name": "multi-head attention",
+            "in_source": "introduces",
+            "role": "main",
+            "rationale": "Multiple heads counteract reduced resolution."
+          },
+          {
+            "id": 69,
+            "slug": "attention-mechanism",
+            "name": "attention mechanism",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Averaging in attention output."
+          },
+          {
+            "id": 68,
+            "slug": "self-attention",
+            "name": "self-attention",
+            "in_source": "introduces",
+            "role": "incidental",
+            "rationale": "Reliance on self-attention."
+          }
+        ]
+      }
+    ],
+    "tokens": {
+      "input": 18276,
+      "output": 4187
+    }
+  }
+}

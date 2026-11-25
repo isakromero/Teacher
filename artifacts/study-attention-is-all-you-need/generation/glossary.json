@@ -1,0 +1,516 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-opus-5-5",
+  "message_id": "msg_011ChMwHzFkV4kFf3kJRi2at",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 14267,
+    "cache_creation_input_tokens": 40222,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 7018
+  },
+  "source": {
+    "slug": "attention-is-all-you-need",
+    "title": "Attention Is All You Need",
+    "media_type": "application/pdf"
+  },
+  "trigger": "generation",
+  "proposed": 66,
+  "dropped": [],
+  "merged": [],
+  "dropped_aliases": [
+    {
+      "term": "word-pieces",
+      "alias": "word-piece",
+      "reason": "does not occur in the study page text"
+    }
+  ],
+  "output": {
+    "terms": [
+      {
+        "term": "Transformer",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The neural network architecture introduced in this paper. It maps one sequence to another using attention layers and feed-forward layers, with no recurrence or convolution.",
+        "aliases": []
+      },
+      {
+        "term": "encoder-decoder",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A two-part model design. The encoder turns the input sequence into internal vectors, and the decoder generates the output sequence from them.",
+        "aliases": []
+      },
+      {
+        "term": "convolution",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A neural network operation that applies the same small learned filter to each local window of the input. In sequence models it combines each position with its nearby neighbours.",
+        "aliases": [
+          "convolutions"
+        ]
+      },
+      {
+        "term": "attention",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A mechanism that lets a model compute an output as a weighted combination of many inputs. The weights reflect how relevant each input is to what is currently being computed.",
+        "aliases": []
+      },
+      {
+        "term": "LSTMs",
+        "kind": "acronym",
+        "expansion": "long short-term memory",
+        "definition": "A widely used type of recurrent neural network whose gates control what information is kept or forgotten from step to step.",
+        "aliases": [
+          "LSTM"
+        ]
+      },
+      {
+        "term": "GRUs",
+        "kind": "acronym",
+        "expansion": "gated recurrent units",
+        "definition": "A type of recurrent neural network similar to the LSTM, but with a simpler gating design.",
+        "aliases": []
+      },
+      {
+        "term": "recurrent network",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A neural network that processes a sequence one position at a time and carries a running internal state from each step to the next.",
+        "aliases": []
+      },
+      {
+        "term": "hidden state",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The internal vector a recurrent network carries from one step to the next. It summarizes what the network has read so far.",
+        "aliases": []
+      },
+      {
+        "term": "GPU",
+        "kind": "acronym",
+        "expansion": "graphics processing unit",
+        "definition": "A processor with many cores that run calculations in parallel. It is the standard hardware for training neural networks.",
+        "aliases": [
+          "GPUs"
+        ]
+      },
+      {
+        "term": "batch",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A group of training examples that are processed together in one training step.",
+        "aliases": []
+      },
+      {
+        "term": "ConvS2S",
+        "kind": "acronym",
+        "expansion": "convolutional sequence to sequence",
+        "definition": "An earlier translation model built from convolutional layers instead of recurrent ones.",
+        "aliases": []
+      },
+      {
+        "term": "self-attention",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Attention in which the positions of a single sequence attend to each other, so the queries, keys and values all come from the same sequence.",
+        "aliases": []
+      },
+      {
+        "term": "multi-head attention",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A form of attention that runs several attention operations, called heads, side by side and then combines their outputs.",
+        "aliases": []
+      },
+      {
+        "term": "transduction model",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A model that converts one sequence into another, for example a sentence in one language into a sentence in another.",
+        "aliases": []
+      },
+      {
+        "term": "vanishing gradients",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A training problem in which the learning signal shrinks towards zero as it passes back through many steps or layers. This makes long-range patterns hard to learn.",
+        "aliases": []
+      },
+      {
+        "term": "tokens",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The basic units a text is split into before a model processes it. A token may be a word or a piece of a word.",
+        "aliases": [
+          "token"
+        ]
+      },
+      {
+        "term": "auto-regressive",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Generating a sequence one element at a time, where each new element is conditioned on the elements already generated.",
+        "aliases": []
+      },
+      {
+        "term": "residual connection",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A shortcut that adds a layer's input to its output. It helps signals and gradients pass through deep networks.",
+        "aliases": []
+      },
+      {
+        "term": "layer normalization",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An operation that rescales the components of each vector to a standard mean and spread, with learned adjustments. It helps keep training stable.",
+        "aliases": []
+      },
+      {
+        "term": "embedding",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A learned vector that represents a discrete item, such as a token, so that the network can work with it numerically.",
+        "aliases": [
+          "embeddings"
+        ]
+      },
+      {
+        "term": "query",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In attention, the vector for the position that is looking for relevant information. It is compared against the keys.",
+        "aliases": []
+      },
+      {
+        "term": "keys",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In attention, the vectors that queries are compared with. A key's match with the query decides how much weight its value receives.",
+        "aliases": []
+      },
+      {
+        "term": "value",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In attention, the vector attached to each key. The attention output is a weighted sum of the values.",
+        "aliases": [
+          "values"
+        ]
+      },
+      {
+        "term": "dot product",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A score for two vectors, computed by multiplying them component by component and summing the results. It is larger when the vectors point in similar directions.",
+        "aliases": [
+          "dot products"
+        ]
+      },
+      {
+        "term": "softmax",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A function that turns a list of scores into positive weights that sum to 1. Higher scores receive larger weights.",
+        "aliases": []
+      },
+      {
+        "term": "additive attention",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An earlier form of attention that scores how well a query matches a key using a small neural network, rather than a dot product.",
+        "aliases": []
+      },
+      {
+        "term": "d_k",
+        "kind": "symbol",
+        "expansion": null,
+        "definition": "The number of dimensions of the query and key vectors in attention.",
+        "aliases": []
+      },
+      {
+        "term": "gradients",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The derivatives that tell training how to adjust each parameter to reduce the error. If they are small, learning is slow.",
+        "aliases": [
+          "gradient"
+        ]
+      },
+      {
+        "term": "position-wise feed-forward network",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A small two-layer neural network applied separately, with the same weights, to the vector at every position.",
+        "aliases": []
+      },
+      {
+        "term": "FFN",
+        "kind": "acronym",
+        "expansion": "feed-forward network",
+        "definition": "The paper's shorthand for the position-wise feed-forward sub-layer in each encoder and decoder layer.",
+        "aliases": []
+      },
+      {
+        "term": "ReLU",
+        "kind": "acronym",
+        "expansion": "rectified linear unit",
+        "definition": "An activation function that keeps positive inputs unchanged and sets negative inputs to zero.",
+        "aliases": []
+      },
+      {
+        "term": "positional encoding",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A vector added to each token's embedding that records the token's position in the sequence.",
+        "aliases": [
+          "positional encodings"
+        ]
+      },
+      {
+        "term": "sinusoid",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A sine or cosine wave. Here, each dimension of the positional encoding follows such a wave with its own frequency.",
+        "aliases": [
+          "sinusoids"
+        ]
+      },
+      {
+        "term": "path length",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The number of computation steps a signal must pass through in a network to connect two positions of a sequence.",
+        "aliases": []
+      },
+      {
+        "term": "WMT",
+        "kind": "acronym",
+        "expansion": "Workshop on Machine Translation",
+        "definition": "A yearly shared evaluation for machine translation that publishes standard training and test datasets. The paper does not spell the acronym out.",
+        "aliases": []
+      },
+      {
+        "term": "byte-pair",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Short for byte-pair encoding, a method that builds a vocabulary of common subword pieces by repeatedly merging frequent pairs of symbols.",
+        "aliases": []
+      },
+      {
+        "term": "word-pieces",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Subword units from a word-piece vocabulary, which splits rare words into smaller, more frequent pieces.",
+        "aliases": []
+      },
+      {
+        "term": "Adam",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A popular optimization algorithm that adapts the step size for each parameter using running averages of past gradients.",
+        "aliases": []
+      },
+      {
+        "term": "learning rate",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The size of the parameter updates made at each training step.",
+        "aliases": []
+      },
+      {
+        "term": "warmup",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An initial phase of training in which the learning rate starts small and is gradually increased.",
+        "aliases": []
+      },
+      {
+        "term": "regularization",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Techniques that discourage a model from fitting quirks of its training data, so that it performs better on new data.",
+        "aliases": []
+      },
+      {
+        "term": "dropout",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A regularization method that randomly sets a fraction of a layer's outputs to zero during training.",
+        "aliases": []
+      },
+      {
+        "term": "Label smoothing",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A training technique that replaces the fully certain target for the correct token with a slightly softened one, spreading a little probability over the other tokens.",
+        "aliases": []
+      },
+      {
+        "term": "perplexity",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A measure of how well a model predicts the actual next tokens. Lower perplexity means the model assigns higher probability to what really comes next.",
+        "aliases": []
+      },
+      {
+        "term": "BLEU",
+        "kind": "acronym",
+        "expansion": "bilingual evaluation understudy",
+        "definition": "A standard automatic score for machine translation that measures how much a system's output overlaps with reference translations. Higher is better. The paper does not spell the acronym out.",
+        "aliases": []
+      },
+      {
+        "term": "ensembles",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Combinations of several separately trained models whose predictions are merged. They usually score better than any single member.",
+        "aliases": [
+          "ensemble"
+        ]
+      },
+      {
+        "term": "newstest2014",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A standard set of news sentences from WMT 2014 that is used as the test set for translation.",
+        "aliases": []
+      },
+      {
+        "term": "TFLOPS",
+        "kind": "acronym",
+        "expansion": "trillion floating-point operations per second",
+        "definition": "A unit of computing speed. The paper uses it for the assumed throughput of each GPU.",
+        "aliases": []
+      },
+      {
+        "term": "FLOPs",
+        "kind": "acronym",
+        "expansion": "floating-point operations",
+        "definition": "A count of arithmetic operations on real numbers, used here as a measure of total training cost.",
+        "aliases": []
+      },
+      {
+        "term": "checkpoints",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Copies of a model's parameters saved at points during training.",
+        "aliases": []
+      },
+      {
+        "term": "beam search",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A decoding method that keeps the several most promising partial outputs at each step, instead of only the single best one.",
+        "aliases": []
+      },
+      {
+        "term": "length penalty",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An adjustment to beam search scores that controls how strongly shorter or longer outputs are favoured.",
+        "aliases": []
+      },
+      {
+        "term": "development set",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Held-out data used to tune settings and compare model variants. It is kept separate from the final test set.",
+        "aliases": []
+      },
+      {
+        "term": "overfitting",
+        "kind": "term",
+        "expansion": null,
+        "definition": "When a model learns its training data so closely that it performs worse on new data.",
+        "aliases": []
+      },
+      {
+        "term": "constituency parsing",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The task of analysing a sentence into a tree of nested phrases, such as noun phrases and verb phrases.",
+        "aliases": []
+      },
+      {
+        "term": "RNN",
+        "kind": "acronym",
+        "expansion": "recurrent neural network",
+        "definition": "A neural network that processes a sequence step by step while carrying a hidden state.",
+        "aliases": []
+      },
+      {
+        "term": "sequence-to-sequence",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Describes models that map an input sequence to an output sequence, typically with an encoder and a decoder.",
+        "aliases": []
+      },
+      {
+        "term": "Penn Treebank",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A large corpus of English sentences annotated by hand with their syntactic trees. It is the standard benchmark for parsing.",
+        "aliases": []
+      },
+      {
+        "term": "semi-supervised",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Training that combines a small set of hand-labelled data with a larger set of data whose labels were not produced by hand.",
+        "aliases": []
+      },
+      {
+        "term": "F1",
+        "kind": "symbol",
+        "expansion": null,
+        "definition": "A score that combines precision and recall into a single number. For parsing, it measures how many predicted phrases match the correct tree.",
+        "aliases": []
+      },
+      {
+        "term": "WSJ",
+        "kind": "acronym",
+        "expansion": "Wall Street Journal",
+        "definition": "The portion of the Penn Treebank made of Wall Street Journal text, used here for training and testing the parser.",
+        "aliases": []
+      },
+      {
+        "term": "anaphora resolution",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Working out which earlier word or phrase a referring expression, such as a pronoun, points back to.",
+        "aliases": []
+      },
+      {
+        "term": "antecedent",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The earlier word or phrase that a pronoun or other referring expression refers to.",
+        "aliases": []
+      },
+      {
+        "term": "ablations",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Experiments that remove or change one component of a model at a time to measure how much that component matters.",
+        "aliases": []
+      },
+      {
+        "term": "BERT",
+        "kind": "acronym",
+        "expansion": "Bidirectional Encoder Representations from Transformers",
+        "definition": "A later family of encoder-only Transformer models that are pretrained on large amounts of text.",
+        "aliases": []
+      },
+      {
+        "term": "GPT",
+        "kind": "acronym",
+        "expansion": "Generative Pre-trained Transformer",
+        "definition": "A later family of decoder-only Transformer models that are trained to generate text one token at a time.",
+        "aliases": []
+      }
+    ]
+  }
+}

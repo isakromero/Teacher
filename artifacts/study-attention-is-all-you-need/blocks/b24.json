@@ -1,0 +1,19 @@
+{
+  "question": "In Table 3 rows (A), 32 heads score 25.4 BLEU against 25.8 for 8 or 16 heads, at the same total computation. Which explanation fits what the page has shown?",
+  "options": [
+    "The 32 concatenated outputs exceed d_model, so the output projection W^O must discard information.",
+    "Each head's keys shrink to 16 dimensions, and rows (B) showed that a smaller d_k hurts quality.",
+    "Thirty-two heads add far more computation, so 100K training steps are no longer enough to converge.",
+    "Thirty-two small heads saturate the softmax, since the 1/√d_k scaling is applied only once overall."
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "Because d_k = d_v = d_model/h, 32 heads leave each key with only 16 dimensions, and rows (B) showed that reducing the key size hurts quality. The tempting misreading is that more heads means more computation, when this experiment holds the total fixed by shrinking each head.",
+    "option_explanations": [
+      "Thirty-two outputs of 16 dimensions concatenate to exactly 512, so their shape forces nothing to be discarded.",
+      "Right. At constant computation d_k = 512/32 = 16, and rows (B) showed that shrinking the key size hurts, which the authors read as compatibility being hard to judge.",
+      "Rows (A) hold computation constant: more heads means smaller heads, not more work.",
+      "The scaling sits inside each head's scaled dot-product attention, using that head's own d_k, so no head runs unscaled."
+    ]
+  }
+}

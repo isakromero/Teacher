@@ -1,0 +1,19 @@
+{
+  "question": "Suppose you want a trained Transformer to translate a sentence longer than any it saw in training. Which positional scheme do the authors expect to cope better, and why?",
+  "options": [
+    "Sinusoids, because their wavelengths stop at 2π, so positions past training simply wrap around.",
+    "Learned embeddings, because on the development set they scored clearly above the sinusoids.",
+    "Sinusoids, because they are given by a formula at every position and may extrapolate beyond it.",
+    "Learned embeddings, because each has its own trainable vector and so adapts to unseen positions."
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "Sinusoids are defined by a formula for any position, which is why the authors think they may extrapolate to longer sequences, whereas learned embeddings have nothing trained beyond the longest training position. The tempting answer that learned embeddings scored better misremembers the result: the two gave nearly identical results.",
+    "option_explanations": [
+      "The wavelengths run from 2π all the way up to 10000·2π, so the encodings do not wrap around after a short range.",
+      "The two versions performed about equally, so a score difference is not what separated them.",
+      "Right. This is the authors' stated reason for keeping sinusoids, though it is a hope (\"may\") rather than something they test.",
+      "A learned embedding exists only for positions seen in training; a position beyond that has no trained vector to use."
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "question": "A colleague says: \"The Transformer trains faster mainly because each of its layers does less arithmetic than an LSTM layer, whatever the input.\" Which account better fits the paper?",
+  "options": [
+    "Its layers need O(1) sequential steps against O(n), so a sentence's positions run in parallel.",
+    "Its per-layer cost O(n²·d) stays below an LSTM's O(n·d²) for inputs of any length at all.",
+    "Its attention is restricted to neighbourhoods of size r, so per-layer cost grows linearly in n.",
+    "Its layers have O(1) path length against O(n), so each training update needs fewer steps."
+  ],
+  "private": {
+    "correct_index": 0,
+    "explanation": "The paper's speed argument centres on parallelism: O(1) sequential operations against O(n) for recurrence. Self-attention also happens to be cheaper per layer when sequences are shorter than d, as they are for sentence-level translation, but that is conditional. So the colleague's \"whatever the input\" is false: for long inputs the n² term dominates. The path-length answer is tempting, but path length is the paper's argument about learning long-range dependencies, not about speed.",
+    "option_explanations": [
+      "Right. Removing the recurrent chain lets every position be computed at once, which is the paper's case for faster training.",
+      "Self-attention is cheaper only when n < d; for long inputs its n² term makes it more expensive.",
+      "Restricted attention is only proposed as future work; the trained models attend over all positions.",
+      "Path length concerns how easily long-range dependencies are learned, not how many steps a training update takes."
+    ]
+  }
+}

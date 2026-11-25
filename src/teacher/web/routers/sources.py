@@ -4,7 +4,8 @@ the concepts concept extraction linked the source to (`GET /api/sources/{slug}/c
 A source is added from an uploaded file (`POST /api/sources`, details detected by
 `POST /api/sources/inspect`) or from a web address (`POST /api/sources/from-url`, details
 detected by `POST /api/sources/inspect-url`); `teacher.url_sources` fetches the address and
-turns a web page into Markdown. Both URL endpoints fetch the address themselves, so what is
+turns a web page into Markdown, and a YouTube video into its transcript as Markdown
+(`teacher.youtube_sources`). Both URL endpoints fetch the address themselves, so what is
 stored is what the server read when the source was added."""
 
 from __future__ import annotations
@@ -555,9 +556,12 @@ def create_source_from_url(
     body: SourceFromUrl,
 ) -> SourceOut:
     """Fetch a web address and store it as a new knowledge source: a PDF as it is (kind
-    "paper"), a web page as Markdown (kind "web_page"). `origin_url` is the address after
-    redirects; `metadata` records when it was fetched, the address asked for and what the
-    server sent."""
+    "paper"), a web page as Markdown (kind "web_page"), a YouTube video as its transcript in
+    Markdown (kind "web_page"). `origin_url` is the address after redirects (a video's
+    canonical watch address); `metadata` records when it was fetched, the address asked for
+    and what the server sent, plus the fetcher's `extra_metadata` (for a video: its id,
+    channel, duration in seconds, and the transcript's language and whether it was generated
+    automatically)."""
     slug = _blank_to_none(body.slug) or slugify(body.title)
     creators = [c.strip() for c in body.creators if c.strip()]
     pairs = _parse_identifiers(body.identifiers)
@@ -574,6 +578,7 @@ def create_source_from_url(
         metadata["words"] = fetched.words
     if fetched.details is not None and fetched.details.site_name:
         metadata["site_name"] = fetched.details.site_name
+    metadata.update(fetched.extra_metadata)
     with tempfile.TemporaryDirectory(prefix="teacher-fetch-") as tmp:
         source = manager.add(
             _write_fetched(fetched, tmp),

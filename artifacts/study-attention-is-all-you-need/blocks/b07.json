@@ -1,0 +1,12 @@
+{
+  "prompt": "Take a query and six keys whose components are random, with mean 0 and variance 1, and use *unscaled* dot products. As the dimension d_k grows from 4 to 1024, what happens to the softmax weights over the six keys?",
+  "options": [
+    "They stay about the same, since every score grows by the same proportion.",
+    "They spread out more evenly, as more dimensions average away the differences.",
+    "They collapse onto one key, while the other keys get almost zero weight."
+  ],
+  "private": {
+    "correct_index": 2,
+    "resolution": "They collapse. The dot product is a sum of d_k random terms, so its spread grows like √d_k, and the gaps between scores grow with it. A softmax over widely spaced scores puts nearly all its weight on the largest one. The widget below lets you watch this happen."
+  }
+}

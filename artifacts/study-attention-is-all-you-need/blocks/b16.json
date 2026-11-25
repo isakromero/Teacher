@@ -1,0 +1,25 @@
+{
+  "prompt": "Suppose you wanted to run a layer with d = 512 over a whole document of 20,000 tokens instead of a sentence. Using the per-layer costs from Table 1, explain how full self-attention compares with a recurrent layer here, and name the remedy the authors propose for such long inputs.",
+  "min_words": 35,
+  "private": {
+    "model_answer": "Here n is far larger than d, so self-attention's n²·d cost per layer exceeds a recurrent layer's n·d²: comparing all 20,000×20,000 pairs becomes the expensive part. Self-attention still needs only O(1) sequential steps, though. The authors suggest restricting attention to a neighbourhood of size r around each position, which cuts the cost but raises the path length to O(n/r).",
+    "rubric": [
+      {
+        "criterion": "States that because n is much larger than d, self-attention's per-layer cost (n²·d) is now higher than the recurrent layer's (n·d²)",
+        "required": true
+      },
+      {
+        "criterion": "Names restricting self-attention to a local neighbourhood of size r as the authors' proposed remedy",
+        "required": true
+      },
+      {
+        "criterion": "Notes the trade-off that restricted attention increases the maximum path length to O(n/r)",
+        "required": false
+      },
+      {
+        "criterion": "Notes that self-attention keeps its advantage of O(1) sequential operations",
+        "required": false
+      }
+    ]
+  }
+}

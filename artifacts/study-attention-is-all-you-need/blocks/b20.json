@@ -1,0 +1,47 @@
+{
+  "kind": "bar",
+  "title": "English-German BLEU on newstest2014, earlier systems vs the Transformer",
+  "x_label": "Model",
+  "y_label": "BLEU (EN-DE)",
+  "series": [
+    {
+      "name": "EN-DE BLEU",
+      "points": [
+        {
+          "x": "ByteNet",
+          "y": 23.75
+        },
+        {
+          "x": "GNMT + RL",
+          "y": 24.6
+        },
+        {
+          "x": "ConvS2S",
+          "y": 25.16
+        },
+        {
+          "x": "MoE",
+          "y": 26.03
+        },
+        {
+          "x": "GNMT + RL Ensemble",
+          "y": 26.3
+        },
+        {
+          "x": "ConvS2S Ensemble",
+          "y": 26.36
+        },
+        {
+          "x": "Transformer (base)",
+          "y": 27.3
+        },
+        {
+          "x": "Transformer (big)",
+          "y": 28.4
+        }
+      ]
+    }
+  ],
+  "caption": "The earlier systems, ensembles included, sit between about 24 and 26.4. The single base Transformer clears all of them, and the big model sits more than 2 BLEU above the best ensemble.",
+  "source": "Table 2"
+}

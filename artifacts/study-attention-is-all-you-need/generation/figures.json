@@ -1,0 +1,89 @@
+{
+  "detector": "pdfium-captions-v1",
+  "source": {
+    "slug": "attention-is-all-you-need",
+    "title": "Attention Is All You Need",
+    "media_type": "application/pdf"
+  },
+  "outcome": "found",
+  "note": "5 figure(s) found in 15 page(s)",
+  "pages": 15,
+  "figures": [
+    {
+      "label": "Figure 1",
+      "page": 3,
+      "caption": "The Transformer - model architecture.",
+      "region": {
+        "page": 3,
+        "x0": 0.3137254901960784,
+        "y0": 0.08585858585858586,
+        "x1": 0.6862745098039216,
+        "y1": 0.5037878787878788
+      },
+      "asset": "figures/figure-1-e137944391.png",
+      "width": 448,
+      "height": 654
+    },
+    {
+      "label": "Figure 2",
+      "page": 4,
+      "caption": "(left) Scaled Dot-Product Attention. (right) Multi-Head Attention consists of several attention layers running in parallel.",
+      "region": {
+        "page": 4,
+        "x0": 0.23562325371636283,
+        "y0": 0.08579616353969381,
+        "x1": 0.7712418300653595,
+        "y1": 0.3434343434343434
+      },
+      "asset": "figures/figure-2-79339a95cb.png",
+      "width": 650,
+      "height": 344
+    },
+    {
+      "label": "Figure 3",
+      "page": 13,
+      "caption": "An example of the attention mechanism following long-distance dependencies in the encoder self-attention in layer 5 of 6. Many of the attention heads attend to a distant dependency of the verb ‘making’, completing the phrase ‘making...more difficult’. Attentions here shown only for the word ‘making’. Different colors represent different heads. Best viewed in color.",
+      "region": {
+        "page": 13,
+        "x0": 0.17011045318802978,
+        "y0": 0.0777201797022964,
+        "x1": 0.8274075377221201,
+        "y1": 0.38636363636363635
+      },
+      "asset": "figures/figure-3-c0b78b813d.png",
+      "width": 801,
+      "height": 469
+    },
+    {
+      "label": "Figure 4",
+      "page": 14,
+      "caption": "Two attention heads, also in layer 5 of 6, apparently involved in anaphora resolution. Top: Full attentions for head 5. Bottom: Isolated attentions from just the word ‘its’ for attention heads 5 and 6. Note that the attentions are very sharp for this word.",
+      "region": {
+        "page": 14,
+        "x0": 0.17213319017996195,
+        "y0": 0.21126186486446497,
+        "x1": 0.8249914630565768,
+        "y1": 0.7676767676767676
+      },
+      "asset": "figures/figure-4-bb60b7f3b8.png",
+      "width": 767,
+      "height": 878
+    },
+    {
+      "label": "Figure 5",
+      "page": 15,
+      "caption": "Many of the attention heads exhibit behaviour that seems related to the structure of the sentence. We give two such examples above, from two different heads from the encoder self-attention at layer 5 of 6. The heads clearly learned to perform different tasks.",
+      "region": {
+        "page": 15,
+        "x0": 0.19516457451714408,
+        "y0": 0.5051015218098959,
+        "x1": 0.8178321987974877,
+        "y1": 0.7495374968557647
+      },
+      "asset": "figures/figure-5-9eec3f4534.png",
+      "width": 760,
+      "height": 385
+    }
+  ],
+  "dropped": []
+}

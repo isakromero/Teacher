@@ -1,0 +1,58 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-opus-5-5",
+  "message_id": "msg_011ChMvvE6qiKcVppHEBYCW7",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 27259,
+    "cache_creation_input_tokens": 40239,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 3297
+  },
+  "source": {
+    "slug": "attention-is-all-you-need",
+    "title": "Attention Is All You Need",
+    "media_type": "application/pdf"
+  },
+  "stage": "review",
+  "blocks": 30,
+  "output": {
+    "issues": [
+      {
+        "block": 1,
+        "kind": "unsupported",
+        "severity": "should_fix",
+        "problem": "An explanation block opens with \"the architecture that most large language models are now built on\". The document says nothing about later language models. This is outside knowledge presented as part of the paper's account.",
+        "suggestion": "Drop the claim or soften it to something the paper supports, e.g. \"introduced the Transformer, an encoder-decoder built from attention alone\". Leave later impact to the critique block."
+      },
+      {
+        "block": 17,
+        "kind": "other",
+        "severity": "should_fix",
+        "problem": "\"There were three kinds of regularization\" is followed by only two named items, dropout and label smoothing. The reader is left looking for a missing third. The paper itself announces three types but describes only these two headings.",
+        "suggestion": "Say that the paper announces three types of regularization but describes two, residual dropout (applied in two places) and label smoothing. Alternatively, drop the count."
+      },
+      {
+        "block": 25,
+        "kind": "other",
+        "severity": "should_fix",
+        "problem": "The block says the Transformer \"beats every previously reported model in the comparison except the Recurrent Neural Network Grammar (91.7 with WSJ only)\". It then admits that multi-task (93.0) and generative (93.3) systems score higher. This is self-contradictory. It also hides that the 93.3 generative entry is itself the RNNG of Dyer et al. [8].",
+        "suggestion": "State that the authors claim it beats all previous models except the RNNG [8], which appears in Table 4 as both 91.7 (discriminative, WSJ only) and 93.3 (generative). Then note that Table 4 also lists Luong et al.'s multi-task 93.0, above the Transformer's 92.7, which the paper's sentence does not mention."
+      },
+      {
+        "block": 27,
+        "kind": "unsupported",
+        "severity": "should_fix",
+        "problem": "The caption calls *Law* and *application* \"the noun phrase *its* refers to\". *Its* refers to *Law*. *Application* is the noun that *its* modifies, not part of its antecedent.",
+        "suggestion": "Rephrase: the two heads put nearly all their weight from *its* on *Law* (its antecedent) and *application* (the noun it modifies), which the paper calls apparent anaphora resolution."
+      },
+      {
+        "block": 23,
+        "kind": "other",
+        "severity": "should_fix",
+        "problem": "In this line chart the x values are JSON numbers (\"x\": 1.0, 4.0, …). The instructions require numeric x values in line charts to be written as text strings, such as \"1\".",
+        "suggestion": "Write the x values as strings: \"1\", \"4\", \"8\", \"16\", \"32\"."
+      }
+    ]
+  }
+}

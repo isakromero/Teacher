@@ -1,0 +1,9 @@
+{
+  "asset": "figures/figure-2-79339a95cb.png",
+  "label": "Figure 2",
+  "source_caption": "(left) Scaled Dot-Product Attention. (right) Multi-Head Attention consists of several attention layers running in parallel.",
+  "page": 4,
+  "width": 650,
+  "height": 344,
+  "caption": "On the left, match each box to the formula: MatMul of Q and K, Scale by 1/√d_k, the optional Mask used only in decoder self-attention, SoftMax, then MatMul with V. On the right, see how h copies of that block each get their own Linear projections, and how their outputs are concatenated and projected once more."
+}

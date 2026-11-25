@@ -1,0 +1,19 @@
+{
+  "question": "Recurrent models cannot parallelize across the positions of one sentence, so they process many sentences side by side in a batch. Why, according to the authors, does this workaround help less as sentences get longer?",
+  "options": [
+    "Sentences of different lengths cannot share a batch, so long ones end up processed alone.",
+    "Long sentences produce vanishing gradients, so batch size must be cut to keep training stable.",
+    "Memory limits how many long examples fit in one batch, so less parallel work is available.",
+    "Longer sentences need deeper recurrent stacks, so each batch takes more sequential steps."
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "Within one sentence, h_t needs h_{t−1}, so the only parallelism left is across sentences. The authors point out that memory constraints limit that batching, and the limit matters most for long sequences. The tempting vanishing-gradient answer mixes up a learning problem with a hardware one.",
+    "option_explanations": [
+      "Sentences of different lengths can share a batch; the paper itself batches sentence pairs by approximate length.",
+      "Vanishing gradients concern learning long dependencies, not how many examples a batch can hold.",
+      "Right. The authors note that memory constraints limit batching across examples, and this bites hardest at longer sequence lengths, just where the sequential chain is longest.",
+      "The number of recurrent layers does not depend on sentence length; the sequential steps grow along the positions within a layer."
+    ]
+  }
+}

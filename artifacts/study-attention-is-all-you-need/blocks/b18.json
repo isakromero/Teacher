@@ -1,0 +1,12 @@
+{
+  "prompt": "The base Transformer trains for only 12 hours on 8 GPUs. On WMT 2014 English-German, how do you expect it to compare with the best earlier systems, including ensembles of several models?",
+  "options": [
+    "It falls behind them; only the larger big model catches up.",
+    "It roughly ties the best earlier single models but trails the ensembles.",
+    "It scores above every earlier system, ensembles included."
+  ],
+  "private": {
+    "correct_index": 2,
+    "resolution": "Even the base model, at 27.3 BLEU, beats every previously published model and ensemble on English-German, at a fraction of their training cost. The big model widens the gap to more than 2 BLEU."
+  }
+}

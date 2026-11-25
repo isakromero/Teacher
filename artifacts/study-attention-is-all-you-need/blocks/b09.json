@@ -1,0 +1,21 @@
+{
+  "prompt": "In your own words, explain why the Transformer divides the query-key dot products by √d_k before applying the softmax.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "A dot product sums d_k terms, so for random unit-variance components its variance is d_k and the scores grow with the dimension. Large scores make the softmax saturate, putting almost all weight on one key, and there its gradients become tiny, which hurts learning. Dividing by √d_k brings the variance back to about 1.",
+    "rubric": [
+      {
+        "criterion": "Explains that the dot products grow in magnitude (or variance) as the dimension d_k grows",
+        "required": true
+      },
+      {
+        "criterion": "Explains that large scores push the softmax into a saturated region with very small gradients, which hampers learning",
+        "required": true
+      },
+      {
+        "criterion": "Notes that dividing by √d_k restores a variance of about 1, independent of d_k",
+        "required": false
+      }
+    ]
+  }
+}

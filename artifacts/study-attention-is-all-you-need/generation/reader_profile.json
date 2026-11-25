@@ -1,0 +1,100 @@
+{
+  "stage": "reader_profile",
+  "source": "attention-is-all-you-need",
+  "limits": {
+    "this_document": 10,
+    "strongest": 5,
+    "weakest": 5,
+    "pages_per_concept": 2
+  },
+  "concepts_with_standing": 9,
+  "linked_concepts": 0,
+  "known": true,
+  "entries": [
+    {
+      "group": "strongest",
+      "concept": {
+        "id": 52,
+        "slug": "long-tail",
+        "name": "long tail"
+      },
+      "status": "strong",
+      "questions_answered": 2,
+      "first_attempt_passed": 2,
+      "pages": [
+        "\"Study: 1,000 True Fans\""
+      ]
+    },
+    {
+      "group": "strongest",
+      "concept": {
+        "id": 49,
+        "slug": "1-000-true-fans",
+        "name": "1,000 true fans"
+      },
+      "status": "strong",
+      "questions_answered": 5,
+      "first_attempt_passed": 4,
+      "pages": [
+        "\"Study: 1,000 True Fans\""
+      ]
+    },
+    {
+      "group": "strongest",
+      "concept": {
+        "id": 51,
+        "slug": "direct-relationship-with-customers",
+        "name": "direct relationship with customers"
+      },
+      "status": "developing",
+      "questions_answered": 1,
+      "first_attempt_passed": 1,
+      "pages": [
+        "\"Study: 1,000 True Fans\""
+      ]
+    },
+    {
+      "group": "strongest",
+      "concept": {
+        "id": 53,
+        "slug": "intermediary",
+        "name": "intermediary"
+      },
+      "status": "developing",
+      "questions_answered": 1,
+      "first_attempt_passed": 1,
+      "pages": [
+        "\"Study: 1,000 True Fans\""
+      ]
+    },
+    {
+      "group": "strongest",
+      "concept": {
+        "id": 55,
+        "slug": "order-of-magnitude-estimate",
+        "name": "order of magnitude estimate"
+      },
+      "status": "developing",
+      "questions_answered": 1,
+      "first_attempt_passed": 1,
+      "pages": [
+        "\"Study: 1,000 True Fans\""
+      ]
+    },
+    {
+      "group": "weakest",
+      "concept": {
+        "id": 50,
+        "slug": "true-fan",
+        "name": "true fan"
+      },
+      "status": "weak",
+      "questions_answered": 1,
+      "first_attempt_passed": 0,
+      "pages": [
+        "\"Study: 1,000 True Fans\""
+      ]
+    }
+  ],
+  "prompt": "The reader. Teacher keeps track of how this reader has done on the concepts its earlier study pages tested, and <reader_profile> below says what it knows. Use it like this:\n\n- Where the page relies on a concept the reader is in good standing on (strong or developing) and the document uses it rather than develops it, give a one-line reminder instead of a full explanation, and name the earlier page it was studied on (for example \"as on the page *<that page's title>*\"), so the reader can go back to it.\n- Where the page touches a concept the reader is weak on, take extra care: build it up from the ground, with an example, and add an exercise that makes the reader use it.\n- Never skip or shorten what is specific to this document. Its own problem, method, evidence and claims are taught in full however well the reader knows the concepts around them.\n- The profile covers only concepts that earlier pages tested. Treat everything else as the outline says: the reader knows its background and nothing yet about this document.\n\n<reader_profile>\nStatuses come from the reader's first attempts at questions on earlier pages: \"strong\" is at least 2 questions with at least 80% right the first time, \"weak\" is fewer than 50% right, \"developing\" is in between.\n\nThe reader's strongest concepts elsewhere:\n- long tail: strong (2 of 2 questions right the first time); studied on \"Study: 1,000 True Fans\"\n- 1,000 true fans: strong (4 of 5 questions right the first time); studied on \"Study: 1,000 True Fans\"\n- direct relationship with customers: developing (1 of 1 question right the first time); studied on \"Study: 1,000 True Fans\"\n- intermediary: developing (1 of 1 question right the first time); studied on \"Study: 1,000 True Fans\"\n- order of magnitude estimate: developing (1 of 1 question right the first time); studied on \"Study: 1,000 True Fans\"\n\nThe reader's weakest concepts elsewhere:\n- true fan: weak (0 of 1 question right the first time); studied on \"Study: 1,000 True Fans\"\n\nNone of this document's concepts has been tested on an earlier page (no earlier generation has linked concepts to this document yet).\n</reader_profile>"
+}

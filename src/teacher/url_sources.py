@@ -10,7 +10,11 @@ them:
   mathematics (the LaTeX annotation of MathML, where a page carries one) are kept. Images are
   not: only their alt text is. Its `details` (title, authors, date, summary, site name, arXiv
   id, DOI) are read from the page's own `<meta>` tags by `page_details`, without a model call;
-- plain text and Markdown are kept as they are (`kind` "web_page").
+- plain text and Markdown are kept as they are (`kind` "web_page");
+- a YouTube video address is not fetched here: `teacher.youtube_sources` recognises it (any
+  other address on a YouTube host, such as a playlist or a channel, is an error, never a page
+  to read) and `YouTubeFetcher` returns the video's transcript as Markdown (`kind` "web_page",
+  `details` from the YouTube Data API, `extra_metadata` naming the video and the transcript).
 
 The stored file is a snapshot: generation and the tutor read it, never the live page.
 
@@ -20,7 +24,8 @@ points at a private or local address (also after a redirect); DNS, connection an
 errors; a status other than 200; too many redirects; a body over the size limit; a content type
 Teacher cannot read; text that cannot be decoded; and a page with fewer than `MIN_WORDS` words
 of readable text (typically one that needs JavaScript or a login). Nothing is truncated and
-there is no fallback to a partial page.
+there is no fallback to a partial page. A YouTube video's own failures (no API key, no
+transcript, ...) are listed in `teacher.youtube_sources`.
 
 No model is called here and nothing is stored; `teacher.web.routers.sources` does both.
 """
@@ -30,7 +35,7 @@ from __future__ import annotations
 import ipaddress
 import re
 import socket
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from typing import Any
@@ -79,8 +84,9 @@ class PageDetails:
 class FetchedSource:
     """A fetched URL, ready to store. `url` is the address after redirects; `media_type` and
     `suffix` describe `content` as stored (a web page is stored as Markdown), and
-    `original_media_type` what the server sent. `details` is set for HTML pages only, `words`
-    for everything but PDFs."""
+    `original_media_type` what the server sent. `details` is set for HTML pages and YouTube
+    videos only, `words` for everything but PDFs. `extra_metadata` is added to the stored
+    source's metadata as it is (a YouTube video's id, channel, duration and transcript)."""
 
     requested_url: str
     url: str
@@ -91,6 +97,7 @@ class FetchedSource:
     original_media_type: str
     details: PageDetails | None = None
     words: int | None = None
+    extra_metadata: Mapping[str, Any] = field(default_factory=dict)
 
 
 # -- HTML: a small tree -------------------------------------------------------------------
@@ -552,7 +559,9 @@ class UrlFetcher:
 
     `client` may be any `httpx2.Client`-compatible object (tests pass one with a
     `MockTransport`); by default a client is created per fetch. `resolve(host)` returns the
-    host's IP addresses and is how private and local addresses are refused.
+    host's IP addresses and is how private and local addresses are refused. `youtube` fetches
+    a YouTube video address (`fetch(requested_url, video_id)`); it defaults to
+    `teacher.youtube_sources.YouTubeFetcher()`.
     """
 
     def __init__(
@@ -561,10 +570,17 @@ class UrlFetcher:
         *,
         resolve: Callable[[str], list[str]] = resolve_host,
         timeout: float = TIMEOUT,
+        youtube: Any = None,
     ) -> None:
         self._client = client
         self.resolve = resolve
         self.timeout = timeout
+        if youtube is None:
+            # Imported here: teacher.youtube_sources imports this module.
+            from teacher.youtube_sources import YouTubeFetcher
+
+            youtube = YouTubeFetcher()
+        self.youtube = youtube
 
     # -- the URL --------------------------------------------------------------------------
 
@@ -658,7 +674,12 @@ class UrlFetcher:
     # -- the result -----------------------------------------------------------------------
 
     def fetch(self, url: str) -> FetchedSource:
+        from teacher.youtube_sources import youtube_video_id  # see __init__
+
         requested = url.strip()
+        video_id = youtube_video_id(requested)
+        if video_id is not None:
+            return self.youtube.fetch(requested, video_id)
         if self._client is not None:
             final, content_type, body = self._get(self._client, requested)
         else:

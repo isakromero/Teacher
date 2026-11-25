@@ -1,0 +1,19 @@
+{
+  "question": "During training the decoder receives the whole target sentence at once. What stops decoder position 3 from simply reading the very token it is meant to predict?",
+  "options": [
+    "Encoder-decoder attention reads only source words, and the target is fed in in reversed order.",
+    "Scores to later positions are set to −∞ before the softmax, and the target is shifted right by one.",
+    "Scores to later positions are set to −∞ after the softmax, and the source is shifted right by one.",
+    "Later positions get a zero positional encoding, and the target is shifted left by one position."
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "Two things work together. The mask sets illegal scores to −∞ before the softmax, so later positions get weight 0, and the outputs are offset by one position. So the prediction for position i depends only on outputs before i. A tempting wrong answer puts the mask after the softmax, but the paper masks the softmax inputs, so the weights over legal positions still sum to 1.",
+    "option_explanations": [
+      "The decoder's own self-attention does read target tokens, and reversing their order would expose later tokens rather than hide them.",
+      "Right. −∞ before the softmax gives later positions weight exactly 0, and the right shift means position 3's own input is the previous token, not the one to predict.",
+      "The mask has to act on the softmax inputs so that the remaining weights still form a proper distribution, and shifting the source does nothing about the target tokens the decoder reads.",
+      "Positional encodings only say where a token sits, and shifting the target left would place the next token at position 3 rather than hide it."
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "prompt": "The authors vary the number of attention heads while shrinking each head so that total computation stays constant (1 head of size 512, up to 32 heads of size 16). How do you expect BLEU to behave?",
+  "options": [
+    "It peaks at a middle number of heads and falls at both extremes.",
+    "It rises steadily: the more heads, the better the translation.",
+    "It barely moves, since the total computation never changes."
+  ],
+  "private": {
+    "correct_index": 0,
+    "resolution": "There is a sweet spot. One head is clearly worst, 8 and 16 heads tie for best, and 32 tiny heads lose ground again, as the next block and chart show."
+  }
+}

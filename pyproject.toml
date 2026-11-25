@@ -18,6 +18,7 @@ dependencies = [
     "sqlalchemy>=2.0",
     "usearch>=2.26.6",
     "uvicorn>=0.54.0",
+    "youtube-transcript-api>=1.2.5",
 ]
 
 [project.scripts]

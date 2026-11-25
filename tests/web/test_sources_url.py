@@ -15,6 +15,7 @@ from teacher.generation import StubGenerator
 from teacher.metadata import MetadataExtractor
 from teacher.url_sources import MIN_WORDS, UrlFetcher
 from teacher.web.app import create_app
+from teacher.youtube_sources import YouTubeFetcher
 
 WORDS = " ".join(f"word{n}" for n in range(MIN_WORDS))
 HEAD = (
@@ -230,3 +231,186 @@ def test_from_url_rejects_bad_bodies(url_client, body: dict[str, Any]) -> None:
     response = client.post("/api/sources/from-url", json=body)
     assert response.status_code == 422, response.text
     assert client.get("/api/sources").json() == []
+
+
+# -- YouTube videos -------------------------------------------------------------------------
+# The Data API is a MockTransport and the transcript getter a fake: no request leaves the test.
+
+YT_KEY = "AIzaSyTEST-router-key-0123456789"
+YT_ID = "dQw4w9WgXcQ"
+YT_WATCH = f"https://www.youtube.com/watch?v={YT_ID}"
+YT_VIDEO = {
+    "id": YT_ID,
+    "snippet": {
+        "publishedAt": "2023-11-02T09:30:00Z",
+        "title": "Attention, visually",
+        "description": "A visual tour of attention.\n\n0:00 Intro\n1:00 Keys\n2:00 Values",
+        "channelTitle": "Ada Lectures",
+        "liveBroadcastContent": "none",
+        "defaultAudioLanguage": "en",
+    },
+    "contentDetails": {"duration": "PT3M20S"},
+}
+
+
+class _Caption:
+    def __init__(self, text: str, start: float) -> None:
+        self.text, self.start, self.duration = text, start, 5.0
+
+
+class _Transcript:
+    def __init__(self, code: str, generated: bool) -> None:
+        self.language_code, self.is_generated = code, generated
+
+    def fetch(self) -> list[_Caption]:
+        return [_Caption(f"part{n} one two three four", n * 5.0) for n in range(40)]
+
+
+@pytest.fixture
+def youtube_client(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[Callable[..., tuple[TestClient, list[str]]]]:
+    """`youtube_client(status=200, body=None, transcripts=...) -> (client, api_requests)`: an app
+    whose fetcher answers the Data API with `body` (by default `YT_VIDEO`) and whose transcript
+    getter offers `transcripts` (code, generated) pairs; `$YOUTUBE_API_KEY` is `YT_KEY`."""
+    monkeypatch.setenv("YOUTUBE_API_KEY", YT_KEY)
+    clients: list[TestClient] = []
+
+    def make(
+        status: int = 200,
+        body: Any = None,
+        transcripts: tuple[tuple[str, bool], ...] = (("en", True),),
+    ) -> tuple[TestClient, list[str]]:
+        api_requests: list[str] = []
+
+        def api(request: httpx2.Request) -> httpx2.Response:
+            api_requests.append(str(request.url))
+            return httpx2.Response(status, json=body if body is not None else {"items": [YT_VIDEO]})
+
+        def page(request: httpx2.Request) -> httpx2.Response:
+            raise AssertionError(f"a YouTube address was fetched as a page: {request.url}")
+
+        youtube = YouTubeFetcher(
+            httpx2.Client(transport=httpx2.MockTransport(api)),
+            list_transcripts=lambda video_id: [_Transcript(c, g) for c, g in transcripts],
+        )
+        fetcher = UrlFetcher(
+            httpx2.Client(transport=httpx2.MockTransport(page)),
+            resolve=lambda host: ["93.184.216.34"],
+            youtube=youtube,
+        )
+        app = create_app(settings, generator=StubGenerator(), url_fetcher=fetcher)
+        client = TestClient(app)
+        client.__enter__()
+        clients.append(client)
+        return client, api_requests
+
+    yield make
+    for client in clients:
+        client.__exit__(None, None, None)
+
+
+def test_inspect_url_reads_a_youtube_video(youtube_client) -> None:
+    client, api_requests = youtube_client()
+    response = client.post(
+        "/api/sources/inspect-url", json={"url": f"https://youtu.be/{YT_ID}?si=share"}
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == {
+        "title": "Attention, visually",
+        "authors": ["Ada Lectures"],
+        "year": 2023,
+        "arxiv_id": None,
+        "doi": None,
+        "summary": "A visual tour of attention.",
+        "model": None,
+        "duplicate_of": None,
+        "url": YT_WATCH,
+        "kind": "web_page",
+        "words": 200,
+        "detection_error": None,
+    }
+    assert len(api_requests) == 1
+    assert client.get("/api/sources").json() == []  # nothing is stored
+
+
+def test_from_url_stores_a_youtube_transcript(youtube_client) -> None:
+    client, _ = youtube_client(transcripts=(("de", False), ("en", True)))
+    response = client.post(
+        "/api/sources/from-url",
+        json={
+            "url": f"https://m.youtube.com/watch?v={YT_ID}&t=42s",
+            "title": "Attention, visually",
+            "creators": ["Ada Lectures"],
+            "originated_on": "2023-11-02",
+        },
+    )
+    assert response.status_code == 201, response.text
+    source = response.json()
+    assert (source["kind"], source["media_type"]) == ("web_page", "text/markdown")
+    assert source["origin_url"] == YT_WATCH
+    metadata = source["metadata"]
+    assert metadata["requested_url"] == f"https://m.youtube.com/watch?v={YT_ID}&t=42s"
+    assert metadata["site_name"] == "YouTube" and metadata["words"] == 200
+    assert {k: metadata[k] for k in (
+        "youtube_video_id", "channel", "duration_seconds", "transcript_language",
+        "transcript_generated",
+    )} == {
+        "youtube_video_id": YT_ID, "channel": "Ada Lectures", "duration_seconds": 200,
+        "transcript_language": "en", "transcript_generated": True,
+    }  # fmt: skip
+    assert YT_KEY not in response.text
+
+    stored = client.get(f"/api/sources/{source['slug']}/file")
+    assert stored.status_code == 200
+    assert stored.text.startswith(
+        f"# Attention, visually\n\nVideo by Ada Lectures on YouTube: {YT_WATCH} "
+        f"(transcript: en, generated automatically)\n\n## Intro\n\n[0:00]({YT_WATCH}&t=0s) part0"
+    )
+    assert "\n\n## Keys\n\n" in stored.text and YT_KEY not in stored.text
+
+    # The same video again, from another address: found by its content.
+    again = client.post("/api/sources/inspect-url", json={"url": f"https://youtu.be/{YT_ID}"})
+    assert again.json()["duplicate_of"] == source["slug"]
+
+    # And it can be taught like any web page.
+    artifact = client.post("/api/artifacts", json={"sources": [source["slug"]]})
+    assert artifact.status_code == 202, artifact.text
+    assert client.get(f"/api/artifacts/{artifact.json()['slug']}").json()["status"] == "ready"
+
+
+@pytest.mark.parametrize(
+    ("setup", "url", "message"),
+    [
+        ({}, "https://www.youtube.com/playlist?list=PL1", "playlist, not a video"),
+        ({}, "https://www.youtube.com/@AdaLectures", "channel, not a video"),
+        ({"body": {"items": []}}, YT_WATCH, "does not exist, was removed, or is private"),
+        ({"status": 403, "body": {"error": {"code": 403, "message": "quota", "errors": [
+            {"reason": "quotaExceeded"}]}}}, YT_WATCH, "quotaExceeded"),
+        ({"transcripts": ()}, YT_WATCH, "offers no transcript"),
+        ({"transcripts": (("fr", False),)}, YT_WATCH, "does not translate"),
+    ],
+)  # fmt: skip
+def test_youtube_failures_reach_the_reader(
+    youtube_client, setup: dict[str, Any], url: str, message: str
+) -> None:
+    client, _ = youtube_client(**setup)
+    for path, body in (
+        ("/api/sources/inspect-url", {"url": url}),
+        ("/api/sources/from-url", {"url": url, "title": "A video"}),
+    ):
+        response = client.post(path, json=body)
+        assert response.status_code == 422, response.text
+        assert message in response.json()["detail"]
+        assert YT_KEY not in response.text
+    assert client.get("/api/sources").json() == []
+
+
+def test_youtube_without_a_key(youtube_client, monkeypatch: pytest.MonkeyPatch) -> None:
+    client, api_requests = youtube_client()
+    monkeypatch.delenv("YOUTUBE_API_KEY")
+    response = client.post("/api/sources/from-url", json={"url": YT_WATCH, "title": "A video"})
+    assert response.status_code == 422, response.text
+    detail = response.json()["detail"]
+    assert "YOUTUBE_API_KEY is not set" in detail and ".env" in detail and "restart" in detail
+    assert api_requests == [] and client.get("/api/sources").json() == []

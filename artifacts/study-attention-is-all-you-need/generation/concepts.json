@@ -1,0 +1,872 @@
+{
+  "extractor": "claude-concepts-v1",
+  "trigger": "generation",
+  "model": "claude-sonnet-5-5",
+  "embedding_model": "text-embedding-3-small",
+  "source": {
+    "slug": "attention-is-all-you-need",
+    "title": "Attention Is All You Need"
+  },
+  "calls": [
+    {
+      "step": "concepts",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChMwDU1yKDSAfrfMXEQY8",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 1035,
+        "cache_creation_input_tokens": 40235,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 2954
+      }
+    },
+    {
+      "step": "concept judge",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChMwG2JUYai2sZt3yUk7Y",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 1406,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 98
+      }
+    }
+  ],
+  "stale_embedded": 0,
+  "removed_links": 0,
+  "candidates": [
+    {
+      "number": 1,
+      "name": "self-attention",
+      "aliases": [
+        "intra-attention"
+      ],
+      "summary": "An attention mechanism in which queries, keys and values all come from the same sequence, so each position can relate to every other position in order to compute a representation of the sequence.",
+      "role": "introduces",
+      "evidence": "Self-attention, sometimes called intra-attention is an attention mechanism relating different positions of a single sequence"
+    },
+    {
+      "number": 2,
+      "name": "attention mechanism",
+      "aliases": [
+        "attention function"
+      ],
+      "summary": "A function that maps a query and a set of key-value pairs to an output, computed as a weighted sum of the values where each weight comes from a compatibility function of the query with the corresponding key.",
+      "role": "uses",
+      "evidence": "mapping a query and a set of key-value pairs to an output"
+    },
+    {
+      "number": 3,
+      "name": "scaled dot-product attention",
+      "aliases": [],
+      "summary": "An attention function that computes dot products of queries with keys, divides them by $\\sqrt{d_k}$, applies a softmax to get weights, and uses them to average the values: $\\mathrm{softmax}(QK^T/\\sqrt{d_k})V$. The scaling keeps the softmax from saturating when $d_k$ is large.",
+      "role": "introduces",
+      "evidence": "We call our particular attention \"Scaled Dot-Product Attention\""
+    },
+    {
+      "number": 4,
+      "name": "multi-head attention",
+      "aliases": [],
+      "summary": "Attention performed several times in parallel on different learned linear projections of queries, keys and values, with the outputs concatenated and projected again. It lets a model attend to information from different representation subspaces at different positions.",
+      "role": "introduces",
+      "evidence": "allows the model to jointly attend to information from different representation subspaces at different positions"
+    },
+    {
+      "number": 5,
+      "name": "Transformer architecture",
+      "aliases": [
+        "Transformer"
+      ],
+      "summary": "A neural sequence model architecture built from stacked attention and feed-forward layers, with no recurrence or convolution, typically in an encoder-decoder arrangement.",
+      "role": "introduces",
+      "evidence": "the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely"
+    },
+    {
+      "number": 6,
+      "name": "encoder-decoder architecture",
+      "aliases": [
+        "sequence-to-sequence model"
+      ],
+      "summary": "A model structure in which an encoder maps an input sequence to continuous representations and a decoder generates an output sequence from them, one element at a time.",
+      "role": "uses",
+      "evidence": "Most competitive neural sequence transduction models have an encoder-decoder structure"
+    },
+    {
+      "number": 7,
+      "name": "sequence transduction",
+      "aliases": [],
+      "summary": "The task of mapping an input sequence of symbols to an output sequence, as in machine translation.",
+      "role": "assumes",
+      "evidence": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks"
+    },
+    {
+      "number": 8,
+      "name": "recurrent neural network",
+      "aliases": [
+        "RNN"
+      ],
+      "summary": "A neural network that processes a sequence step by step, computing each hidden state from the previous hidden state and the current input. This sequential dependence prevents parallelization across positions.",
+      "role": "assumes",
+      "evidence": "they generate a sequence of hidden states ht, as a function of the previous hidden state ht−1 and the input for position t"
+    },
+    {
+      "number": 9,
+      "name": "convolutional sequence model",
+      "aliases": [
+        "convolutional neural network for sequences"
+      ],
+      "summary": "A model that computes hidden representations in parallel for all positions using convolutions with a limited kernel width. Relating distant positions requires stacking many layers.",
+      "role": "assumes",
+      "evidence": "all of which use convolutional neural networks as basic building block"
+    },
+    {
+      "number": 10,
+      "name": "positional encoding",
+      "aliases": [
+        "sinusoidal positional encoding"
+      ],
+      "summary": "Vectors added to token embeddings to give a model without recurrence or convolution information about token order. They can be fixed sinusoids of different frequencies or learned.",
+      "role": "uses",
+      "evidence": "we add \"positional encodings\" to the input embeddings at the bottoms of the encoder and decoder stacks"
+    },
+    {
+      "number": 11,
+      "name": "masked self-attention",
+      "aliases": [
+        "causal masking"
+      ],
+      "summary": "Self-attention in which illegal connections to later positions are blocked, for example by setting their softmax inputs to $-\\infty$, so predictions at a position depend only on earlier positions.",
+      "role": "uses",
+      "evidence": "masking out (setting to −∞) all values in the input of the softmax which correspond to illegal connections"
+    },
+    {
+      "number": 12,
+      "name": "auto-regressive generation",
+      "aliases": [
+        "auto-regressive model"
+      ],
+      "summary": "Producing an output sequence one element at a time, with each step conditioned on the elements already generated.",
+      "role": "uses",
+      "evidence": "At each step the model is auto-regressive, consuming the previously generated symbols as additional input"
+    },
+    {
+      "number": 13,
+      "name": "residual connection",
+      "aliases": [
+        "skip connection"
+      ],
+      "summary": "A connection that adds a layer's input to its output, so that the layer computes $x + F(x)$. It eases the training of deep networks.",
+      "role": "uses",
+      "evidence": "We employ a residual connection around each of the two sub-layers"
+    },
+    {
+      "number": 14,
+      "name": "layer normalization",
+      "aliases": [
+        "LayerNorm"
+      ],
+      "summary": "A normalization technique that standardizes the activations of a layer across the feature dimension for each example, stabilizing training.",
+      "role": "uses",
+      "evidence": "followed by layer normalization"
+    },
+    {
+      "number": 15,
+      "name": "position-wise feed-forward network",
+      "aliases": [],
+      "summary": "A small fully connected network, two linear transformations with a ReLU in between, applied identically and independently to each position of a sequence.",
+      "role": "uses",
+      "evidence": "applied to each position separately and identically"
+    },
+    {
+      "number": 16,
+      "name": "softmax function",
+      "aliases": [
+        "softmax"
+      ],
+      "summary": "A function that converts a vector of real scores into a probability distribution by exponentiating and normalizing them. Very large inputs push it into regions with tiny gradients.",
+      "role": "assumes",
+      "evidence": "apply a softmax function to obtain the weights on the values"
+    },
+    {
+      "number": 17,
+      "name": "BLEU score",
+      "aliases": [
+        "BLEU"
+      ],
+      "summary": "An automatic metric for machine translation quality that measures n-gram overlap between a system output and reference translations.",
+      "role": "uses",
+      "evidence": "28.4 BLEU on the WMT 2014 English-to-German translation task"
+    },
+    {
+      "number": 18,
+      "name": "learning rate warmup",
+      "aliases": [
+        "warmup schedule"
+      ],
+      "summary": "A learning-rate schedule that increases the rate linearly for an initial number of steps and then decays it, for example proportionally to the inverse square root of the step number.",
+      "role": "uses",
+      "evidence": "increasing the learning rate linearly for the first warmup_steps training steps, and decreasing it thereafter"
+    },
+    {
+      "number": 19,
+      "name": "Adam optimizer",
+      "aliases": [
+        "Adam"
+      ],
+      "summary": "A stochastic gradient-based optimization method that adapts per-parameter step sizes using running estimates of the first and second moments of gradients.",
+      "role": "uses",
+      "evidence": "We used the Adam optimizer [20] with β1 = 0.9, β2 = 0.98"
+    },
+    {
+      "number": 20,
+      "name": "dropout",
+      "aliases": [],
+      "summary": "A regularization technique that randomly zeroes a fraction of activations during training to reduce overfitting.",
+      "role": "uses",
+      "evidence": "we apply dropout [33] to the output of each sub-layer"
+    },
+    {
+      "number": 21,
+      "name": "label smoothing",
+      "aliases": [],
+      "summary": "A regularization technique that replaces hard one-hot targets with softened distributions, making the model less confident. It can hurt perplexity while improving accuracy.",
+      "role": "uses",
+      "evidence": "we employed label smoothing of value ϵls = 0.1"
+    },
+    {
+      "number": 22,
+      "name": "byte-pair encoding",
+      "aliases": [
+        "BPE",
+        "subword units"
+      ],
+      "summary": "A subword tokenization method that iteratively merges the most frequent symbol pairs to build a fixed vocabulary, allowing rare words to be represented as pieces.",
+      "role": "uses",
+      "evidence": "Sentences were encoded using byte-pair encoding [3]"
+    },
+    {
+      "number": 23,
+      "name": "beam search",
+      "aliases": [],
+      "summary": "A decoding algorithm that keeps the several highest-scoring partial output sequences at each step instead of only one.",
+      "role": "uses",
+      "evidence": "We used beam search with a beam size of 4 and length penalty α = 0.6"
+    },
+    {
+      "number": 24,
+      "name": "path length between long-range dependencies",
+      "aliases": [
+        "maximum path length"
+      ],
+      "summary": "The number of steps signals must traverse between two positions in a network. Shorter paths make long-range dependencies easier to learn.",
+      "role": "uses",
+      "evidence": "The third is the path length between long-range dependencies in the network"
+    },
+    {
+      "number": 25,
+      "name": "weight tying of embeddings",
+      "aliases": [
+        "shared embedding and softmax weights"
+      ],
+      "summary": "Sharing one weight matrix between the input embedding, output embedding and pre-softmax linear layers to reduce parameters.",
+      "role": "uses",
+      "evidence": "we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation"
+    },
+    {
+      "number": 26,
+      "name": "constituency parsing",
+      "aliases": [],
+      "summary": "The task of producing a syntactic tree that groups a sentence's words into nested phrases.",
+      "role": "uses",
+      "evidence": "English constituency parsing"
+    }
+  ],
+  "resolutions": [
+    {
+      "candidate": 1,
+      "name": "self-attention",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 2,
+      "name": "attention mechanism",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 3,
+      "name": "scaled dot-product attention",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 4,
+      "name": "multi-head attention",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 5,
+      "name": "Transformer architecture",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 6,
+      "name": "encoder-decoder architecture",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 7,
+      "name": "sequence transduction",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 8,
+      "name": "recurrent neural network",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 9,
+      "name": "convolutional sequence model",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 10,
+      "name": "positional encoding",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 11,
+      "name": "masked self-attention",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 12,
+      "name": "auto-regressive generation",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 13,
+      "name": "residual connection",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 14,
+      "name": "layer normalization",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 15,
+      "name": "position-wise feed-forward network",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 16,
+      "name": "softmax function",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 17,
+      "name": "BLEU score",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 18,
+      "name": "learning rate warmup",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 19,
+      "name": "Adam optimizer",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": "Adam is a gradient-based optimizer using moment estimates, while advantage estimation is a reinforcement-learning variance-reduction technique, so they are unrelated ideas.",
+      "shortlist": [
+        {
+          "id": 4,
+          "slug": "advantage-estimation",
+          "name": "advantage estimation",
+          "found_by": [
+            "embedding 0.513"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 20,
+      "name": "dropout",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 21,
+      "name": "label smoothing",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 22,
+      "name": "byte-pair encoding",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 23,
+      "name": "beam search",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 24,
+      "name": "path length between long-range dependencies",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 25,
+      "name": "weight tying of embeddings",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 26,
+      "name": "constituency parsing",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": null,
+      "shortlist": []
+    }
+  ],
+  "output": {
+    "links": [
+      {
+        "slug": "self-attention",
+        "name": "self-attention",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "self-attention"
+        ],
+        "judge_reason": null,
+        "evidence": "Self-attention, sometimes called intra-attention is an attention mechanism relating different positions of a single sequence",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "attention-mechanism",
+        "name": "attention mechanism",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "attention mechanism"
+        ],
+        "judge_reason": null,
+        "evidence": "mapping a query and a set of key-value pairs to an output",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "scaled-dot-product-attention",
+        "name": "scaled dot-product attention",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "scaled dot-product attention"
+        ],
+        "judge_reason": null,
+        "evidence": "We call our particular attention \"Scaled Dot-Product Attention\"",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "multi-head-attention",
+        "name": "multi-head attention",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "multi-head attention"
+        ],
+        "judge_reason": null,
+        "evidence": "allows the model to jointly attend to information from different representation subspaces at different positions",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "transformer-architecture",
+        "name": "Transformer architecture",
+        "role": "introduces",
+        "resolution": "created",
+        "candidates": [
+          "Transformer architecture"
+        ],
+        "judge_reason": null,
+        "evidence": "the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "encoder-decoder-architecture",
+        "name": "encoder-decoder architecture",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "encoder-decoder architecture"
+        ],
+        "judge_reason": null,
+        "evidence": "Most competitive neural sequence transduction models have an encoder-decoder structure",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "sequence-transduction",
+        "name": "sequence transduction",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "sequence transduction"
+        ],
+        "judge_reason": null,
+        "evidence": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "recurrent-neural-network",
+        "name": "recurrent neural network",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "recurrent neural network"
+        ],
+        "judge_reason": null,
+        "evidence": "they generate a sequence of hidden states ht, as a function of the previous hidden state ht−1 and the input for position t",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "convolutional-sequence-model",
+        "name": "convolutional sequence model",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "convolutional sequence model"
+        ],
+        "judge_reason": null,
+        "evidence": "all of which use convolutional neural networks as basic building block",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "positional-encoding",
+        "name": "positional encoding",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "positional encoding"
+        ],
+        "judge_reason": null,
+        "evidence": "we add \"positional encodings\" to the input embeddings at the bottoms of the encoder and decoder stacks",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "masked-self-attention",
+        "name": "masked self-attention",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "masked self-attention"
+        ],
+        "judge_reason": null,
+        "evidence": "masking out (setting to −∞) all values in the input of the softmax which correspond to illegal connections",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "auto-regressive-generation",
+        "name": "auto-regressive generation",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "auto-regressive generation"
+        ],
+        "judge_reason": null,
+        "evidence": "At each step the model is auto-regressive, consuming the previously generated symbols as additional input",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "residual-connection",
+        "name": "residual connection",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "residual connection"
+        ],
+        "judge_reason": null,
+        "evidence": "We employ a residual connection around each of the two sub-layers",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "layer-normalization",
+        "name": "layer normalization",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "layer normalization"
+        ],
+        "judge_reason": null,
+        "evidence": "followed by layer normalization",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "position-wise-feed-forward-network",
+        "name": "position-wise feed-forward network",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "position-wise feed-forward network"
+        ],
+        "judge_reason": null,
+        "evidence": "applied to each position separately and identically",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "softmax-function",
+        "name": "softmax function",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "softmax function"
+        ],
+        "judge_reason": null,
+        "evidence": "apply a softmax function to obtain the weights on the values",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "bleu-score",
+        "name": "BLEU score",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "BLEU score"
+        ],
+        "judge_reason": null,
+        "evidence": "28.4 BLEU on the WMT 2014 English-to-German translation task",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "learning-rate-warmup",
+        "name": "learning rate warmup",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "learning rate warmup"
+        ],
+        "judge_reason": null,
+        "evidence": "increasing the learning rate linearly for the first warmup_steps training steps, and decreasing it thereafter",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "adam-optimizer",
+        "name": "Adam optimizer",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "Adam optimizer"
+        ],
+        "judge_reason": null,
+        "evidence": "We used the Adam optimizer [20] with β1 = 0.9, β2 = 0.98",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "dropout",
+        "name": "dropout",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "dropout"
+        ],
+        "judge_reason": null,
+        "evidence": "we apply dropout [33] to the output of each sub-layer",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "label-smoothing",
+        "name": "label smoothing",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "label smoothing"
+        ],
+        "judge_reason": null,
+        "evidence": "we employed label smoothing of value ϵls = 0.1",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "byte-pair-encoding",
+        "name": "byte-pair encoding",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "byte-pair encoding"
+        ],
+        "judge_reason": null,
+        "evidence": "Sentences were encoded using byte-pair encoding [3]",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "beam-search",
+        "name": "beam search",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "beam search"
+        ],
+        "judge_reason": null,
+        "evidence": "We used beam search with a beam size of 4 and length penalty α = 0.6",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "path-length-between-long-range-dependencies",
+        "name": "path length between long-range dependencies",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "path length between long-range dependencies"
+        ],
+        "judge_reason": null,
+        "evidence": "The third is the path length between long-range dependencies in the network",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "weight-tying-of-embeddings",
+        "name": "weight tying of embeddings",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "weight tying of embeddings"
+        ],
+        "judge_reason": null,
+        "evidence": "we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "constituency-parsing",
+        "name": "constituency parsing",
+        "role": "uses",
+        "resolution": "created",
+        "candidates": [
+          "constituency parsing"
+        ],
+        "judge_reason": null,
+        "evidence": "English constituency parsing",
+        "aliases_added": [],
+        "slug_note": null
+      }
+    ]
+  }
+}

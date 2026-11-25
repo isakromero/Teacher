@@ -1,0 +1,746 @@
+{
+  "builder": "claude-review-bank-v1",
+  "model": "claude-opus-5-5",
+  "reply": {
+    "multiple_choice": [
+      {
+        "question_number": 1,
+        "question": "An RNN translation team gets a good speedup by putting many short sentences side by side in one batch, but the speedup shrinks when they move to long sentences. What reason do the Transformer's authors give for this?",
+        "options": [
+          "Memory caps how many long sequences fit in a batch, leaving less work to run in parallel.",
+          "Long sequences cause vanishing gradients, which forces smaller batches for stable training.",
+          "Long sequences require more stacked recurrent layers, adding sequential steps per batch.",
+          "Sequences of unequal length cannot be batched together, so long ones are run alone."
+        ],
+        "correct_index": 0,
+        "explanation": "A recurrent layer cannot parallelize within a sentence, because h_t needs h_{t−1}. The only parallelism left is across sentences in a batch. Memory constraints limit that batching, and the limit bites hardest for long sequences.",
+        "option_explanations": [
+          "Right. With long sequences each example uses more memory, so fewer fit in a batch and less parallel work is available.",
+          "Vanishing gradients are a learning problem about long dependencies. They do not determine how many examples a batch can hold.",
+          "The number of recurrent layers does not depend on sentence length. The sequential steps grow along the positions within a layer.",
+          "Sentences of different lengths can share a batch; the paper itself batches sentence pairs of approximately similar length."
+        ]
+      },
+      {
+        "question_number": 1,
+        "question": "Which statement correctly describes both why a recurrent layer cannot parallelize within one sentence and what limits the usual workaround of batching many sentences?",
+        "options": [
+          "Each h_t needs h_{t−1}; batching across sentences is limited by memory at long lengths.",
+          "Each h_t needs h_{t+1}; batching across sentences is limited by vanishing gradients.",
+          "Each layer needs the one below; batching across sentences is limited by layer depth.",
+          "Each h_t needs h_{t−1}; batching fails because all sentence lengths must match exactly."
+        ],
+        "correct_index": 0,
+        "explanation": "The hidden state at position t depends on the state at t−1, which forces sequential computation along the sentence. Batching across sentences recovers some parallelism, but memory constraints limit how many long examples fit in a batch.",
+        "option_explanations": [
+          "Right. The sequential chain runs forward through h_{t−1}, and memory limits how many long sequences can be batched.",
+          "The recurrence runs forward from the previous state, not from the next one. Vanishing gradients also concern learning, not batch capacity.",
+          "The sequential problem lies along positions within a layer, not between layers. Depth is also not what limits batching.",
+          "The dependence on h_{t−1} is right, but sentences of different lengths can still be batched together, for example by grouping similar lengths."
+        ]
+      },
+      {
+        "question_number": 3,
+        "question": "A Transformer decoder is trained with the whole target sentence supplied at once. Which pair of mechanisms ensures that the prediction for position i depends only on outputs before i?",
+        "options": [
+          "Scores to later positions set to −∞ after the softmax, plus the source shifted right by one.",
+          "Scores to later positions set to −∞ before the softmax, plus the target shifted right by one.",
+          "Later positions given a zero positional encoding, plus the target shifted left by one.",
+          "The target fed in reversed order, plus the decoder attending only to source words."
+        ],
+        "correct_index": 1,
+        "explanation": "Illegal attention scores are set to −∞ before the softmax, so later positions receive weight exactly 0 and the remaining weights still sum to 1. The target outputs are also offset by one position to the right, so each position's input is the previous token rather than the one to be predicted.",
+        "option_explanations": [
+          "Masking has to act on the softmax inputs so the remaining weights form a proper distribution. Shifting the source does nothing about the target tokens the decoder reads.",
+          "Right. −∞ before the softmax gives later positions zero weight, and the right shift means position i receives the token before the one it must predict.",
+          "Positional encodings only indicate where a token sits, so zeroing one does not hide the token. Shifting left would place the next token at the current position.",
+          "The decoder's self-attention does read target tokens, and reversing their order would expose later tokens instead of hiding them."
+        ]
+      },
+      {
+        "question_number": 3,
+        "question": "A student implements decoder masking this way: compute the softmax over all positions first, then set the weights of later positions to zero. Compared with the Transformer's approach, what goes wrong?",
+        "options": [
+          "The remaining weights over earlier positions no longer sum to 1.",
+          "Later positions still keep a small positive weight after the zeroing.",
+          "The scores lose their 1/√d_k scaling, so the softmax saturates.",
+          "Nothing differs; zeroing after the softmax equals −∞ before it."
+        ],
+        "correct_index": 0,
+        "explanation": "The paper sets illegal scores to −∞ in the softmax input, so the softmax spreads all the probability over the legal positions and the weights sum to 1. Zeroing weights afterwards removes probability mass without renormalizing, so the weights over earlier positions sum to less than 1.",
+        "option_explanations": [
+          "Right. Part of the probability mass went to later positions before they were zeroed, so what remains no longer forms a proper distribution.",
+          "Zeroing sets those weights to exactly 0, so later positions do not keep any weight. The problem lies elsewhere.",
+          "Masking order has nothing to do with the √d_k scaling, which is applied to the scores either way.",
+          "The two are not equivalent. Applying −∞ before the softmax renormalizes over the legal positions, and zeroing afterwards does not."
+        ]
+      },
+      {
+        "question_number": 4,
+        "question": "The authors found that sinusoidal and learned positional encodings gave nearly identical results. Why did they still prefer the sinusoidal version?",
+        "options": [
+          "Sinusoids are defined by a formula at any position, so they may extrapolate to longer inputs.",
+          "Sinusoids scored clearly higher BLEU on the development set than the learned embeddings.",
+          "Sinusoids wrap around after a wavelength of 2π, so unseen positions reuse familiar ones.",
+          "Sinusoids give every position its own trainable vector, which adapts to new lengths."
+        ],
+        "correct_index": 0,
+        "explanation": "A formula defines a sinusoidal encoding for any position, including positions longer than any seen in training. The authors therefore hope the model may extrapolate to longer sequences. Learned embeddings have nothing trained beyond the longest training position. This is a stated hope, not a tested result.",
+        "option_explanations": [
+          "Right. Because sinusoids are computed rather than learned, every position has an encoding, which is the authors' reason for choosing them.",
+          "The two versions performed about equally, so a score gap was not the reason for the choice.",
+          "The wavelengths range from 2π up to 10000·2π, so the encodings do not wrap around after a short range.",
+          "Trainable per-position vectors describe learned embeddings, not sinusoids, and they exist only for positions seen in training."
+        ]
+      },
+      {
+        "question_number": 4,
+        "question": "A Transformer was trained with learned positional embeddings on sentences of at most 60 tokens. At test time a 90-token sentence arrives. Following the authors' reasoning, what is the problem?",
+        "options": [
+          "Positions 61–90 have no trained vector, whereas a sinusoid formula would still define them.",
+          "Positions 61–90 wrap around onto positions 1–30, so early and late tokens get confused.",
+          "Learned embeddings scored clearly worse in development, so accuracy drops at every length.",
+          "A sinusoid formula would fail here too, since it only covers lengths seen in training."
+        ],
+        "correct_index": 0,
+        "explanation": "A learned embedding exists only for positions that occurred in training, so positions beyond 60 have nothing trained. Sinusoidal encodings are given by a formula at every position, which is why the authors expect them to cope better with longer sequences.",
+        "option_explanations": [
+          "Right. Training produced no embedding for positions past 60, while a formula-based encoding is defined for any position.",
+          "Wrap-around is not how learned embeddings behave. The issue is that the unseen positions have no trained vectors at all.",
+          "The learned and sinusoidal versions performed nearly identically in development, so there is no general accuracy gap.",
+          "A formula is defined for any position, which is exactly why the authors think sinusoids may extrapolate."
+        ]
+      },
+      {
+        "question_number": 6,
+        "question": "With d_model = 512 and total computation held fixed, raising the number of attention heads from 16 to 32 lowers BLEU. Which explanation fits the experimental findings?",
+        "options": [
+          "Each head's keys shrink to 16 dimensions, and smaller key sizes were shown to hurt quality.",
+          "Doubling the heads doubles total computation, so training no longer converges in time.",
+          "Concatenating 32 heads exceeds d_model, so W^O must throw away part of the information.",
+          "With so many small heads the √d_k scaling is skipped, so each head's softmax saturates."
+        ],
+        "correct_index": 0,
+        "explanation": "Because d_k = d_model/h, 32 heads leave each head with 16-dimensional keys. Separate experiments showed that reducing the key size hurts quality, which suggests compatibility is hard to judge in so few dimensions.",
+        "option_explanations": [
+          "Right. 512/32 = 16 dimensions per key, and shrinking the key size was shown to reduce quality.",
+          "The experiment holds computation constant: more heads means smaller heads, not more work.",
+          "32 heads of 16 dimensions concatenate to exactly 512, so nothing has to be discarded for shape reasons.",
+          "Each head applies scaled dot-product attention with its own d_k, so no head runs unscaled."
+        ]
+      },
+      {
+        "question_number": 6,
+        "question": "In the Transformer's fixed-computation setup with d_model = 512, what key dimension d_k does each head have with 8 heads and with 32 heads, and what does that imply about the weaker 32-head result?",
+        "options": [
+          "64 and 16; keys of 16 dimensions are too small to judge compatibility well.",
+          "64 and 64; the extra heads add computation that training cannot absorb.",
+          "512 and 512; every head sees the full model, so the heads become redundant.",
+          "64 and 16; the smaller keys make dot products too large for the softmax."
+        ],
+        "correct_index": 0,
+        "explanation": "Under fixed computation d_k = d_model/h, so 512/8 = 64 and 512/32 = 16. Reducing the key size was shown to hurt quality, so very small per-head keys plausibly explain why 32 heads do worse.",
+        "option_explanations": [
+          "Right. The heads shrink as their number grows, and very small keys were shown to degrade quality.",
+          "Per-head size is not constant here. It is divided among the heads so that total computation stays fixed.",
+          "Heads do not each use the full 512 dimensions in this setup. The model dimension is split across them.",
+          "The dimensions are correct, but smaller d_k gives smaller dot products, not larger ones, and the √d_k scaling already handles size."
+        ]
+      },
+      {
+        "question_number": 7,
+        "question": "Which reason does the paper mainly give for the Transformer training faster than recurrent models?",
+        "options": [
+          "Its layers need O(1) sequential operations, so all positions are computed in parallel.",
+          "Its per-layer cost O(n²·d) is below the recurrent O(n·d²) for every sequence length.",
+          "Its O(1) path length between positions means each update needs fewer optimization steps.",
+          "Its attention is restricted to local windows of size r, so cost grows only linearly in n."
+        ],
+        "correct_index": 0,
+        "explanation": "Self-attention removes the recurrent chain: a layer needs O(1) sequential operations instead of O(n), so every position in a sentence can be computed at once. It is also cheaper per layer only when n < d, which is conditional. Path length concerns learning long-range dependencies, not speed.",
+        "option_explanations": [
+          "Right. Removing the sequential dependence lets positions run in parallel, which is the paper's case for faster training.",
+          "Self-attention is cheaper only when n is smaller than d. For long inputs the n² term makes it more expensive.",
+          "Path length is the paper's argument about learning long-range dependencies, not about the number of training steps.",
+          "Restricted attention is only proposed for very long inputs as future work; the trained models attend over all positions."
+        ]
+      },
+      {
+        "question_number": 7,
+        "question": "Which of these statements about self-attention versus recurrent layers is FALSE according to the paper?",
+        "options": [
+          "Self-attention needs O(1) sequential operations per layer, a recurrent layer O(n).",
+          "Self-attention is cheaper per layer than recurrence for inputs of any length.",
+          "Self-attention is cheaper per layer than recurrence when n is smaller than d.",
+          "Short path lengths matter for learning long-range dependencies rather than for speed."
+        ],
+        "correct_index": 1,
+        "explanation": "Self-attention costs O(n²·d) per layer and recurrence O(n·d²), so self-attention is cheaper only when n < d. For long inputs the n² term dominates, so the claim that it is cheaper whatever the length is false.",
+        "option_explanations": [
+          "This statement is true: removing the recurrent chain reduces the sequential operations from O(n) to O(1).",
+          "This is the false statement. When n exceeds d, self-attention's n²·d cost is larger than recurrence's n·d².",
+          "This statement is true: comparing n²·d with n·d² shows that self-attention wins exactly when n < d.",
+          "This statement is true: the paper uses path length to argue about learning dependencies, while speed comes from parallelism."
+        ]
+      }
+    ],
+    "blurb": [
+      {
+        "question_number": 2,
+        "prompt": "Imagine a Transformer variant where d_k is raised from 64 to 1024 and the attention scores are no longer divided by √d_k. Explain what would happen to the size of the query-key scores and why that would harm training. Then say what dividing by √d_k achieves.",
+        "model_answer": "A dot product sums d_k products. If the components are random with unit variance, the variance of the sum is d_k, so with d_k = 1024 the scores would be much larger in magnitude than with 64. Large scores push the softmax into saturation: nearly all the weight goes to one key, and in that region the gradients become extremely small, so learning stalls. Dividing by √d_k brings the score variance back to about 1, whatever d_k is.",
+        "rubric": [
+          {
+            "criterion": "Explains that the dot-product scores grow in magnitude (or variance) as d_k grows",
+            "required": true
+          },
+          {
+            "criterion": "Explains that large scores saturate the softmax, giving very small gradients that hamper learning",
+            "required": true
+          },
+          {
+            "criterion": "Notes that dividing by √d_k restores a variance of about 1, independent of d_k",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 2,
+        "prompt": "A colleague deletes the 1/√d_k factor from scaled dot-product attention, arguing that \"softmax only cares about which score is biggest, so scale doesn't matter.\" Explain why this argument is wrong, covering how the scores behave as d_k grows and what that does to the softmax and its gradients.",
+        "model_answer": "Scale does matter for the softmax. A query-key dot product is a sum of d_k terms, so its variance grows like d_k, and with large d_k the scores become large. The softmax of large scores is very peaked: it puts almost all the weight on a single key. In that saturated region the gradients are tiny, which makes the model hard to train. The 1/√d_k factor keeps the score variance near 1, so the softmax stays in a region with useful gradients.",
+        "rubric": [
+          {
+            "criterion": "Explains that unscaled dot products grow in magnitude (or variance) with the dimension d_k",
+            "required": true
+          },
+          {
+            "criterion": "Explains that large inputs make the softmax saturate (near one-hot) with very small gradients, hurting learning",
+            "required": true
+          },
+          {
+            "criterion": "Notes that the scaling keeps the score variance around 1 regardless of d_k",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 5,
+        "prompt": "A researcher wants to apply a layer with d = 1024 to sequences of 50,000 tokens. Using the per-layer complexities of self-attention and recurrent layers, explain which layer type is more expensive per layer here and why. Then name the remedy the Transformer's authors propose for very long inputs.",
+        "model_answer": "Self-attention costs O(n²·d) per layer and a recurrent layer O(n·d²). With n = 50,000 far larger than d = 1024, the n² term dominates, so full self-attention is now more expensive: it compares every pair of 50,000 positions. It still needs only O(1) sequential operations, though, whereas recurrence needs O(n). For such inputs the authors suggest restricting self-attention to a neighbourhood of size r around each position. This lowers the cost but raises the maximum path length to O(n/r).",
+        "rubric": [
+          {
+            "criterion": "States that because n is much larger than d, self-attention's per-layer cost (n²·d) exceeds the recurrent layer's (n·d²)",
+            "required": true
+          },
+          {
+            "criterion": "Names restricting self-attention to a local neighbourhood of size r as the authors' proposed remedy",
+            "required": true
+          },
+          {
+            "criterion": "Notes that restricted attention increases the maximum path length to O(n/r)",
+            "required": false
+          },
+          {
+            "criterion": "Notes that self-attention still needs only O(1) sequential operations",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 5,
+        "prompt": "Compare the per-layer cost of full self-attention with that of a recurrent layer (d = 512) in two cases: a 30-token sentence and a 30,000-token book chapter. Explain which is cheaper in each case and why. Then state what the authors propose for the long case.",
+        "model_answer": "Self-attention costs about n²·d per layer and a recurrent layer about n·d², so self-attention is cheaper exactly when n < d. For a 30-token sentence n is far below 512, so self-attention is cheaper. For a 30,000-token chapter n far exceeds 512, so the n² pairwise comparisons make self-attention the more expensive option. For such long inputs the authors propose restricting attention to a neighbourhood of size r around each position. This reduces the cost at the price of a longer maximum path length, O(n/r).",
+        "rubric": [
+          {
+            "criterion": "Explains that self-attention is cheaper when n < d (the short sentence) but more expensive when n > d (the long chapter), based on n²·d versus n·d²",
+            "required": true
+          },
+          {
+            "criterion": "Names restricting self-attention to a local neighbourhood of size r as the proposed remedy",
+            "required": true
+          },
+          {
+            "criterion": "Mentions the trade-off of a longer path length O(n/r) or that self-attention keeps O(1) sequential operations",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 8,
+        "prompt": "Why does the Transformer split attention into several heads instead of using a single attention function over the full model dimension? Describe the drawback of single-head attention that motivates this, explain how multiple heads help, and cite one piece of evidence from the paper.",
+        "model_answer": "An attention output is a weighted average of the value vectors at many positions. With a single head, everything the model attends to is blended into one average, which reduces effective resolution. Multi-head attention gives each head its own learned projections, so different heads can attend to different representation subspaces and positions at the same time and keep several relationships separate. Evidence: in Table 3, a single head was 0.9 BLEU worse than the best multi-head configuration at equal computation. Attention visualizations also show different heads performing different tasks.",
+        "rubric": [
+          {
+            "criterion": "Identifies the drawback as reduced effective resolution caused by averaging attention-weighted positions in a single head",
+            "required": true
+          },
+          {
+            "criterion": "Cites evidence from the paper, such as single-head attention being 0.9 BLEU worse than the best setting, or visualizations of heads doing different tasks",
+            "required": true
+          },
+          {
+            "criterion": "Explains that each head has its own projections and can attend to different subspaces or positions in parallel",
+            "required": false
+          },
+          {
+            "criterion": "Notes that the comparison holds total computation constant, or that too many heads also hurt",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 8,
+        "prompt": "Suppose a model must track two different relationships for the same word at once, for example its syntactic partner and the word it refers to. Explain why a single attention head would struggle with this, how multi-head attention addresses it, and give one result from the paper supporting the use of several heads.",
+        "model_answer": "A single head produces one weighted average over positions. If it has to cover both relationships, the two get blurred together into one average, losing effective resolution. With multiple heads, each with its own learned query, key and value projections, one head can focus on the syntactic partner while another focuses on the referent, and their outputs are concatenated. Supporting result: with computation held constant, one head scored 0.9 BLEU below the best multi-head setting, and visualizations show heads specializing in different tasks.",
+        "rubric": [
+          {
+            "criterion": "Explains that a single head averages over attention-weighted positions, blending information and reducing effective resolution",
+            "required": true
+          },
+          {
+            "criterion": "Gives supporting evidence from the paper, such as the 0.9 BLEU drop for a single head or visualizations of heads with different roles",
+            "required": true
+          },
+          {
+            "criterion": "Explains that separate heads with their own projections can attend to different positions or subspaces simultaneously",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "trigger": "after_generation",
+  "stage": "review_bank",
+  "questions": [
+    {
+      "number": 1,
+      "block": "b03",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 2,
+      "block": "b09",
+      "type": "blurb"
+    },
+    {
+      "number": 3,
+      "block": "b12",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 4,
+      "block": "b14",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 5,
+      "block": "b16",
+      "type": "blurb"
+    },
+    {
+      "number": 6,
+      "block": "b24",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 7,
+      "block": "b29",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 8,
+      "block": "b30",
+      "type": "blurb"
+    }
+  ],
+  "variants": [
+    {
+      "question": 1,
+      "block": "b03",
+      "content": {
+        "question": "An RNN translation team gets a good speedup by putting many short sentences side by side in one batch, but the speedup shrinks when they move to long sentences. What reason do the Transformer's authors give for this?",
+        "options": [
+          "Memory caps how many long sequences fit in a batch, leaving less work to run in parallel.",
+          "Long sequences cause vanishing gradients, which forces smaller batches for stable training.",
+          "Long sequences require more stacked recurrent layers, adding sequential steps per batch.",
+          "Sequences of unequal length cannot be batched together, so long ones are run alone."
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "A recurrent layer cannot parallelize within a sentence, because h_t needs h_{t−1}. The only parallelism left is across sentences in a batch. Memory constraints limit that batching, and the limit bites hardest for long sequences.",
+          "option_explanations": [
+            "Right. With long sequences each example uses more memory, so fewer fit in a batch and less parallel work is available.",
+            "Vanishing gradients are a learning problem about long dependencies. They do not determine how many examples a batch can hold.",
+            "The number of recurrent layers does not depend on sentence length. The sequential steps grow along the positions within a layer.",
+            "Sentences of different lengths can share a batch; the paper itself batches sentence pairs of approximately similar length."
+          ]
+        }
+      }
+    },
+    {
+      "question": 1,
+      "block": "b03",
+      "content": {
+        "question": "Which statement correctly describes both why a recurrent layer cannot parallelize within one sentence and what limits the usual workaround of batching many sentences?",
+        "options": [
+          "Each h_t needs h_{t−1}; batching across sentences is limited by memory at long lengths.",
+          "Each h_t needs h_{t+1}; batching across sentences is limited by vanishing gradients.",
+          "Each layer needs the one below; batching across sentences is limited by layer depth.",
+          "Each h_t needs h_{t−1}; batching fails because all sentence lengths must match exactly."
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "The hidden state at position t depends on the state at t−1, which forces sequential computation along the sentence. Batching across sentences recovers some parallelism, but memory constraints limit how many long examples fit in a batch.",
+          "option_explanations": [
+            "Right. The sequential chain runs forward through h_{t−1}, and memory limits how many long sequences can be batched.",
+            "The recurrence runs forward from the previous state, not from the next one. Vanishing gradients also concern learning, not batch capacity.",
+            "The sequential problem lies along positions within a layer, not between layers. Depth is also not what limits batching.",
+            "The dependence on h_{t−1} is right, but sentences of different lengths can still be batched together, for example by grouping similar lengths."
+          ]
+        }
+      }
+    },
+    {
+      "question": 2,
+      "block": "b09",
+      "content": {
+        "prompt": "Imagine a Transformer variant where d_k is raised from 64 to 1024 and the attention scores are no longer divided by √d_k. Explain what would happen to the size of the query-key scores and why that would harm training. Then say what dividing by √d_k achieves.",
+        "min_words": 30,
+        "private": {
+          "model_answer": "A dot product sums d_k products. If the components are random with unit variance, the variance of the sum is d_k, so with d_k = 1024 the scores would be much larger in magnitude than with 64. Large scores push the softmax into saturation: nearly all the weight goes to one key, and in that region the gradients become extremely small, so learning stalls. Dividing by √d_k brings the score variance back to about 1, whatever d_k is.",
+          "rubric": [
+            {
+              "criterion": "Explains that the dot-product scores grow in magnitude (or variance) as d_k grows",
+              "required": true
+            },
+            {
+              "criterion": "Explains that large scores saturate the softmax, giving very small gradients that hamper learning",
+              "required": true
+            },
+            {
+              "criterion": "Notes that dividing by √d_k restores a variance of about 1, independent of d_k",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 2,
+      "block": "b09",
+      "content": {
+        "prompt": "A colleague deletes the 1/√d_k factor from scaled dot-product attention, arguing that \"softmax only cares about which score is biggest, so scale doesn't matter.\" Explain why this argument is wrong, covering how the scores behave as d_k grows and what that does to the softmax and its gradients.",
+        "min_words": 30,
+        "private": {
+          "model_answer": "Scale does matter for the softmax. A query-key dot product is a sum of d_k terms, so its variance grows like d_k, and with large d_k the scores become large. The softmax of large scores is very peaked: it puts almost all the weight on a single key. In that saturated region the gradients are tiny, which makes the model hard to train. The 1/√d_k factor keeps the score variance near 1, so the softmax stays in a region with useful gradients.",
+          "rubric": [
+            {
+              "criterion": "Explains that unscaled dot products grow in magnitude (or variance) with the dimension d_k",
+              "required": true
+            },
+            {
+              "criterion": "Explains that large inputs make the softmax saturate (near one-hot) with very small gradients, hurting learning",
+              "required": true
+            },
+            {
+              "criterion": "Notes that the scaling keeps the score variance around 1 regardless of d_k",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 3,
+      "block": "b12",
+      "content": {
+        "question": "A Transformer decoder is trained with the whole target sentence supplied at once. Which pair of mechanisms ensures that the prediction for position i depends only on outputs before i?",
+        "options": [
+          "Scores to later positions set to −∞ after the softmax, plus the source shifted right by one.",
+          "Scores to later positions set to −∞ before the softmax, plus the target shifted right by one.",
+          "Later positions given a zero positional encoding, plus the target shifted left by one.",
+          "The target fed in reversed order, plus the decoder attending only to source words."
+        ],
+        "private": {
+          "correct_index": 1,
+          "explanation": "Illegal attention scores are set to −∞ before the softmax, so later positions receive weight exactly 0 and the remaining weights still sum to 1. The target outputs are also offset by one position to the right, so each position's input is the previous token rather than the one to be predicted.",
+          "option_explanations": [
+            "Masking has to act on the softmax inputs so the remaining weights form a proper distribution. Shifting the source does nothing about the target tokens the decoder reads.",
+            "Right. −∞ before the softmax gives later positions zero weight, and the right shift means position i receives the token before the one it must predict.",
+            "Positional encodings only indicate where a token sits, so zeroing one does not hide the token. Shifting left would place the next token at the current position.",
+            "The decoder's self-attention does read target tokens, and reversing their order would expose later tokens instead of hiding them."
+          ]
+        }
+      }
+    },
+    {
+      "question": 3,
+      "block": "b12",
+      "content": {
+        "question": "A student implements decoder masking this way: compute the softmax over all positions first, then set the weights of later positions to zero. Compared with the Transformer's approach, what goes wrong?",
+        "options": [
+          "The remaining weights over earlier positions no longer sum to 1.",
+          "Later positions still keep a small positive weight after the zeroing.",
+          "The scores lose their 1/√d_k scaling, so the softmax saturates.",
+          "Nothing differs; zeroing after the softmax equals −∞ before it."
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "The paper sets illegal scores to −∞ in the softmax input, so the softmax spreads all the probability over the legal positions and the weights sum to 1. Zeroing weights afterwards removes probability mass without renormalizing, so the weights over earlier positions sum to less than 1.",
+          "option_explanations": [
+            "Right. Part of the probability mass went to later positions before they were zeroed, so what remains no longer forms a proper distribution.",
+            "Zeroing sets those weights to exactly 0, so later positions do not keep any weight. The problem lies elsewhere.",
+            "Masking order has nothing to do with the √d_k scaling, which is applied to the scores either way.",
+            "The two are not equivalent. Applying −∞ before the softmax renormalizes over the legal positions, and zeroing afterwards does not."
+          ]
+        }
+      }
+    },
+    {
+      "question": 4,
+      "block": "b14",
+      "content": {
+        "question": "The authors found that sinusoidal and learned positional encodings gave nearly identical results. Why did they still prefer the sinusoidal version?",
+        "options": [
+          "Sinusoids are defined by a formula at any position, so they may extrapolate to longer inputs.",
+          "Sinusoids scored clearly higher BLEU on the development set than the learned embeddings.",
+          "Sinusoids wrap around after a wavelength of 2π, so unseen positions reuse familiar ones.",
+          "Sinusoids give every position its own trainable vector, which adapts to new lengths."
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "A formula defines a sinusoidal encoding for any position, including positions longer than any seen in training. The authors therefore hope the model may extrapolate to longer sequences. Learned embeddings have nothing trained beyond the longest training position. This is a stated hope, not a tested result.",
+          "option_explanations": [
+            "Right. Because sinusoids are computed rather than learned, every position has an encoding, which is the authors' reason for choosing them.",
+            "The two versions performed about equally, so a score gap was not the reason for the choice.",
+            "The wavelengths range from 2π up to 10000·2π, so the encodings do not wrap around after a short range.",
+            "Trainable per-position vectors describe learned embeddings, not sinusoids, and they exist only for positions seen in training."
+          ]
+        }
+      }
+    },
+    {
+      "question": 4,
+      "block": "b14",
+      "content": {
+        "question": "A Transformer was trained with learned positional embeddings on sentences of at most 60 tokens. At test time a 90-token sentence arrives. Following the authors' reasoning, what is the problem?",
+        "options": [
+          "Positions 61–90 have no trained vector, whereas a sinusoid formula would still define them.",
+          "Positions 61–90 wrap around onto positions 1–30, so early and late tokens get confused.",
+          "Learned embeddings scored clearly worse in development, so accuracy drops at every length.",
+          "A sinusoid formula would fail here too, since it only covers lengths seen in training."
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "A learned embedding exists only for positions that occurred in training, so positions beyond 60 have nothing trained. Sinusoidal encodings are given by a formula at every position, which is why the authors expect them to cope better with longer sequences.",
+          "option_explanations": [
+            "Right. Training produced no embedding for positions past 60, while a formula-based encoding is defined for any position.",
+            "Wrap-around is not how learned embeddings behave. The issue is that the unseen positions have no trained vectors at all.",
+            "The learned and sinusoidal versions performed nearly identically in development, so there is no general accuracy gap.",
+            "A formula is defined for any position, which is exactly why the authors think sinusoids may extrapolate."
+          ]
+        }
+      }
+    },
+    {
+      "question": 5,
+      "block": "b16",
+      "content": {
+        "prompt": "A researcher wants to apply a layer with d = 1024 to sequences of 50,000 tokens. Using the per-layer complexities of self-attention and recurrent layers, explain which layer type is more expensive per layer here and why. Then name the remedy the Transformer's authors propose for very long inputs.",
+        "min_words": 35,
+        "private": {
+          "model_answer": "Self-attention costs O(n²·d) per layer and a recurrent layer O(n·d²). With n = 50,000 far larger than d = 1024, the n² term dominates, so full self-attention is now more expensive: it compares every pair of 50,000 positions. It still needs only O(1) sequential operations, though, whereas recurrence needs O(n). For such inputs the authors suggest restricting self-attention to a neighbourhood of size r around each position. This lowers the cost but raises the maximum path length to O(n/r).",
+          "rubric": [
+            {
+              "criterion": "States that because n is much larger than d, self-attention's per-layer cost (n²·d) exceeds the recurrent layer's (n·d²)",
+              "required": true
+            },
+            {
+              "criterion": "Names restricting self-attention to a local neighbourhood of size r as the authors' proposed remedy",
+              "required": true
+            },
+            {
+              "criterion": "Notes that restricted attention increases the maximum path length to O(n/r)",
+              "required": false
+            },
+            {
+              "criterion": "Notes that self-attention still needs only O(1) sequential operations",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 5,
+      "block": "b16",
+      "content": {
+        "prompt": "Compare the per-layer cost of full self-attention with that of a recurrent layer (d = 512) in two cases: a 30-token sentence and a 30,000-token book chapter. Explain which is cheaper in each case and why. Then state what the authors propose for the long case.",
+        "min_words": 35,
+        "private": {
+          "model_answer": "Self-attention costs about n²·d per layer and a recurrent layer about n·d², so self-attention is cheaper exactly when n < d. For a 30-token sentence n is far below 512, so self-attention is cheaper. For a 30,000-token chapter n far exceeds 512, so the n² pairwise comparisons make self-attention the more expensive option. For such long inputs the authors propose restricting attention to a neighbourhood of size r around each position. This reduces the cost at the price of a longer maximum path length, O(n/r).",
+          "rubric": [
+            {
+              "criterion": "Explains that self-attention is cheaper when n < d (the short sentence) but more expensive when n > d (the long chapter), based on n²·d versus n·d²",
+              "required": true
+            },
+            {
+              "criterion": "Names restricting self-attention to a local neighbourhood of size r as the proposed remedy",
+              "required": true
+            },
+            {
+              "criterion": "Mentions the trade-off of a longer path length O(n/r) or that self-attention keeps O(1) sequential operations",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 6,
+      "block": "b24",
+      "content": {
+        "question": "With d_model = 512 and total computation held fixed, raising the number of attention heads from 16 to 32 lowers BLEU. Which explanation fits the experimental findings?",
+        "options": [
+          "Each head's keys shrink to 16 dimensions, and smaller key sizes were shown to hurt quality.",
+          "Doubling the heads doubles total computation, so training no longer converges in time.",
+          "Concatenating 32 heads exceeds d_model, so W^O must throw away part of the information.",
+          "With so many small heads the √d_k scaling is skipped, so each head's softmax saturates."
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "Because d_k = d_model/h, 32 heads leave each head with 16-dimensional keys. Separate experiments showed that reducing the key size hurts quality, which suggests compatibility is hard to judge in so few dimensions.",
+          "option_explanations": [
+            "Right. 512/32 = 16 dimensions per key, and shrinking the key size was shown to reduce quality.",
+            "The experiment holds computation constant: more heads means smaller heads, not more work.",
+            "32 heads of 16 dimensions concatenate to exactly 512, so nothing has to be discarded for shape reasons.",
+            "Each head applies scaled dot-product attention with its own d_k, so no head runs unscaled."
+          ]
+        }
+      }
+    },
+    {
+      "question": 6,
+      "block": "b24",
+      "content": {
+        "question": "In the Transformer's fixed-computation setup with d_model = 512, what key dimension d_k does each head have with 8 heads and with 32 heads, and what does that imply about the weaker 32-head result?",
+        "options": [
+          "64 and 16; keys of 16 dimensions are too small to judge compatibility well.",
+          "64 and 64; the extra heads add computation that training cannot absorb.",
+          "512 and 512; every head sees the full model, so the heads become redundant.",
+          "64 and 16; the smaller keys make dot products too large for the softmax."
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "Under fixed computation d_k = d_model/h, so 512/8 = 64 and 512/32 = 16. Reducing the key size was shown to hurt quality, so very small per-head keys plausibly explain why 32 heads do worse.",
+          "option_explanations": [
+            "Right. The heads shrink as their number grows, and very small keys were shown to degrade quality.",
+            "Per-head size is not constant here. It is divided among the heads so that total computation stays fixed.",
+            "Heads do not each use the full 512 dimensions in this setup. The model dimension is split across them.",
+            "The dimensions are correct, but smaller d_k gives smaller dot products, not larger ones, and the √d_k scaling already handles size."
+          ]
+        }
+      }
+    },
+    {
+      "question": 7,
+      "block": "b29",
+      "content": {
+        "question": "Which reason does the paper mainly give for the Transformer training faster than recurrent models?",
+        "options": [
+          "Its layers need O(1) sequential operations, so all positions are computed in parallel.",
+          "Its per-layer cost O(n²·d) is below the recurrent O(n·d²) for every sequence length.",
+          "Its O(1) path length between positions means each update needs fewer optimization steps.",
+          "Its attention is restricted to local windows of size r, so cost grows only linearly in n."
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "Self-attention removes the recurrent chain: a layer needs O(1) sequential operations instead of O(n), so every position in a sentence can be computed at once. It is also cheaper per layer only when n < d, which is conditional. Path length concerns learning long-range dependencies, not speed.",
+          "option_explanations": [
+            "Right. Removing the sequential dependence lets positions run in parallel, which is the paper's case for faster training.",
+            "Self-attention is cheaper only when n is smaller than d. For long inputs the n² term makes it more expensive.",
+            "Path length is the paper's argument about learning long-range dependencies, not about the number of training steps.",
+            "Restricted attention is only proposed for very long inputs as future work; the trained models attend over all positions."
+          ]
+        }
+      }
+    },
+    {
+      "question": 7,
+      "block": "b29",
+      "content": {
+        "question": "Which of these statements about self-attention versus recurrent layers is FALSE according to the paper?",
+        "options": [
+          "Self-attention needs O(1) sequential operations per layer, a recurrent layer O(n).",
+          "Self-attention is cheaper per layer than recurrence for inputs of any length.",
+          "Self-attention is cheaper per layer than recurrence when n is smaller than d.",
+          "Short path lengths matter for learning long-range dependencies rather than for speed."
+        ],
+        "private": {
+          "correct_index": 1,
+          "explanation": "Self-attention costs O(n²·d) per layer and recurrence O(n·d²), so self-attention is cheaper only when n < d. For long inputs the n² term dominates, so the claim that it is cheaper whatever the length is false.",
+          "option_explanations": [
+            "This statement is true: removing the recurrent chain reduces the sequential operations from O(n) to O(1).",
+            "This is the false statement. When n exceeds d, self-attention's n²·d cost is larger than recurrence's n·d².",
+            "This statement is true: comparing n²·d with n·d² shows that self-attention wins exactly when n < d.",
+            "This statement is true: the paper uses path length to argue about learning dependencies, while speed comes from parallelism."
+          ]
+        }
+      }
+    },
+    {
+      "question": 8,
+      "block": "b30",
+      "content": {
+        "prompt": "Why does the Transformer split attention into several heads instead of using a single attention function over the full model dimension? Describe the drawback of single-head attention that motivates this, explain how multiple heads help, and cite one piece of evidence from the paper.",
+        "min_words": 40,
+        "private": {
+          "model_answer": "An attention output is a weighted average of the value vectors at many positions. With a single head, everything the model attends to is blended into one average, which reduces effective resolution. Multi-head attention gives each head its own learned projections, so different heads can attend to different representation subspaces and positions at the same time and keep several relationships separate. Evidence: in Table 3, a single head was 0.9 BLEU worse than the best multi-head configuration at equal computation. Attention visualizations also show different heads performing different tasks.",
+          "rubric": [
+            {
+              "criterion": "Identifies the drawback as reduced effective resolution caused by averaging attention-weighted positions in a single head",
+              "required": true
+            },
+            {
+              "criterion": "Cites evidence from the paper, such as single-head attention being 0.9 BLEU worse than the best setting, or visualizations of heads doing different tasks",
+              "required": true
+            },
+            {
+              "criterion": "Explains that each head has its own projections and can attend to different subspaces or positions in parallel",
+              "required": false
+            },
+            {
+              "criterion": "Notes that the comparison holds total computation constant, or that too many heads also hurt",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 8,
+      "block": "b30",
+      "content": {
+        "prompt": "Suppose a model must track two different relationships for the same word at once, for example its syntactic partner and the word it refers to. Explain why a single attention head would struggle with this, how multi-head attention addresses it, and give one result from the paper supporting the use of several heads.",
+        "min_words": 40,
+        "private": {
+          "model_answer": "A single head produces one weighted average over positions. If it has to cover both relationships, the two get blurred together into one average, losing effective resolution. With multiple heads, each with its own learned query, key and value projections, one head can focus on the syntactic partner while another focuses on the referent, and their outputs are concatenated. Supporting result: with computation held constant, one head scored 0.9 BLEU below the best multi-head setting, and visualizations show heads specializing in different tasks.",
+          "rubric": [
+            {
+              "criterion": "Explains that a single head averages over attention-weighted positions, blending information and reducing effective resolution",
+              "required": true
+            },
+            {
+              "criterion": "Gives supporting evidence from the paper, such as the 0.9 BLEU drop for a single head or visualizations of heads with different roles",
+              "required": true
+            },
+            {
+              "criterion": "Explains that separate heads with their own projections can attend to different positions or subspaces simultaneously",
+              "required": false
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
