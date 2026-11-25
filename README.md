@@ -114,7 +114,7 @@ All configuration is through environment variables.
 | `TEACHER_METADATA_MODEL` | Source metadata and references | `claude-haiku-5-5` |
 | `TEACHER_EMBEDDING_MODEL` | Embeddings | `text-embedding-3-small` |
 | `TEACHER_PYODIDE_DIR` | Use a Pyodide install somewhere else | `derived/pyodide/<version>` |
-| `TEACHER_PASSWORD` | Password for signing in (`src/teacher/web/auth.py`): with it set, every page and API route needs a session, kept for 30 days in a signed cookie; changing it signs everyone out. Set but blank is an error, and `teacher serve` refuses a `--host` other than 127.0.0.1/localhost without it | none (no sign-in; only for 127.0.0.1) |
+| `TEACHER_PASSWORD` | Turns on user accounts (`src/teacher/web/auth.py`): with it set, every page and API route needs signing in with your own account (email and password; a session lasts 30 days), and the variable's value is the **access code** that registering an account needs. Nobody signs in with it. Changing it does not sign anyone out; it only changes what new registrations need. Set but blank is an error, and `teacher serve` refuses a `--host` other than 127.0.0.1/localhost without it | none (no accounts, no sign-in; only for 127.0.0.1) |
 
 The model for a single study page can also be picked in the UI when creating it.
 
@@ -186,7 +186,7 @@ and `fly.toml` in the repository root:
 - The database is Supabase (`TEACHER_DB=supabase`, set in `fly.toml`). The files (sources,
   generated pages, derived data) live on a Fly volume mounted at `/data` (`TEACHER_HOME`).
 - Signing in is required: the server refuses to start without `TEACHER_PASSWORD`. `GET
-  /healthz` stays open for Fly's health check.
+  /healthz` stays open for Fly's health check. See "Accounts" below.
 - One machine, always running (`fly.toml` says why: page generation runs inside the server).
 - **Labs are not available there**: the image has no Node.js and no Pyodide. The app reports
   the lab runtime as not installed, and asking for a new lab fails with that reason.
@@ -200,14 +200,39 @@ fly apps create airistotle
 fly volumes create teacher_data --app airistotle --region iad --size 3
 fly secrets set --app airistotle --stage \
   ANTHROPIC_API_KEY=<key> OPENAI_API_KEY=<key> \
-  SUPABASE_DB_URL=<postgresql://... connection string> TEACHER_PASSWORD=<password>
+  SUPABASE_DB_URL=<postgresql://... connection string> TEACHER_PASSWORD=<access code>
 fly deploy --app airistotle --ha=false
 ```
 
 `--ha=false` keeps it to one machine (the volume belongs to one). Then open
-https://airistotle.fly.dev and sign in. To check the image locally without Fly:
+https://airistotle.fly.dev/register and make your account with the access code
+(`TEACHER_PASSWORD`). To check the image locally without Fly:
 `docker build -t airistotle:local .` and
-`docker run --rm -e TEACHER_DB=sqlite -e TEACHER_PASSWORD=<test password> -p 127.0.0.1:8090:8080 airistotle:local`.
+`docker run --rm -e TEACHER_DB=sqlite -e TEACHER_PASSWORD=<test access code> -p 127.0.0.1:8090:8080 airistotle:local`.
+
+### Accounts
+
+With `TEACHER_PASSWORD` set (always, when hosted) everyone signs in with their own account: an
+email and a password (8 to 1024 characters). `TEACHER_PASSWORD` is not a password anyone signs
+in with: it is the **access code** that registering an account at `/register` needs, so that
+strangers who find the site cannot make one (they would see the library and spend the API keys).
+Give it only to the people you want in.
+
+- **After deploying, register your own account** at `/register` (email, password, access code).
+  No account exists until someone registers; the migration creates none.
+- There is no email verification and no reset by email. To reset a friend's password, or to
+  lock someone out, use the command line on the server (`fly ssh console --app airistotle`,
+  then for example `teacher users set-password friend@example.com`; see "Command line").
+  A new password or disabling an account signs that account out everywhere.
+- Sessions last 30 days from signing in; "Sign out" ends one. Only a hash of each session token
+  and of each password is stored (tables `users` and `user_sessions`).
+- Accounts do not own data yet: everyone signed in sees and changes the same library, pages and
+  history.
+- Clients that are not browsers can use `POST /api/auth/register`, `POST /api/auth/login` (both
+  answer a token), then send `Authorization: Bearer <token>`; `GET /api/auth/me` and `POST
+  /api/auth/logout`.
+- Before accounts, `TEACHER_PASSWORD` was a shared sign-in password. Anyone signed in with it
+  is signed out by this change and has to register (with the same value as the access code).
 
 ## Where data lives
 
@@ -244,7 +269,14 @@ uv run teacher concepts relate <concept-slug> | --all
 uv run teacher concepts tag-blocks <artifact-slug> | --all
 uv run teacher references extract <source-slug> | --all
 uv run teacher costs backfill [--dry-run]
+uv run teacher users list
+uv run teacher users add|set-password|disable|enable <email>
 ```
+
+`teacher users` manages the accounts (see "Accounts"): `add` creates one, `set-password` gives one
+a new password and `disable` stops one from signing in (both sign it out everywhere), `enable`
+lets it in again. Passwords are typed at a hidden prompt, twice; they are never taken from an
+argument and never printed.
 
 `teacher costs backfill` adds the API calls made before the cost ledger existed (from the
 generation runs and their stage files, graded answers, tutor replies and reference

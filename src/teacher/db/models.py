@@ -1,4 +1,4 @@
-"""ORM models for all thirty-two Teacher tables.
+"""ORM models for all thirty-four Teacher tables.
 
 Conventions: naive-UTC timestamps with both a Python default and a CURRENT_TIMESTAMP server default;
 JSON columns carry a named `CHECK (json_valid(col))`; all constraints are named via `Base.metadata`.
@@ -1552,6 +1552,72 @@ class ApiCall(Base):
         )
 
 
+class User(Base):
+    """A user account (revision 0017; `teacher.managers.users`). `email` is stored normalised
+    (stripped and lowercased) and unique; `password_hash` is `teacher.passwords`' self-describing
+    scrypt string (the password itself is never stored). `last_login_at` is the last time a
+    session was created (a sign-in or the registration), NULL before. A user with `disabled_at`
+    set cannot sign in and has no sessions. Accounts own no data yet: sources, pages and history
+    are shared by everyone who can sign in."""
+
+    __tablename__ = "users"
+    __table_args__ = (CheckConstraint("length(email) BETWEEN 3 AND 254", name="email"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(Text, unique=True)
+    password_hash: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime)
+    disabled_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+    sessions: Mapped[list[UserSession]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="UserSession.id",
+    )
+
+    def __repr__(self) -> str:
+        return f"User(id={self.id!r}, email={self.email!r})"
+
+
+class UserSession(Base):
+    """One signed-in session of a user (revision 0017): a browser's cookie or a client's bearer
+    token. Only the SHA-256 of the token is stored (`token_sha256`, hex, unique); the token
+    itself is shown once, when the session is created. Valid until `expires_at` while the user
+    is not disabled; `last_seen_at` is updated at most every few minutes
+    (`teacher.managers.users.SEEN_INTERVAL`). `label` is a short note on the client ("web",
+    "api" or what the client sent). Deleting the user deletes their sessions."""
+
+    __tablename__ = "user_sessions"
+    __table_args__ = (
+        CheckConstraint("length(token_sha256) = 64", name="token_sha256"),
+        CheckConstraint("expires_at > created_at", name="expiry"),
+        CheckConstraint("length(label) BETWEEN 1 AND 100", name="label"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    token_sha256: Mapped[str] = mapped_column(Text, unique=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    label: Mapped[str | None] = mapped_column(Text)
+
+    user: Mapped[User] = relationship(back_populates="sessions")
+
+    def __repr__(self) -> str:
+        return f"UserSession(id={self.id!r}, user_id={self.user_id!r})"  # never the token hash
+
+
 __all__ = [
     "API_CALL_PROVIDERS",
     "API_CALL_PURPOSES",
@@ -1599,5 +1665,7 @@ __all__ = [
     "SourceSegment",
     "StudyEvent",
     "StudySession",
+    "User",
+    "UserSession",
     "utcnow",
 ]

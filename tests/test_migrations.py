@@ -64,7 +64,10 @@ TAG_TABLES = {"block_concepts"}
 REVIEW_TABLES = {"review_variants", "review_items", "review_attempts"}  # 0013
 CITATION_TABLES = {"source_reference_extractions", "source_references"}  # 0015
 LEDGER_TABLES = {"api_calls"}  # 0016
-TABLES = TABLES_0010 | TAG_TABLES | REVIEW_TABLES | CITATION_TABLES | LEDGER_TABLES
+USER_TABLES = {"users", "user_sessions"}  # 0017
+TABLES = (
+    TABLES_0010 | TAG_TABLES | REVIEW_TABLES | CITATION_TABLES | LEDGER_TABLES | USER_TABLES
+)
 # The two FTS5 virtual tables (word and trigram index) and the shadow tables FTS5 keeps for them.
 FTS_TABLES = {
     "concept_search",
@@ -88,7 +91,7 @@ CHAT_BLOCK_TABLES = {"chat_blocks", "chat_block_responses"}
 LAB_TABLES = {"lab_workspaces", "lab_runs"}
 HISTORY_TABLES = {"study_sessions", "study_events", "attention_spans"}
 ACTIVITY_TABLES = ("block_responses", "chat_block_responses", "chat_messages", "lab_runs")
-HEAD = "0016"
+HEAD = "0017"
 
 # The chain's SQLite side: raw sqlite3, PRAGMAs, the file backup and FTS5. The Postgres side is
 # in test_migrations_postgres.py.
@@ -1503,7 +1506,7 @@ def test_upgrade_0012_to_0013_adds_the_review_queue_and_keeps_data(tmp_path: Pat
     settings = _at_0011_with_answers(tmp_path)
     command.upgrade(alembic_config(settings), "0012")
     command.upgrade(alembic_config(settings), "0013")
-    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         conn.execute("PRAGMA foreign_keys=ON")
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == (2,)
@@ -1566,7 +1569,7 @@ def test_downgrade_0013_to_0012_drops_only_the_review_queue(tmp_path: Path) -> N
     command.downgrade(alembic_config(settings), "0012")
     assert current_revision(settings) == "0012"
     assert _tables(settings) == (
-        (TABLES - REVIEW_TABLES - CITATION_TABLES - LEDGER_TABLES) | FTS_TABLES | {"alembic_version"}
+        (TABLES - REVIEW_TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
     )
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == (2,)
@@ -1674,7 +1677,7 @@ def test_downgrade_0015_to_0014_drops_only_the_citations(tmp_path: Path) -> None
         )
     command.downgrade(alembic_config(settings), "0014")
     assert current_revision(settings) == "0014"
-    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         assert conn.execute(
             "SELECT count(*) FROM knowledge_sources WHERE id IN (101, 102)"
@@ -1771,7 +1774,9 @@ def test_downgrade_0016_to_0015_drops_only_the_ledger(tmp_path: Path) -> None:
     upgrade_to_head(settings)
     command.downgrade(alembic_config(settings), "0015")
     assert current_revision(settings) == "0015"
-    assert _tables(settings) == (TABLES - LEDGER_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (
+        (TABLES - LEDGER_TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
+    )
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT input_tokens FROM chat_messages WHERE id = 401").fetchall() == [
             (1000,)
@@ -1790,3 +1795,95 @@ def test_0016_froze_the_live_checks() -> None:
     live = {c.name: str(c.sqltext) for c in table.constraints if isinstance(c, CheckConstraint)}
     frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
     assert live == frozen
+
+
+# -- 0017: user accounts ---------------------------------------------------------------------
+
+
+def _at_0016_with_data(tmp_path: Path) -> Settings:
+    """At 0016 with an artifact, two sources, a chat thread and a ledger row."""
+    settings = _at_0015_with_data(tmp_path)
+    command.upgrade(alembic_config(settings), "0016")
+    with _sqlite(settings) as conn:
+        conn.execute(
+            "INSERT INTO api_calls (purpose, step, provider, model, input_tokens, "
+            "cache_write_tokens, cache_read_tokens, output_tokens) "
+            "VALUES ('tutor', 's', 'anthropic', 'm', 1, 0, 0, 1)"
+        )
+    return settings
+
+
+def test_upgrade_0016_to_0017_adds_accounts_and_keeps_data(tmp_path: Path) -> None:
+    settings = _at_0016_with_data(tmp_path)
+    counted = ("artifacts", "chat_messages", "knowledge_sources", "api_calls")
+    with _sqlite(settings) as conn:
+        before = {t: conn.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in counted}
+    backup = upgrade_to_head(settings)
+    assert backup is not None and current_revision(settings) == HEAD
+    assert USER_TABLES <= _tables(settings)
+    with _sqlite(settings) as conn:
+        conn.execute("PRAGMA foreign_keys=ON")
+        for table, count in before.items():
+            assert conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0] == count
+        # No account is made by the migration: the owner registers one.
+        assert conn.execute("SELECT count(*) FROM users").fetchone() == (0,)
+        conn.execute("INSERT INTO users (id, email, password_hash) VALUES (1, 'a@b.io', 'h')")
+        assert conn.execute(
+            "SELECT created_at IS NOT NULL, last_login_at, disabled_at FROM users"
+        ).fetchone() == (1, None, None)
+        for email, constraint in [("a@b.io", "UNIQUE"), ("ab", "ck_users_email"),
+                                  ("x" * 255, "ck_users_email")]:
+            with pytest.raises(sqlite3.IntegrityError, match=constraint):
+                conn.execute("INSERT INTO users (email, password_hash) VALUES (?, 'h')", (email,))
+        insert = (
+            "INSERT INTO user_sessions (user_id, token_sha256, created_at, expires_at, label) "
+            "VALUES (?, ?, '2026-11-25 12:00:00', ?, ?)"
+        )
+        ok = [1, "a" * 64, "2026-12-25 12:00:00", "web"]
+        conn.execute(insert, ok)
+        assert conn.execute("SELECT last_seen_at IS NOT NULL FROM user_sessions").fetchone() == (1,)
+        for change, constraint in [
+            ({}, "UNIQUE"),
+            ({1: "short"}, "ck_user_sessions_token_sha256"),
+            ({1: "b" * 64, 2: "2026-11-25 12:00:00"}, "ck_user_sessions_expiry"),
+            ({1: "b" * 64, 3: ""}, "ck_user_sessions_label"),
+            ({0: 99, 1: "b" * 64}, "FOREIGN KEY"),
+        ]:
+            values = [change.get(i, v) for i, v in enumerate(ok)]
+            with pytest.raises(sqlite3.IntegrityError, match=constraint):
+                conn.execute(insert, values)
+        conn.execute("DELETE FROM users WHERE id = 1")  # the sessions go with the user
+        assert conn.execute("SELECT count(*) FROM user_sessions").fetchone() == (0,)
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_downgrade_0017_to_0016_drops_only_the_accounts(tmp_path: Path) -> None:
+    settings = _at_0016_with_data(tmp_path)
+    upgrade_to_head(settings)
+    with _sqlite(settings) as conn:
+        conn.execute("INSERT INTO users (id, email, password_hash) VALUES (1, 'a@b.io', 'h')")
+    command.downgrade(alembic_config(settings), "0016")
+    assert current_revision(settings) == "0016"
+    assert _tables(settings) == (TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
+    with _sqlite(settings) as conn:
+        assert conn.execute("SELECT count(*) FROM api_calls").fetchone() == (1,)
+        assert conn.execute("SELECT input_tokens FROM chat_messages WHERE id = 401").fetchall() == [
+            (1000,)
+        ]
+    upgrade_to_head(settings)  # and up again
+    assert USER_TABLES <= _tables(settings)
+
+
+def test_0017_froze_the_live_checks() -> None:
+    """The check texts 0017 froze must match the models' (until a later revision changes them)."""
+    from teacher.db.models import User, UserSession
+
+    script = ScriptDirectory.from_config(alembic_config(Settings(root=Path("unused"))))
+    module = script.get_revision("0017").module
+    for model in (User, UserSession):
+        table = model.__table__
+        live = {
+            c.name: str(c.sqltext) for c in table.constraints if isinstance(c, CheckConstraint)
+        }
+        frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
+        assert live == frozen, table.name

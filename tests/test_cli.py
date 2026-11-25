@@ -34,7 +34,7 @@ def test_serve_defaults(uvicorn_calls: list[dict[str, Any]], tmp_path: Path) -> 
 def test_serve_host_and_port(
     uvicorn_calls: list[dict[str, Any]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # A host other than loopback needs the password gate (tests/web/test_auth.py).
+    # A host other than loopback needs the account gate (tests/web/test_auth.py).
     monkeypatch.setenv("TEACHER_PASSWORD", "a test password")
     cli.main(["serve", "--host", "0.0.0.0", "--port", "9123"])
     (call,) = uvicorn_calls

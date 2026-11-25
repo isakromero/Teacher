@@ -1,6 +1,6 @@
 """Application settings: which database Teacher uses and where it keeps its files, which models
-it uses, the YouTube Data API key (`youtube_api_key_from_env`) and the sign-in password
-(`teacher_password_from_env`)."""
+it uses, the YouTube Data API key (`youtube_api_key_from_env`) and the access code that
+registering an account needs (`teacher_password_from_env`)."""
 
 from __future__ import annotations
 
@@ -263,23 +263,25 @@ def youtube_api_key_from_env() -> str | None:
     return value.strip()
 
 
-# -- the password gate --------------------------------------------------------------------
+# -- the account gate ---------------------------------------------------------------------
 
 ENV_PASSWORD = "TEACHER_PASSWORD"
 
 
 def teacher_password_from_env() -> str | None:
-    """`$TEACHER_PASSWORD`: the password of the sign-in gate (`teacher.web.auth`) that
-    `teacher serve` puts in front of every page and API route. The one place the variable is
-    read. None when it is not set (no gate: the app is open, as on 127.0.0.1); a variable that
-    is set but blank is a ConfigError rather than an open app. The value is used exactly as
-    given (not stripped) and is never logged or echoed."""
+    """`$TEACHER_PASSWORD`: with it set, `teacher serve` puts the account gate
+    (`teacher.web.auth`) in front of every page and API route, and the value is the access code
+    that registering an account needs (nobody signs in with it: everyone signs in with their own
+    account). The one place the variable is read. None when it is not set (no gate, no accounts:
+    the app is open, as on 127.0.0.1); a variable that is set but blank is a ConfigError rather
+    than an open app. The value is used exactly as given (not stripped) and is never logged or
+    echoed."""
     value = os.environ.get(ENV_PASSWORD)
     if value is None:
         return None
     if not value.strip():
         raise ConfigError(
-            f"${ENV_PASSWORD} is set but empty; set it to the password for signing in, or "
-            "unset it to run without a password (only on 127.0.0.1)"
+            f"${ENV_PASSWORD} is set but empty; set it to the access code for registering "
+            "accounts, or unset it to run without sign-in (only on 127.0.0.1)"
         )
     return value

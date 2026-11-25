@@ -6,6 +6,7 @@ tables with the pg_trgm extension (in `extensions` when that schema exists, as o
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -25,7 +26,7 @@ from teacher.managers import ConceptManager
 
 pytestmark = pytest.mark.postgres_only("the migration chain on PostgreSQL")
 
-HEAD = "0016"
+HEAD = "0017"
 TABLES = set(Base.metadata.tables)
 SEARCH_TABLES = {"concept_search", "concept_search_tokens", "concept_trigram"}
 SEARCH_INDEXES = {
@@ -244,3 +245,27 @@ def test_json_columns_and_boolean_defaults(settings: Settings) -> None:
         nested.rollback()
         with pytest.raises(DBAPIError, match="invalid input syntax for type json"):
             conn.execute(text(insert), {"attempt": 3, "missing": "not json"})
+
+
+def test_the_account_tables_have_row_level_security(settings: Settings) -> None:
+    """0017 enables RLS (with no policy) on users and user_sessions, so Supabase's Data API roles
+    see none of their rows; the app, connecting as the tables' owner, is not affected."""
+    with _connect(settings) as conn:
+        rls = dict(
+            conn.execute(
+                text(
+                    "SELECT relname, relrowsecurity FROM pg_class "
+                    "WHERE relname IN ('users', 'user_sessions', 'api_calls')"
+                )
+            ).all()
+        )
+        assert rls == {"users": True, "user_sessions": True, "api_calls": False}
+        # A role like Supabase's `anon`, with SELECT on the table (rolled back with the rest).
+        probe = f"rls_probe_{uuid.uuid4().hex[:12]}"
+        conn.execute(text(f"CREATE ROLE {probe} NOLOGIN"))
+        conn.execute(text(f"GRANT {probe} TO CURRENT_USER"))
+        conn.execute(text(f"GRANT SELECT ON users TO {probe}"))
+        conn.execute(text("INSERT INTO users (email, password_hash) VALUES ('a@b.io', 'h')"))
+        assert conn.execute(text("SELECT count(*) FROM users")).scalar() == 1  # the owner sees it
+        conn.execute(text(f"SET LOCAL ROLE {probe}"))
+        assert conn.execute(text("SELECT count(*) FROM users")).scalar() == 0  # others do not

@@ -14,10 +14,13 @@
     teacher history export [--format json|markdown] [--output PATH]
     teacher references extract <source-slug> | --all [--redo] [--stub]
     teacher costs backfill [--dry-run]
+    teacher users list
+    teacher users add|set-password|disable|enable <email>
 
 `serve` runs the web app with uvicorn on `--host` and `--port`. With $TEACHER_PASSWORD set,
-every page and API route needs signing in with that password (`teacher.web.auth`); set but blank
-is an error. Without it the app is open to anyone who can reach it, so a `--host` that is not a
+every page and API route needs signing in with a user account, and the variable's value is the
+access code that registering an account needs (`teacher.web.auth`); set but blank is an error.
+Without it the app is open to anyone who can reach it, so a `--host` that is not a
 loopback address (127.0.0.1 or any 127.x, ::1, localhost) is refused with status 1 and an error
 naming the variable, before anything starts. uvicorn trusts the `X-Forwarded-For` and
 `X-Forwarded-Proto` headers (the client's address and HTTPS) only from the addresses in
@@ -115,6 +118,17 @@ the folders with their file counts and sizes, changing nothing. `--db` is not us
 `db rebuild-search` rebuilds the concept search index of the database in use from the concepts
 and checks it (the retry when that last step of a copy failed). Both: status 1 with the error on
 stderr when they fail.
+
+`users` manages the accounts people sign in with when the app runs behind the account gate
+(`teacher.managers.users`): `list` prints each account's email, when it was created, when it
+last signed in and whether it is disabled; `add <email>` creates an account; `set-password
+<email>` gives an account a new password (there is no reset by email: this is how one is reset)
+and signs it out everywhere; `disable <email>` stops an account from signing in and signs it out
+everywhere; `enable <email>` lets it sign in again. `add` and `set-password` read the password
+twice with a hidden prompt (never from an argument or the environment) and never print it. Each
+migrates the database to head first; status 1 with the error on stderr when it fails (an email
+with no account, an account that exists already, a password that breaks the rules, the two
+entries differing, no terminal to prompt on).
 
 Every API call any command makes is recorded in the cost ledger (`teacher.costs`).
 
@@ -287,6 +301,16 @@ def build_parser() -> argparse.ArgumentParser:
     cost_backfill.add_argument(
         "--dry-run", action="store_true", help="say what would be added, add nothing"
     )
+    users = commands.add_parser("users", help="the accounts people sign in with")
+    user_actions = users.add_subparsers(dest="action", required=True)
+    user_actions.add_parser("list", help="every account")
+    for name, text in (
+        ("add", "create an account (the password is asked for, hidden)"),
+        ("set-password", "give an account a new password (asked for, hidden); signs it out"),
+        ("disable", "stop an account from signing in; signs it out everywhere"),
+        ("enable", "let a disabled account sign in again"),
+    ):
+        user_actions.add_parser(name, help=text).add_argument("email")
     return parser
 
 
@@ -302,21 +326,22 @@ def is_loopback(host: str) -> bool:
 
 
 def serve(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT) -> None:
-    """Build the app from `Settings.from_env()`, behind the password gate when
-    $TEACHER_PASSWORD is set, and run it with uvicorn (blocks). No password and a host that is
-    not loopback is a ConfigError, raised before anything starts."""
-    password = teacher_password_from_env()
-    if password is None and not is_loopback(host):
+    """Build the app from `Settings.from_env()`, behind the account gate when
+    $TEACHER_PASSWORD (the access code for registering) is set, and run it with uvicorn
+    (blocks). No access code and a host that is not loopback is a ConfigError, raised before
+    anything starts."""
+    access_code = teacher_password_from_env()
+    if access_code is None and not is_loopback(host):
         raise ConfigError(
-            f"refusing to serve on {host!r} without a password: anyone who can reach it could "
-            f"use the app and spend on its API keys. Set ${ENV_PASSWORD} to the password for "
-            "signing in, or serve on 127.0.0.1."
+            f"refusing to serve on {host!r} without sign-in: anyone who can reach it could "
+            f"use the app and spend on its API keys. Set ${ENV_PASSWORD} to the access code "
+            "for registering accounts, or serve on 127.0.0.1."
         )
     import uvicorn
 
     from teacher.web.app import create_app
 
-    uvicorn.run(create_app(password=password), host=host, port=port)
+    uvicorn.run(create_app(access_code=access_code), host=host, port=port)
 
 
 # -- concepts -------------------------------------------------------------------------------
@@ -767,6 +792,114 @@ def costs_backfill(*, dry_run: bool = False) -> int:
     return 0
 
 
+# -- users ----------------------------------------------------------------------------------
+
+
+class PromptError(Exception):
+    """The password could not be read: no terminal, cancelled, or the two entries differ."""
+
+
+def prompt_password(prompt: str) -> str:
+    """Read one password without echoing it (tests replace this function). Without a
+    terminal to read it from (getpass would fall back to reading stdin with echo) it is a
+    PromptError."""
+    import getpass
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", getpass.GetPassWarning)
+        try:
+            return getpass.getpass(prompt)
+        except getpass.GetPassWarning:
+            raise PromptError(
+                "no terminal to read the password from; run the command in an interactive "
+                "terminal"
+            ) from None
+        except (EOFError, KeyboardInterrupt):
+            raise PromptError("cancelled: no password was entered") from None
+
+
+def _new_password(email: str) -> str:
+    """Ask twice for a new password for `email`, hidden; it must follow the rules."""
+    from teacher.passwords import check_password_rules
+
+    first = prompt_password(f"New password for {email}: ")
+    check_password_rules(first)
+    if prompt_password("Repeat the password: ") != first:
+        raise PromptError("the two passwords differ; nothing was changed")
+    return first
+
+
+def _when(value: Any) -> str:
+    return value.strftime("%Y-%m-%d %H:%M UTC") if value is not None else "never"
+
+
+def users_command(action: str, email: str | None = None) -> int:
+    """`teacher users <action> [email]`. 0 on success, else 1."""
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from teacher.db.engine import session_scope
+    from teacher.db.migrate import upgrade_to_head
+    from teacher.managers import ManagerError, UserManager
+    from teacher.managers.users import normalise_email
+
+    try:
+        settings = Settings.from_env()
+        upgrade_to_head(settings)
+        if action == "list":
+            with session_scope(settings) as session:
+                accounts = UserManager(session, settings).list()
+                if not accounts:
+                    print("No accounts yet.")
+                for user in accounts:
+                    state = "active"
+                    if user.disabled_at is not None:
+                        state = f"disabled {_when(user.disabled_at)}"
+                    print(
+                        f"{user.email}  created {_when(user.created_at)}  "
+                        f"last sign-in {_when(user.last_login_at)}  {state}"
+                    )
+            return 0
+        if email is None:
+            raise ValueError(f"users {action} needs an email")
+        address = normalise_email(email)
+        if action == "add":
+            with session_scope(settings) as session:
+                if UserManager(session, settings).find(address) is not None:
+                    raise ValueError(f"an account with the email {address} already exists")
+            password = _new_password(address)
+            with session_scope(settings) as session:
+                UserManager(session, settings).create(address, password)
+            print(f"Added the account {address}.")
+            return 0
+        if action == "set-password":
+            with session_scope(settings) as session:
+                UserManager(session, settings).get_by_email(address)  # fail before asking
+            password = _new_password(address)
+            with session_scope(settings) as session:
+                users = UserManager(session, settings)
+                signed_out = users.set_password(users.get_by_email(address), password)
+            print(f"Set a new password for {address}; signed out {signed_out} session(s).")
+            return 0
+        with session_scope(settings) as session:
+            users = UserManager(session, settings)
+            user = users.get_by_email(address)
+            if action == "disable":
+                signed_out = users.disable(user)
+                print(f"Disabled {address}; signed out {signed_out} session(s).")
+            elif action == "enable":
+                users.enable(user)
+                print(f"Enabled {address}.")
+            else:
+                raise ValueError(f"unknown users action {action!r}")
+    except (ManagerError, ValueError, PromptError, OSError) as exc:
+        return _fail(str(exc))
+    except SQLAlchemyError as exc:  # the first line only: the rest can quote rows
+        orig = getattr(exc, "orig", None) or exc
+        return _fail((str(orig).strip().splitlines() or [type(exc).__name__])[0])
+    return 0
+
+
 # -- db -------------------------------------------------------------------------------------
 
 
@@ -891,6 +1024,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return history_export(format=args.format, output=args.output)
     if args.command == "costs" and args.action == "backfill":
         return costs_backfill(dry_run=args.dry_run)
+    if args.command == "users":
+        return users_command(args.action, getattr(args, "email", None))
     raise AssertionError(f"unhandled command {args.command!r}")  # argparse requires one
 
 

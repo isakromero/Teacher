@@ -1,7 +1,7 @@
 <!doctype html>
-{#- The sign-in page of the password gate (teacher.web.auth). Standalone, not base.html: the
-    header's scripts call the API, which needs a session. It loads only the stylesheets the gate
-    serves without one (auth.OPEN_STATIC) and no script. -#}
+{#- The sign-in page of the account gate (teacher.web.auth). Standalone, not base.html: the
+    header's scripts call the API, which needs a session. It loads only the stylesheets and tab icons the gate
+    serves without one (auth.OPEN_STATIC) and no script. register.html is its twin. -#}
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -9,6 +9,9 @@
   <meta name="color-scheme" content="light dark">
   <meta name="robots" content="noindex">
   <title>Sign in - Teacher</title>
+  <link rel="icon" type="image/svg+xml" href="{{ static('img/favicon.svg') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ static('img/favicon-32.png') }}">
+  <link rel="apple-touch-icon" href="{{ static('img/apple-touch-icon.png') }}">
   <link rel="stylesheet" href="{{ static('css/app.css') }}">
   <link rel="stylesheet" href="{{ static('css/login.css') }}">
 </head>
@@ -24,18 +27,24 @@
   <main id="main" class="page page-login">
     <div class="card login-card">
       <h1>Sign in</h1>
-      <p class="muted">This Teacher is private. Enter its password to continue.</p>
+      <p class="muted">This Teacher is private. Sign in with your account to continue.</p>
       {% if error %}<p id="login-error" class="error" role="alert">{{ error }}</p>{% endif %}
+      {%- set invalid %}{% if error %} aria-invalid="true" aria-describedby="login-error"{% endif %}{% endset %}
       <form class="form login-form" method="post" action="/login">
         <input type="hidden" name="next" value="{{ next }}">
         <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" name="email" type="email" value="{{ email }}" autocomplete="username" maxlength="254" required{% if not email %} autofocus{% endif %}{{ invalid }}>
+        </div>
+        <div class="field">
           <label for="login-password">Password</label>
-          <input id="login-password" name="password" type="password" autocomplete="current-password" required autofocus{% if error %} aria-invalid="true" aria-describedby="login-error"{% endif %}>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" maxlength="1024" required{% if email %} autofocus{% endif %}{{ invalid }}>
         </div>
         <div class="form-actions">
           <button class="button primary" type="submit">Sign in</button>
         </div>
       </form>
+      <p class="login-switch">No account yet? <a href="{{ register_href }}">Register</a></p>
     </div>
   </main>
 </body>

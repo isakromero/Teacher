@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>{% block title %}Teacher{% endblock %} - Teacher</title>
+  <link rel="icon" type="image/svg+xml" href="{{ static('img/favicon.svg') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ static('img/favicon-32.png') }}">
+  <link rel="apple-touch-icon" href="{{ static('img/apple-touch-icon.png') }}">
   <link rel="stylesheet" href="{{ static('css/app.css') }}">
   {# What a page, a lab or a tutor conversation cost (static/js/cost.js). #}
   <link rel="stylesheet" href="{{ static('css/cost.css') }}">
@@ -43,9 +46,13 @@
         <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
         <span>Add<span class="nav-add-long"> a source</span></span>
       </a>
-      {#- Only behind the password gate (teacher.web.auth). #}
-      {%- if request.app.state.password_gate %}
+      {#- Only behind the account gate (teacher.web.auth), which sets request.state.user. #}
+      {%- if request.app.state.auth_gate %}
+      {%- set account = request.state.user %}
       <form class="nav-signout" method="post" action="/logout">
+        {%- if account %}
+        <span class="nav-user" title="Signed in as {{ account.email }}"><span class="visually-hidden">Signed in as </span>{{ account.email }}</span>
+        {%- endif %}
         <button class="button quiet compact" type="submit">Sign out</button>
       </form>
       {%- endif %}

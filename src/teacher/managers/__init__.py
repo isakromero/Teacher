@@ -49,6 +49,7 @@ from teacher.managers.study_history import (
     SessionSummary,
     StudyHistoryManager,
 )
+from teacher.managers.users import SignInError, UserManager
 
 __all__ = [
     "ArtifactBlockManager",
@@ -84,6 +85,7 @@ __all__ = [
     "RetargetedRelation",
     "SessionPage",
     "SessionSummary",
+    "SignInError",
     "SourceConceptManager",
     "SourceInUseError",
     "SourceReferenceManager",
@@ -93,5 +95,6 @@ __all__ = [
     "StudyHistoryManager",
     "TagSpec",
     "ThreadSummary",
+    "UserManager",
     "VectorIndexError",
 ]

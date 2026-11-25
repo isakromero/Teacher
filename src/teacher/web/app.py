@@ -10,8 +10,8 @@ registry of concepts with a relating run in progress), `review_bank_builder` (wr
 queue's question variants, `teacher.review_bank`; None when the app has none),
 `reference_extractor` (lists each source's references, `teacher.reference_extraction`; None
 when the app has none) and `clock` (the
-review queue's time: a callable returning naive UTC) and `password_gate` (the sign-in gate,
-`teacher.web.auth`, or None when the app has no password). Every request runs under a base cost
+review queue's time: a callable returning naive UTC) and `auth_gate` (the account gate,
+`teacher.web.auth`, or None when the app has no access code: nobody signs in). Every request runs under a base cost
 meter (`CostMeterMiddleware`, `teacher.costs`), so every API call the app makes is recorded. On startup the lifespan logs
 which database it uses (the provider's `describe()`, never a password), migrates the
 database to head and marks any
@@ -37,7 +37,7 @@ from teacher.db.models import GenerationRun
 from teacher.managers import ArtifactManager
 from teacher.managers.generation_runs import GenerationRunManager
 from teacher.url_sources import UrlFetcher
-from teacher.web.auth import install_password_gate
+from teacher.web.auth import install_auth_gate
 from teacher.web.errors import install_error_handlers
 from teacher.web.routers import (
     artifacts,
@@ -121,7 +121,7 @@ def create_app(
     reference_extractor: Any = None,
     clock: Any = None,
     max_attempts: int = 2,
-    password: str | None = None,
+    access_code: str | None = None,
 ) -> FastAPI:
     """Build the API app. `settings` defaults to `Settings.from_env()`.
 
@@ -178,9 +178,10 @@ def create_app(
     `teacher.reference_extraction.StubReferenceExtractor()` offline); without one, extraction
     is reported as unavailable and every source's state stays "never run".
 
-    `password` puts the password gate in front of every route (`teacher.web.auth`; `teacher
-    serve` passes `$TEACHER_PASSWORD`). None (the default): no gate, the app is open. `GET
-    /healthz` (an empty 200) exists either way.
+    `access_code` puts the account gate in front of every route (`teacher.web.auth`): every
+    page and API route then needs a signed-in user account, and registering an account needs
+    this code (`teacher serve` passes `$TEACHER_PASSWORD`). None (the default): no gate, no
+    accounts, the app is open. `GET /healthz` (an empty 200) exists either way.
     """
     if settings is None:
         settings = Settings.from_env()
@@ -367,7 +368,7 @@ def create_app(
     # --- end pages ---
 
     # Last, so its middleware is the outermost: a request without a session goes no further.
-    install_password_gate(app, password)
+    install_auth_gate(app, access_code, settings)
 
     return app
 

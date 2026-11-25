@@ -365,6 +365,25 @@ mark {
 .nav-add[aria-current="page"] {
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
 }
+/* Behind the account gate: the signed-in email, then "Sign out". The email is cut with an
+   ellipsis (its full text is the title) and gives way first: narrower on phones, and hidden
+   (still read out) on the narrowest ones, so the top row never wraps. */
+.nav-signout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+}
+.nav-user {
+  min-width: 0;
+  max-width: 16rem;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 /* Touch screens at any width (a phone on its side, a tablet): 44px-tall links, the current
    one's bar on the header's bottom edge. */
 @media (pointer: coarse) {
@@ -428,7 +447,21 @@ mark {
     padding: 0.3rem 0.9rem;
     font-size: 0.9375rem;
   }
+  .nav-user {
+    max-width: 9rem;
+  }
   .nav-add-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+/* Phones narrower than 32rem: the email does not fit beside "Add" and "Sign out". */
+@media (max-width: 31.9375rem) {
+  .nav-user {
     position: absolute;
     width: 1px;
     height: 1px;
