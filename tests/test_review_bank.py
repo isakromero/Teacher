@@ -35,6 +35,10 @@ from teacher.review_bank import (
     rubric_violation,
 )
 
+# The components here make their API calls directly: an in-memory cost meter records them
+# (without a meter a component refuses to make a call; see `teacher.costs`).
+pytestmark = pytest.mark.usefixtures("cost_meter")
+
 MC = {
     "question": "Which colour does the filter pass?",
     "options": ["red light", "blue light", "green light"],
@@ -255,7 +259,7 @@ def test_a_build_is_a_run_and_replaces_the_variants(settings: Settings, page: st
         run = GenerationRunManager(session, settings).latest(artifact, REVIEW_BANK_STAGE)
         assert (run.status, run.model, run.input_tokens, run.output_tokens) == ("succeeded", "claude-x", 10, 5)
         assert run.output_file == "artifacts/filters/generation/review_bank.json"
-        record = json.loads((settings.root / run.output_file).read_text())
+        record = json.loads((settings.data_root / run.output_file).read_text())
         assert record["trigger"] == "on_demand" and len(record["variants"]) == 4
         rows = session.scalars(select(ReviewVariant).order_by(ReviewVariant.id)).all()
         assert [(r.position, r.type, r.run_id) for r in rows] == [

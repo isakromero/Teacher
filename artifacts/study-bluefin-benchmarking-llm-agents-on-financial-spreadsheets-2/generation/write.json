@@ -1,0 +1,333 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-opus-5-5",
+  "message_id": "msg_011ChNv4PJLPyq9qT2JZNAPW",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 12500,
+    "cache_creation_input_tokens": 84417,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 18974
+  },
+  "source": {
+    "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+    "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+    "media_type": "application/pdf"
+  },
+  "depth": "standard",
+  "output": {
+    "blocks": [
+      {
+        "type": "prose",
+        "section": "motivation-and-gap",
+        "role": "explanation",
+        "markdown": "## What this paper is about\n\nBLUEFIN is a **benchmark**, a fixed set of tasks plus a way of scoring them, for testing whether LLM agents can do the spreadsheet work of professional finance: building valuation models, extending debt schedules, and answering what-if questions about existing workbooks.\n\nThe authors give three reasons it matters. Finance runs on spreadsheets: they count nearly 2.5 million US finance professionals, and cite surveys saying analysts spend about 10 hours a week in spreadsheets. Spreadsheet errors are expensive: one audit found 117 errors across 50 operational spreadsheets, with impacts of up to $100M, and a formula error contributed to JPMorgan's \"London Whale\" loss. And labs are now shipping spreadsheet assistants. The authors cite evidence that AI *hurts* productivity when a task exceeds the tool's ability. That is why we need to know where that boundary lies before trusting these tools.\n\nThe headline finding is blunt. No frontier model scores above 50% overall. Models are much better at writing plausible-looking formulas than at building workbooks that stay correct when an input changes. This page walks through how the benchmark is built, how it is graded, and what the failures look like."
+      },
+      {
+        "type": "prose",
+        "section": "related-work",
+        "role": "explanation",
+        "markdown": "## Why not just reuse existing benchmarks?\n\nYou studied **programmatic verifiability** on the earlier page *Study: BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets*: an output can be checked automatically by running code. Coding benchmarks rely on this, since a patch either passes the tests or it doesn't, and code is also abundant in training data.\n\nThe authors argue that finance spreadsheets break both conveniences:\n\n- **Data is hard to get.** Real workbooks contain client secrets and proprietary models, unlike permissively licensed open-source code.\n- **Correctness is multi-dimensional.** A workbook must be numerically right *and* follow finance conventions, such as blue font for hardcoded inputs, sensible layout and formulas linked to their source tabs. Many of these are not programmatically checkable.\n- **Spreadsheets add things code lacks.** They require 2D spatial reasoning across cells and visual formatting, and they follow standard modelling conventions.\n\nPrior spreadsheet benchmarks test narrower skills: generating a single formula, atomic edits (\"highlight Sales between 200 and 500\"), flat CSV-like tables, or question answering over a fixed sheet. Even SheetAgent's \"long-horizon\" tasks just chain well-defined instructions together. BLUEFIN instead uses **underspecified, natural requests**, so the agent must plan the work and meet implicit domain expectations. The closest relatives are Fin-SheetBench, whose QA tasks prove easier than BLUEFIN's interrogation tasks, and the concurrent BankerToolBench, whose aggregate scores fall in a similar 40–60% range."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "related-work",
+        "draws_on": [
+          "motivation-and-gap",
+          "related-work"
+        ],
+        "new_scenario": false,
+        "question": "Coding benchmarks can grade complex tasks by running tests. According to the paper, what mainly stops BLUEFIN from simply doing the same for its build and edit tasks?",
+        "options": [
+          "A correct workbook must also meet conventions and usability expectations that no automated test captures, and naturally phrased prompts admit many valid builds",
+          "Spreadsheet formulas cannot be executed outside of Excel itself, so there is no way to compute what a generated workbook's cells evaluate to",
+          "Finance workbooks are too large for automated tests to finish in reasonable time, so only a sample of cells could ever be checked by code",
+          "Frontier models were already trained on every public spreadsheet benchmark, so any execution-based test would be contaminated by memorisation"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Right. The paper's obstacle (2) is that outputs must be structurally and numerically correct and also satisfy usability and clarity criteria that are not programmatically verifiable. Underspecified prompts also mean there is no single expected layout.",
+          "Workbooks can be recalculated outside Excel; the benchmark's own harness recalculates them with LibreOffice. Execution isn't the problem.",
+          "The paper never names workbook size or test runtime as the obstacle. Re-read what it says about criteria that are hard to express as tests.",
+          "Contamination is why some tasks are held out, but it is not the reason given for why grading can't be purely programmatic."
+        ],
+        "explanation": "The paper's point is that finance spreadsheet quality includes convention and usability criteria, and that realistic underspecified prompts allow many valid solutions. Neither fits neatly into a test suite. The execution distractor is tempting, but the harness itself recalculates workbooks headlessly, so computing values is not where the difficulty lies."
+      },
+      {
+        "type": "prose",
+        "section": "task-families",
+        "role": "explanation",
+        "markdown": "## Three task families\n\nYou met this taxonomy on the earlier BLUEFIN page. Here is how each family is built and graded. Each task pairs a workbook context with a natural-language request:\n\n- **Synthesis** (prompt → new workbook, 10 tasks). An example: \"build me a DCF for Take Two Interactive with four tabs: Operating Model Cases, Operating Model, WACC and DCF.\"\n- **Manipulation** (workbook + prompt → updated workbook, 82 tasks, the largest family). An example: add a debt schedule under an existing Sources & Uses sheet. This mirrors the bulk of investment banking and private equity analyst work, and each task needs at least 45 minutes of analyst effort.\n- **Interrogation** (workbook + question → answer, 39 tasks). Each has a single correct answer and no rubric. Questions are deliberately of the form \"if these inputs change, what happens to this output?\", so the agent must push changes through multi-step calculation chains.\n\nIn the figure, look at the bottom of each column. Synthesis and manipulation are graded by **rubric criteria**: formula checks, ±2% output checks and \"perturbation\" checks that change an input. Interrogation is graded by a **numeric match** against the reference answer.\n\nOnly 11 tasks (305 criteria) are public. The rest are held out to avoid leakage into training data. The held-out manipulation set spans five categories, led by Planning & Forecasting at 39%, and 16 industry labels."
+      },
+      {
+        "type": "figure",
+        "section": "task-families",
+        "figure": "Figure 1",
+        "caption": "Read each column top to bottom: input, agent, output, grading. The perturbation criteria (\"if Base → Bull, does Implied Upside recompute?\") test whether the workbook *behaves* correctly, not just whether it looks right. That distinction drives most of the results later."
+      },
+      {
+        "type": "prose",
+        "section": "dataset-construction",
+        "role": "explanation",
+        "markdown": "## Who built the tasks, and how\n\nThe tasks were written by **78 vetted finance contributors** from seven countries. They ranged from senior undergraduates with banking internships to managing directors, and were paid well above market annotation rates. Admission was by invitation, and onboarding calibrated contributors to the task specification.\n\nFor a manipulation task, a contributor started from a **seed workbook**, made the change themselves, and wrote the request \"as [they] would brief a capable analyst.\" Their finished workbook became the reference solution. **Claude Opus 4.6 drafted candidate rubric criteria**, and human reviewers validated and refined them. Every submission passed automated checks and a checklist review, often going through several revisions. The authors estimate about **5 hours of human labour per task**.\n\nOne detail stands out: the standards themselves changed mid-project, and already-accepted tasks were sent back for rework.\n\n- Prompts were made *less* prescriptive, describing the intent rather than the steps.\n- The complexity floor was raised.\n- Rubrics shifted from surface signs of completion to outcome correctness and robustness.\n- Hygiene checks for hidden sheets and stray named ranges were added.\n\nTasks were also screened for personally identifiable information and for IP problems."
+      },
+      {
+        "type": "prose",
+        "section": "rubric-categories",
+        "role": "explanation",
+        "markdown": "## Six rubric categories\n\nEvery criterion is a **binary yes/no check with a fixed point weight**. A task's score is the points earned divided by the maximum possible points, on a 0–100 scale. The six categories are:\n\n| Category | Checks that… | Example |\n|---|---|---|\n| Formula Correctness | a formula implements the intended calculation (any valid formulation counts) | fiscal years computed as prior year + 1 |\n| Model Integration | a value is *linked* from its source tab, not recomputed or typed in locally | DCF's WACC links to the WACC tab |\n| Output Validation | a key output is within tolerance of the reference | 2031 Revenue within ±2% of $10,342M |\n| Perturbation | changing an input makes outputs recompute correctly | Base → Bull moves share price to ≈$255.11 |\n| Presentation | formatting conventions are followed | hardcoded assumptions in blue font |\n| Pitfalls | **penalties** (negative points) | any #REF!, #DIV/0! errors |\n\nFormula Correctness is the largest category, with 1,082 of the 3,225 criteria.\n\nThe authors deliberately *dropped* a \"structural completeness\" category. In early experiments it over-rewarded copying the reference template and penalised valid alternative builds. Structure is instead captured indirectly. If the structure is wrong, formulas, links, outputs and perturbations will fail too."
+      },
+      {
+        "type": "blurb",
+        "section": "rubric-categories",
+        "draws_on": [
+          "rubric-categories",
+          "dataset-construction"
+        ],
+        "new_scenario": false,
+        "prompt": "Why did the authors remove a separate 'structural completeness' rubric category, and how does the final rubric still catch a badly structured workbook?",
+        "min_words": 30,
+        "model_answer": "A structural-completeness section rewarded models for copying the reference template's layout and penalised valid alternative builds. Instead, structure is checked indirectly: a poorly structured model will fail formula correctness, model integration, output validation and perturbation criteria.",
+        "rubric": [
+          {
+            "criterion": "Explains that a structure category over-rewarded copying a particular template and/or penalised valid alternative builds",
+            "required": true
+          },
+          {
+            "criterion": "States that structure is captured through the other categories (formula correctness, integration, output validation, perturbation)",
+            "required": true
+          },
+          {
+            "criterion": "Connects this to the goal of accepting multiple valid implementations, e.g. the underspecified prompts",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": "prose",
+        "section": "harness-and-judge",
+        "role": "explanation",
+        "markdown": "## The harness and the judge\n\n**The agent's side.** Each model gets the same 20 tools:\n\n- read tools (ranges or the whole workbook state),\n- batch write tools,\n- formatting tools,\n- `recalc_workbook`, which runs a headless LibreOffice calculation with iterative calculation on, so circular structures like revolvers can converge,\n- `execute_python`, a locked-down sandbox where the workbook is an openpyxl object, with no file or network access and a 30-second timeout.\n\nThe agent's instructions are deliberately **minimal (61 words)**: you're an expert, use formulas rather than hardcoded values, call `done` when finished. The aim is to measure raw capability, not how well a model follows a detailed recipe. The authors concede that richer scaffolding could score higher.\n\n**The judge's side.** Synthesis and manipulation outputs are graded by **GPT-5.4 at high reasoning effort**. It uses the *same* 20 tools, plus a much more prescriptive, domain-heavy prompt. It must read both a cell's value and its formula string, because $100,000 could be a typed constant (bad) or `=SUM(B2:B5)` (good). For a perturbation criterion it follows five steps: read the output, change the input, call `recalc_workbook`, read the output again, then restore the input. Every verdict is binary and must cite cell evidence.\n\n**Is the judge trustworthy?** On 384 expert-labelled criteria the judge agreed with expert consensus at Krippendorff's α = 0.826, with macro-F1 0.839. That was slightly better than Gemini 3.1 Pro (0.803) and Sonnet 4.6 (0.805) as judges, and the authors describe all three as near the human reliability ceiling. Interrogation answers are graded separately, component by component, with format normalisation and a 1% relative tolerance."
+      },
+      {
+        "type": "interactable",
+        "section": "harness-and-judge",
+        "title": "Run the judge on three toy builds",
+        "instructions": "This is a **made-up mini-model**, not one of the paper's tasks: Revenue × 20% margin = EBIT, then EBIT × (1 − tax) = NOPAT. It is graded with three criteria in the style of BLUEFIN's rubric. Pick a build and press **Run judge**.\n\n- The *all formulas* build should pass everything.\n- The *EBIT hardcoded* build shows the right number today. Which check catches it?\n- The *tax typed as 25* build has a perfectly good formula. Which check catches that?\n\nNotice that Formula Correctness passes for every build.",
+        "html": "<div id=\"w\"><label for=\"b\">Agent's build: </label><select id=\"b\"><option value=\"f\">All formulas</option><option value=\"h\">EBIT hardcoded as 20</option><option value=\"r\">Tax rate typed as 25 (not 0.25)</option></select><table id=\"t\"></table><button class=\"primary\" id=\"run\">Run judge</button><div id=\"log\"></div><p>Score: <output id=\"sc\"></output></p></div><style>#w{font-size:14px}#t{border-collapse:collapse;margin:8px 0;width:100%}#t td{border:1px solid var(--border);padding:4px 6px}#t td.k{color:var(--muted)}#log div{padding:3px 0;border-bottom:1px solid var(--border)}.ok{color:var(--series-2);font-weight:bold}.bad{color:var(--series-3);font-weight:bold}</style><script>(function(){var B={f:{hard:false,tax:0.25},h:{hard:true,tax:0.25},r:{hard:false,tax:25}};var sel=document.getElementById('b'),t=document.getElementById('t'),log=document.getElementById('log'),sc=document.getElementById('sc');function calc(k,rev){var c=B[k];var ebit=c.hard?20:rev*0.2;return{rev:rev,ebit:ebit,nopat:ebit*(1-c.tax),c:c};}function within(v,x){return Math.abs(v-x)<=0.02*Math.abs(x);}function fmt(x){return Math.round(x*100)/100;}function render(){var k=sel.value,s=calc(k,100);var rows=[['B1 Revenue (input)','100'],['B2 Margin (input)','0.20'],['B3 Tax rate (input)',String(s.c.tax)],['B4 EBIT',(s.c.hard?'20 (typed constant)':'=B1*B2 → '+fmt(s.ebit))],['B5 NOPAT','=B4*(1-B3) → '+fmt(s.nopat)]];t.innerHTML='';rows.forEach(function(r){var tr=document.createElement('tr');tr.innerHTML='<td class=\"k\">'+r[0]+'</td><td>'+r[1]+'</td>';t.appendChild(tr);});log.innerHTML='';sc.textContent='(press Run judge)';}function line(txt,pass){var d=document.createElement('div');d.innerHTML=txt+' <span class=\"'+(pass?'ok':'bad')+'\">'+(pass?'PASS':'FAIL')+'</span>';log.appendChild(d);}function run(){var k=sel.value;log.innerHTML='';var pts=0;line('Formula Correctness (2 pts): does B5 contain =EBIT×(1−tax)? Yes, formula present.',true);pts+=2;var s=calc(k,100);var ov=within(s.nopat,15);line('Output Validation (3 pts): NOPAT = '+fmt(s.nopat)+'; within ±2% of reference 15?',ov);if(ov)pts+=3;var after=calc(k,120);var pv=within(after.nopat,18);line('Perturbation (5 pts): read NOPAT = '+fmt(s.nopat)+' → set Revenue 100→120 → recalc → NOPAT = '+fmt(after.nopat)+'; within ±2% of 18? (then restore input)',pv);if(pv)pts+=5;sc.textContent=pts+' / 10 = '+(pts*10)+'%';}sel.addEventListener('change',function(){render();run();});document.getElementById('run').addEventListener('click',run);render();run();})();</script>"
+      },
+      {
+        "type": "multiple_choice",
+        "section": "harness-and-judge",
+        "draws_on": [
+          "harness-and-judge",
+          "rubric-categories"
+        ],
+        "new_scenario": true,
+        "question": "Imagine an agent builds a DCF whose Implied Share Price cell shows exactly the reference value, but the cell holds a typed number, not a formula. The rubric has an Output Validation check on that price and a Perturbation check (raise WACC, expect the price to move to a new target). How does BLUEFIN's judge most likely score these two checks?",
+        "options": [
+          "Output Validation passes because the value is within tolerance, but Perturbation fails because the price does not move after recalculation",
+          "Both checks fail, because the judge treats any typed constant in an output cell as an automatic error before comparing values",
+          "Both checks pass, because the judge only compares the displayed value with the reference and never edits the workbook's inputs",
+          "Output Validation fails because constants are not counted as outputs, while Perturbation passes since the cell still exists"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Correct. The value matches today, so the tolerance check passes. The perturbation procedure changes WACC and recalculates, and a typed constant cannot update, so that check fails.",
+          "Output Validation only asks whether the value is within tolerance. Typed constants are caught by checks designed for them, such as perturbation, integration and pitfall checks, not by an automatic fail on every criterion.",
+          "The judge's perturbation procedure explicitly mutates the input, calls recalc_workbook, and re-reads the output. It does change the workbook, then restores it.",
+          "Output Validation checks the computed value against the reference within tolerance. It does not care whether the value came from a formula, and a cell merely existing does not satisfy Perturbation."
+        ],
+        "explanation": "This is exactly the gap BLUEFIN is designed to expose. A hardcoded result can look right (Output Validation passes) while the model is broken (Perturbation fails, because the number doesn't respond to the input change). The tempting wrong answer is that both pass. That would be true only if the judge looked at displayed values alone, which is the shortcut its five-step perturbation procedure exists to avoid."
+      },
+      {
+        "type": "prediction",
+        "section": "overall-results",
+        "prompt": "Five frontier models were run on 120 held-out tasks. On which task family do you expect them to score highest?",
+        "options": [
+          "Synthesis: building a workbook from scratch",
+          "Manipulation: modifying an existing workbook",
+          "Interrogation: answering a what-if question about a workbook"
+        ],
+        "correct_index": 0,
+        "resolution": "Synthesis scored highest for every model (Opus 4.7 reached 66.7%). The authors suggest that building from scratch is more forgiving than fitting into an existing workbook's formulas, layouts and references."
+      },
+      {
+        "type": "prose",
+        "section": "overall-results",
+        "role": "explanation",
+        "markdown": "## Headline results\n\nEach model ran at high reasoning effort on the held-out set: 75 manipulation, 9 synthesis and 36 interrogation tasks. A run that didn't complete counted as zero. Overall:\n\n- **GPT-5.5**: 49.6%\n- **Opus 4.7**: 49.2%\n- **Gemini 3.1 Pro**: 45.9%\n- **Sonnet 4.6**: 42.9%\n- **Grok 4.20**: 31.3%\n\nNo model clears 50%. The authors contrast this with the same models \"rapidly saturating\" coding benchmarks such as SWE-bench Pro.\n\nThe ordering across task families matters more than any single number. **Synthesis is easiest. Manipulation, the bulk of real finance work, is harder**, because new work has to integrate with formulas, layouts and references that already exist. Interrogation is hard to get exactly right, because a single wrong link in a multi-step chain gives the wrong final number. Interrogation scores of 34.7–50.0% barely reach the *lower* end of Fin-SheetBench's results. The authors attribute this to their questions requiring the agent to change assumptions and recompute multi-level dependencies.\n\nOn the 11-task public set, the open-weight models Kimi K2.6 and MiniMax M2.5 scored 42.3% and 20.9%. That set is very small."
+      },
+      {
+        "type": "chart",
+        "section": "overall-results",
+        "kind": "bar",
+        "title": "Held-out score by task family and model",
+        "x_label": "Model",
+        "y_label": "Score (%, criteria-weighted)",
+        "series": "[{\"name\": \"Synthesis (n=9)\", \"points\": [{\"x\": \"Opus 4.7\", \"y\": 66.7}, {\"x\": \"GPT-5.5\", \"y\": 59.9}, {\"x\": \"Gemini 3.1 Pro\", \"y\": 50.3}, {\"x\": \"Sonnet 4.6\", \"y\": 53.2}, {\"x\": \"Grok 4.20\", \"y\": 46.9}]}, {\"name\": \"Manipulation (n=75)\", \"points\": [{\"x\": \"Opus 4.7\", \"y\": 49.4}, {\"x\": \"GPT-5.5\", \"y\": 48.2}, {\"x\": \"Gemini 3.1 Pro\", \"y\": 46.1}, {\"x\": \"Sonnet 4.6\", \"y\": 43.0}, {\"x\": \"Grok 4.20\", \"y\": 27.8}]}, {\"name\": \"Interrogation (n=36)\", \"points\": [{\"x\": \"Opus 4.7\", \"y\": 44.4}, {\"x\": \"GPT-5.5\", \"y\": 50.0}, {\"x\": \"Gemini 3.1 Pro\", \"y\": 44.4}, {\"x\": \"Sonnet 4.6\", \"y\": 40.3}, {\"x\": \"Grok 4.20\", \"y\": 34.7}]}, {\"name\": \"Overall (n=120)\", \"points\": [{\"x\": \"Opus 4.7\", \"y\": 49.2}, {\"x\": \"GPT-5.5\", \"y\": 49.6}, {\"x\": \"Gemini 3.1 Pro\", \"y\": 45.9}, {\"x\": \"Sonnet 4.6\", \"y\": 42.9}, {\"x\": \"Grok 4.20\", \"y\": 31.3}]}]",
+        "caption": "Synthesis bars tower over the rest for every model. Overall scores sit almost on top of the manipulation scores because manipulation is 75 of the 120 tasks. Grok's collapse on manipulation (27.8%) drags its overall score down.",
+        "source": "Table 2 (held-out performance)"
+      },
+      {
+        "type": "prediction",
+        "section": "failure-modes",
+        "prompt": "On the 75 held-out manipulation tasks, which of these rubric categories do you expect models to pass least often?",
+        "options": [
+          "Formula Correctness",
+          "Presentation",
+          "Perturbation",
+          "Model Integration"
+        ],
+        "correct_index": 2,
+        "resolution": "Perturbation is the weakest of these for every model (14.8–37.3%), while Formula Correctness and Presentation are the strongest. Formulas that look right often don't behave right when an input changes; the next block shows why."
+      },
+      {
+        "type": "prose",
+        "section": "failure-modes",
+        "role": "explanation",
+        "markdown": "## Static versus dynamic correctness\n\nBreaking scores down by rubric category reveals a pattern shared by every model. Across the five models:\n\n- **Formula Correctness**: 50–68% pass\n- **Output Validation**: 20–48%\n- **Perturbation**: 15–37%\n\nThat is roughly a **30-point gap** between *static* checks (does the formula look right?) and *dynamic* checks (does the model produce the right numbers, and keep producing them when an input moves?).\n\nWhat breaks under perturbation: intermediate values typed in instead of computed, formula cells overwritten with constants, and circular structures that never converge.\n\nWhat breaks output validation, even when formulas are structurally right? Manual inspection found four recurring causes:\n\n1. **sign errors**: adding cash outflows instead of subtracting them,\n2. **date misalignment**: an off-by-one-year reporting offset,\n3. **rate vs. amount**: a 5% spread entered as 5.0 instead of 0.05,\n4. **discounting timing**: end-of-period versus beginning-of-period discounting in DCFs.\n\nOne caution in reading the heatmap below: **Pitfalls is a penalty section**, so a higher pass rate means fewer errors were detected. Grok's high Pitfalls rate mostly reflects producing *less content*, which leaves fewer places for errors to appear.\n\nPer task, the median manipulation task averages 46.2% across models. Only 44% of tasks average 50% or more, none exceeds 70%, and 23% fall below 30%."
+      },
+      {
+        "type": "figure",
+        "section": "failure-modes",
+        "figure": "Figure 4",
+        "caption": "In panel (a), compare the Perturbation row (reds) with the Formula Correctness row (greens). That contrast is the static/dynamic gap. Remember that Pitfalls reads differently: Grok's 48.8 there is not a sign of quality. Panel (b) shows the spread of task difficulty, with a long left tail of tasks the typical model mostly fails."
+      },
+      {
+        "type": "blurb",
+        "section": "failure-modes",
+        "draws_on": [
+          "failure-modes",
+          "harness-and-judge",
+          "rubric-categories"
+        ],
+        "new_scenario": false,
+        "prompt": "Explain how a workbook can pass Formula Correctness criteria yet fail Perturbation criteria. Describe how the judge detects this, and give one concrete kind of model mistake that causes it.",
+        "min_words": 35,
+        "model_answer": "Formula Correctness only checks that a cell's formula looks like the right calculation. Perturbation checks behaviour: the judge changes an input, calls recalc_workbook, and re-reads the output to see whether it moved to the expected value. If the model typed an intermediate value as a constant, or overwrote a formula downstream, the visible formula can be right while the output never updates.",
+        "rubric": [
+          {
+            "criterion": "Distinguishes a static check of formula form from a dynamic check of behaviour after an input change",
+            "required": true
+          },
+          {
+            "criterion": "Describes the judge changing an input and recalculating, then checking whether the output updates correctly",
+            "required": true
+          },
+          {
+            "criterion": "Names a concrete cause such as hardcoded intermediate values, a formula overwritten with a constant, or a non-converging circular structure",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": "prose",
+        "section": "cost-and-behavior",
+        "role": "explanation",
+        "markdown": "## Cost and agent behaviour\n\nPlotting average agent cost per task against score gives a Pareto frontier running **Grok → Gemini 3.1 Pro → GPT-5.5**. **Opus 4.7 is dominated**: GPT-5.5 gets a similar score at **5.6× lower cost** ($8.85 vs. $49.21 per task). Gemini, at $5.78 per task, is cheaper still. The two trade wins by category: GPT-5.5 is stronger on Formula Correctness, Integration and Presentation, while Gemini triggers fewer Pitfalls.\n\nThe authors tie scores to *how* agents work:\n\n- **GPT-5.5 goes to Python first.** On 64% of manipulation tasks, its first action after viewing the workbook was `execute_python`. That means fewer turns (24 vs. 38 for Opus), but code-driven writes are harder to verify without explicit recalculation, which matches its weaker Output Validation.\n- **Recalculation habits track Perturbation scores.** GPT-5.5 calls `recalc_workbook` on 100% of tasks and Opus on 75%, but Sonnet and Grok on fewer than 50%. An agent that never recalculates cannot check that its computed values actually update.\n- **Sonnet sometimes does nothing.** On about 8% of manipulation tasks it read the workbook, called `done`, and returned it unchanged.\n- **Expensive isn't always better.** On a routine balance-sheet build, Gemini scored 100% for $3.00 using narrow reads, compact writes and recalc checks. Opus scored 95% for $83.05 with broad reads and heavy output, a cost ratio of 27.7×."
+      },
+      {
+        "type": "prose",
+        "section": "case-studies",
+        "role": "explanation",
+        "markdown": "## Three case studies\n\nThe appendix walks through three tasks in detail.\n\n**A merger model where everyone failed (max 35%).** Line items shared with the existing model, such as notes and shares outstanding, had to be *linked* to the Capitalization and Inputs tabs through conditional formulas. Gemini (22.2%) linked EBITDA to a fixed input cell, which was right for the current acquirer but broke if the acquirer changed. Opus (30%) drove revolver draws off a change-in-cash cell that already included revolver activity, making the formula partially circular. It also pointed Capex at the wrong Inputs row: Daily Production Volume.\n\n**An OpEx schedule that sorted the models.** The task was simple: divide annual inputs by 12 across five years and wire the results into the Income Statement. But the references had to point at the right rows. Gemini (32%) was off by one row throughout, starting from a blank cell. Opus (64%) also had wrong rows, and routed two Income Statement lines around the new tab. GPT-5.5 (88%) got the rows right. The authors' lesson is that **referential discipline** drives much of the difference in scores.\n\n**The balance sheet at a 27.7× cost ratio.** Both models produced near-equivalent outputs, though Opus's did not fully balance. The authors suggest reserving costly reasoning models for ambiguous or novel problems, not for high-specification wiring."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "cost-and-behavior",
+        "draws_on": [
+          "cost-and-behavior",
+          "failure-modes"
+        ],
+        "new_scenario": false,
+        "question": "The paper reports that Sonnet and Grok call recalc_workbook on fewer than half of tasks. Why does it treat this as an explanation for their weak Perturbation pass rates?",
+        "options": [
+          "Without recalculating, an agent cannot see whether its formulas actually produce and update the right values, so dynamic errors go unnoticed",
+          "The judge deducts points from any workbook in which the agent never called recalc_workbook during its trajectory, lowering Perturbation",
+          "Calling recalc_workbook converts typed constants back into live formulas, so agents that skip it leave hardcoded values in place",
+          "Perturbation criteria can only be scored on workbooks the agent recalculated itself, so unrecalculated workbooks are marked as not met"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Correct. The paper says models that do not recalculate cannot self-verify whether their dynamically computed values are correct, which fits their weaker Perturbation scores.",
+          "The judge grades only the final output workbook, not the agent's trajectory, and it runs its own recalculation when testing perturbations.",
+          "Recalculation recomputes the existing formulas. It does not turn constants into formulas, so it can't repair hardcoded values by itself.",
+          "The judge performs its own mutate-recalculate-read procedure on any workbook. It doesn't depend on whether the agent recalculated."
+        ],
+        "explanation": "Recalculation is a self-checking habit. An agent that recalculates can notice that a value didn't update or came out wrong, and fix it before calling done. The tempting wrong answer is that the judge penalises missing recalc calls, but the paper states that the evaluation considers only the final output, not the trajectory."
+      },
+      {
+        "type": "prose",
+        "section": "human-utility",
+        "role": "explanation",
+        "markdown": "## Do the outputs actually help a professional?\n\nRubric scores measure compliance with criteria, not usefulness. So the authors asked **two former finance professionals** one question about each release-set output: *would this substantially help my build, or need significant rework first?*\n\nThe share of \"yes\" answers:\n\n- **Opus**: 75%\n- **GPT-5.5**: 68.75%\n- **Gemini** and **Sonnet**: 56.25% each\n- **Grok**: 0%, largely because it often failed to produce complete output\n\nReviewers found Opus strongest on structure and formulas, and most often a usable starting point. **Formatting was a weakness for every model.** They tended to impose their own styling instead of matching the conventions already in the workbook they were editing.\n\nThis study is small: two reviewers, on the small release set. It is best read as a complement to the rubric scores, not a validation of them. It is still telling that a model at about 49% on the rubric can be a useful starting point three times out of four."
+      },
+      {
+        "type": "prose",
+        "section": "limitations-and-outlook",
+        "role": "explanation",
+        "markdown": "## Limitations the authors acknowledge\n\n- **One workbook of context.** Each task gives the agent at most one workbook. There are no slide decks, emails or retrieved documents, which real finance work often involves.\n- **A uniform, minimal harness.** Many frontier models are trained to work with their own particular scaffolds, so this harness may under-measure them. The authors plan a leaderboard that accepts custom harnesses, and ask readers to treat the current numbers as a *strong baseline*, not a ceiling.\n- **Labour effects.** Scalable automation of finance work could affect job security and working conditions in mixed or negative ways.\n\nThe authors' outlook places BLUEFIN in a broader argument. AI benchmarks over-represent coding and mathematics relative to where people actually work, largely because realistic tasks are expensive to collect and hard to verify at scale. They offer their methodology as a template for others building benchmarks in specialised domains: expert authors, LLM-drafted but human-vetted binary rubrics, and an agentic judge that tests behaviour."
+      },
+      {
+        "type": "prose",
+        "section": "",
+        "role": "critique",
+        "markdown": "## A critical look\n\nA few things worth weighing, some from the paper's own numbers and some from general knowledge of LLM evaluation:\n\n- **Same-family grading.** The judge is GPT-5.4, and the top scorer is GPT-5.5. The rubric criteria were drafted by Claude Opus 4.6, and an Opus model is evaluated. LLM-as-judge work has raised concerns about judges favouring outputs from their own model family. The expert-agreement study reduces this worry but doesn't directly test for vendor bias. As far as I can tell, the paper does not report agreement broken down by the model being graded.\n- **Small cells, no variance.** Synthesis has only 9 held-out tasks, and I don't see run-to-run variance or confidence intervals reported. A 0.4-point gap between GPT-5.5 and Opus overall is probably not meaningful.\n- **Some internal inconsistencies.** The text refers to \"Table 3\" for results that appear in Table 2. Section 4.3 quotes an Opus \"macro score\" of 53.5% alongside a micro score of 49.2%, without explaining the difference. Neither changes the story, but both invite caution with precise figures.\n- **Agreement ≠ validity.** α = 0.826 shows the judge matches expert labels on 384 criteria. Whether the criteria themselves capture what makes a model good is a separate question, and the tiny human-utility study only partly speaks to it.\n- **Pitfalls interact with effort.** As the authors note for Grok, penalty sections reward doing less, so aggregate scores mix quality with output volume."
+      },
+      {
+        "type": "multiple_choice",
+        "section": "",
+        "draws_on": [
+          "cost-and-behavior",
+          "case-studies",
+          "failure-modes"
+        ],
+        "new_scenario": true,
+        "question": "Suppose a bank wants an AI agent to wire up dozens of standard balance sheets from detailed, fully specified instructions, and it has a limited budget. Based on BLUEFIN's evidence, which approach best fits?",
+        "options": [
+          "Use a cheaper model such as Gemini 3.1 Pro, and make sure the agent recalculates and checks that values update before finishing",
+          "Use the most expensive reasoning model, since higher cost per task reliably buys proportionally higher scores on BLUEFIN tasks",
+          "Use whichever model scores highest on Formula Correctness, since passing those checks implies outputs will update correctly",
+          "Use a model that relies on execute_python for bulk writes, since fewer turns means fewer chances for referencing errors"
+        ],
+        "correct_index": 0,
+        "option_explanations": [
+          "Correct. On a routine, high-specification balance-sheet task, Gemini scored 100% for $3.00 against Opus's 95% for $83.05. Recalculation habits track dynamic correctness.",
+          "The cost–performance results show the opposite: Opus is Pareto-dominated, and cost and quality are only loosely coupled.",
+          "The static/dynamic gap shows that passing formula checks does not imply passing output validation or perturbation checks.",
+          "GPT-5.5's Python-first habit meant fewer turns, but weaker Output Validation when it didn't explicitly recalculate. Fewer turns did not mean fewer errors."
+        ],
+        "explanation": "The authors suggest reserving high-cost reasoning models for ambiguous or novel problems. For well-specified wiring, a cheaper model that verifies by recalculating looks best. The tempting wrong answer is Formula Correctness, but the 30-point static/dynamic gap shows that formulas which look right are not the same as a workbook that behaves correctly."
+      },
+      {
+        "type": "blurb",
+        "section": "",
+        "draws_on": [
+          "rubric-categories",
+          "overall-results",
+          "human-utility",
+          "limitations-and-outlook"
+        ],
+        "new_scenario": false,
+        "prompt": "A colleague reads that GPT-5.5 scored 49.6% on BLUEFIN and concludes it is 'useless for finance work'. Explain what the 49.6% actually measures, and give one reason from the paper why that conclusion goes too far.",
+        "min_words": 35,
+        "model_answer": "The 49.6% is the share of weighted binary rubric points earned (with numeric matching for interrogation), averaged over held-out tasks, with non-completions scored as zero. It doesn't measure usefulness directly. In the human utility study, reviewers judged GPT-5.5 outputs a substantial help about 69% of the time, and the authors treat the minimal harness as a baseline that richer scaffolding could beat.",
+        "rubric": [
+          {
+            "criterion": "Explains that the score is a weighted fraction of binary rubric criteria (or answer matches) passed across tasks",
+            "required": true
+          },
+          {
+            "criterion": "Gives a reason from the paper the conclusion is too strong, e.g. the human utility study found outputs often useful, or the minimal harness may under-measure models",
+            "required": true
+          },
+          {
+            "criterion": "Mentions a nuance such as non-completions counting as zero or synthesis scoring higher than manipulation",
+            "required": false
+          }
+        ]
+      }
+    ]
+  }
+}

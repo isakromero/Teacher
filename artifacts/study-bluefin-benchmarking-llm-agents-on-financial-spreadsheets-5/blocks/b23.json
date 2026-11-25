@@ -1,0 +1,19 @@
+{
+  "question": "GPT-5.5 often starts with execute_python and uses fewer turns. What does the paper link this to?",
+  "options": [
+    "Weaker Pitfalls scores, since code-driven writes tend to leave many error values behind",
+    "Higher cost than Opus, since long Python sessions consume far more tokens per task",
+    "Unchanged output workbooks, since code-driven edits are often never saved to the file",
+    "Weaker Output Validation, since code-driven writes are hard to check without recalculation"
+  ],
+  "private": {
+    "correct_index": 3,
+    "explanation": "Fewer turns came with less verification, which shows in Output Validation, echoing the importance of recalculating.",
+    "option_explanations": [
+      "The paper ties the Python habit to Output Validation, not Pitfalls.",
+      "GPT-5.5 is far cheaper than Opus per task.",
+      "The zero-write behavior was reported for Sonnet, not linked to Python.",
+      "Correct: the paper says code-driven writes need fewer turns but are harder to check against expected values without recalculation."
+    ]
+  }
+}

@@ -26,7 +26,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session
 
 from teacher.config import Settings
@@ -215,7 +215,8 @@ class LabManager:
             select(
                 LabRunRecord.step_index,
                 func.count(),
-                func.max(LabRunRecord.passed),
+                # max() over a boolean column: SQLite stores 0/1, Postgres has no max(boolean).
+                func.max(case((LabRunRecord.passed, 1), else_=0)),
             )
             .where(LabRunRecord.artifact_id == artifact.id, LabRunRecord.kind == "check")
             .group_by(LabRunRecord.step_index)

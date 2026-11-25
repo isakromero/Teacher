@@ -8,7 +8,7 @@
   padding: 0 0.45rem;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
   color: var(--muted);
@@ -66,7 +66,7 @@
   border-left-color: var(--accent);
 }
 .suggestion-kind {
-  font-size: var(--text-xs);
+  font-size: 0.8125rem; /* not below 13px, the floor for secondary text on a phone */
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -83,6 +83,11 @@
 .suggestion-numbers > summary {
   cursor: pointer;
   width: fit-content;
+}
+@media (pointer: coarse) {
+  .suggestion-numbers > summary {
+    padding-block: 0.6rem;
+  }
 }
 .suggestion-numbers p {
   margin: 0;

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -19,7 +20,7 @@ from teacher.db.models import (
     BlockSegmentRef,
     SourceSegment,
 )
-from teacher.files import sha256_bytes, to_absolute
+from teacher.files import sha256_bytes, sync_dir, to_absolute
 from teacher.managers.artifacts import (
     _is_unique_violation,
     _require_persistent,
@@ -67,7 +68,8 @@ class ArtifactBlockManager:
         is_gate: bool = False,
         segments: Sequence[SourceSegment] = (),
     ) -> ArtifactBlock:
-        """Append a block at the next position, writing `blocks/<key>.json` first.
+        """Append a block at the next position, writing `blocks/<key>.json` first (and flushing it to
+        disk, so the file is never newer than a committed row).
 
         `content` must be a dict (TypeError) that serialises to JSON (ValueError). Every segment
         must belong to one of the artifact's linked sources (ValueError). The file is removed
@@ -92,8 +94,12 @@ class ArtifactBlockManager:
         path = blocks_dir / f"{key}.json"
 
         try:
+            # On disk before the row can be committed (teacher.files.sync_file).
             with path.open("xb") as fh:
                 fh.write(data)
+                fh.flush()
+                os.fsync(fh.fileno())
+            sync_dir(blocks_dir)
         except FileExistsError:
             raise IntegrityCheckError(
                 f"{artifact.slug}: orphan file {rel_file} is in the way of block {key}"
@@ -292,7 +298,7 @@ class ArtifactBlockManager:
     # -- paths ------------------------------------------------------------------------------
 
     def _artifact_dir(self, artifact: Artifact) -> Path:
-        return to_absolute(artifact.dir_path, self.settings.root)
+        return to_absolute(artifact.dir_path, self.settings.data_root)
 
     def _block_path(self, block: ArtifactBlock) -> Path:
         return to_absolute(block.content_file, self._artifact_dir(block.artifact))

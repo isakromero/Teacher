@@ -172,3 +172,123 @@
 #history-concepts {
   overflow-x: auto;
 }
+
+/* Phones: each table row is a compact block: the row's page or concept on its own line (the
+   standing chip beside a concept), then its numbers flowing on the lines below, each preceded
+   by its column's name (the cell's data-label, history.js and standing.js); the column headers
+   stay for screen readers only. Links, the folded numbers, the "show more" button and the
+   toggle get finger-sized targets. */
+@media (max-width: 600px) {
+  #history-totals,
+  #history-concepts {
+    overflow-x: visible;
+  }
+  .history-table,
+  .history-table tbody {
+    display: block;
+  }
+  .history-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .history-table tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.2rem var(--space-3);
+    padding: var(--space-2) 0 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .history-table tbody tr:hover {
+    background: none;
+  }
+  .history-table th,
+  .history-table td {
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .history-table th[scope="row"] {
+    flex: 1 1 100%;
+    font-size: 1rem;
+  }
+  .history-table td {
+    font-size: 0.875rem;
+  }
+  .history-table td::before {
+    content: attr(data-label) " ";
+    color: var(--muted);
+  }
+  /* (rules for standing.css's classes say .page-history: standing.css loads after this file) */
+  /* the standing table: the status chip on the concept's line (the next cell no longer fits
+     there, so the numbers start a line of their own) */
+  .standing-table th[scope="row"] {
+    flex: 1 1 65%;
+  }
+  .standing-table td[data-label="Standing"] {
+    flex: none;
+  }
+  .standing-table td[data-label="Standing"]::before {
+    content: none;
+  }
+  .page-history .standing-chip {
+    font-size: 0.8125rem;
+  }
+  .page-history .suggestion-kind {
+    font-size: 0.8125rem;
+  }
+  /* finger-sized links: padding on an inline link grows its target, not the line */
+  .history-table th[scope="row"] a,
+  .history-timeline a,
+  .page-history .suggestion a {
+    padding-block: 0.75rem;
+  }
+  .page-history .suggestion-numbers > summary {
+    padding-block: 0.75rem;
+  }
+  .page-history .suggestions-more .button {
+    min-height: 2.75rem;
+  }
+  .page-history .standing-toggle {
+    min-height: 2.75rem;
+    gap: var(--space-2);
+  }
+  .page-history .standing-toggle input {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 1rem;
+  }
+  .history-filters {
+    padding: var(--space-3);
+  }
+  .history-filters .field {
+    flex: 1 1 100%;
+  }
+  .history-filters select,
+  .history-filters input {
+    width: 100%;
+    max-width: none;
+    min-height: 2.75rem;
+  }
+  .history-session {
+    padding: var(--space-3);
+  }
+  .history-session > summary {
+    min-height: 2.75rem;
+  }
+}
+
+/* Touch screens wider than a phone (a phone on its side, a tablet) keep the tables, but their
+   links get finger-sized targets too (padding on an inline link grows its target, not the line). */
+@media (pointer: coarse) {
+  .history-table th[scope="row"] a,
+  .history-timeline a,
+  .page-history .suggestion a {
+    padding-block: 0.75rem;
+  }
+}

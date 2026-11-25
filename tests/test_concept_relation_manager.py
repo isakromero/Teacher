@@ -19,6 +19,7 @@ from teacher.managers import (
     RelationConflictError,
 )
 from teacher.managers.concept_relations import validate_rationale
+from tests.conftest import FOREIGN_KEY_VIOLATION
 
 WHY = "It needs the other one first."
 
@@ -243,7 +244,7 @@ def _insert(session: Session, type: str, from_id: int, to_id: int, low: int, hig
         (("builds_on", 2, 1, 2, 1), "ck_concept_relations_pair"),
         (("builds_on", 1, 2, 1, 3), "ck_concept_relations_pair"),
         (("parent_of", 1, 2, 1, 2), "ck_concept_relations_type"),
-        (("builds_on", 1, 99, 1, 99), "FOREIGN KEY"),
+        (("builds_on", 1, 99, 1, 99), FOREIGN_KEY_VIOLATION),
     ],
 )
 def test_database_checks(
@@ -253,12 +254,18 @@ def test_database_checks(
         _insert(session, *row)
 
 
+# The UNIQUE over (low_id, high_id), as SQLite and Postgres name it.
+PAIR_UNIQUE = (
+    r"UNIQUE constraint failed: concept_relations\.low_id|uq_concept_relations_low_id_high_id"
+)
+
+
 def test_database_allows_one_relation_per_unordered_pair(
     session: Session, abcd: tuple[Concept, ...]
 ) -> None:
     _insert(session, "builds_on", 1, 2, 1, 2)
     for row in [("builds_on", 2, 1, 1, 2), ("relates_to", 1, 2, 1, 2)]:
-        with pytest.raises(IntegrityError, match="UNIQUE constraint failed: concept_relations.low_id"):
+        with pytest.raises(IntegrityError, match=PAIR_UNIQUE):
             with session.begin_nested():
                 _insert(session, *row)
     _insert(session, "builds_on", 3, 1, 1, 3)  # another pair is fine
@@ -266,7 +273,7 @@ def test_database_allows_one_relation_per_unordered_pair(
 
 
 def test_relation_check_origin_constraint(session: Session, abcd: tuple[Concept, ...]) -> None:
-    with pytest.raises(IntegrityError, match="ck_concept_relations_origin"):
+    with pytest.raises(IntegrityError, match="ck_concept_relations_origin"), session.begin_nested():
         session.execute(
             text(
                 "INSERT INTO concept_relations (type, from_id, to_id, low_id, high_id, rationale, "

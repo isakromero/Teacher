@@ -1,6 +1,10 @@
 // Tutor side chat on a ready study page (artifact.js) or lab (lab.js): a side bar on wide
-// screens, an overlay panel opened by a floating "Tutor" button on narrow ones. The reader can
-// chat with the tutor or ask the tutor to check their understanding; on a study page they can
+// screens, an overlay panel opened by a floating "Tutor" button on narrow ones (the whole screen
+// on a phone, sized to window.visualViewport so that an on-screen keyboard does not cover the
+// composer; the floating button tucks away while the page is scrolled down, and opening the
+// panel on a touch screen focuses the message list, not the composer, so that no keyboard
+// covers the conversation; Enter, which sends, is labelled "send" on that keyboard). The reader
+// can chat with the tutor or ask the tutor to check their understanding; on a study page they can
 // also select text in a block and attach it ("Ask about this") as a quoted reference. Replies
 // stream over SSE from a POST (fetch + reader).
 //
@@ -28,8 +32,10 @@
 
 import { ApiError, api, describeError, detailText, seg } from "./api.js";
 import { renderBlock } from "./blocks/index.js";
+import { refreshThreadCost, renderThreadCost, replyCost } from "./cost.js";
 import { byId, h, prefersReducedMotion, setChildren } from "./dom.js";
 import { renderMarkdown } from "./markdown.js";
+import { mountScrollHints } from "./scroll_hints.js";
 import {
   MAX_MESSAGE_CHARS,
   MAX_REFERENCE_CHARS,
@@ -50,6 +56,9 @@ const threadKey = (slug) => `teacher.tutor.thread.${slug}`;
 const RENDER_MS = 80; // re-render the streaming markdown at most this often
 const FLASH_MS = 1800;
 const PINNED_SLACK_PX = 48;
+const TUCK_SLACK_PX = 8; // scrolling less than this does not move the floating button
+const TUCK_AFTER_PX = 160; // the button stays out near the top of the page...
+const UNTUCK_NEAR_END_PX = 120; // ...and near its end
 const STALL_MS = 1500; // a streaming reply this quiet is shown as still being worked on
 const STREAM_EVENTS = new Set(["user_message", "delta", "block", "done", "error"]);
 const BLOCK_NAMES = {
@@ -255,6 +264,7 @@ export function mountChat(artifact, options = {}) {
   const beforeSend = options.beforeSend || null;
 
   const wide = window.matchMedia(WIDE_QUERY);
+  const touch = window.matchMedia("(pointer: coarse)");
   let collapsed = storage.get(COLLAPSED_KEY) === "1";
   let overlayOpen = false;
   let threadId = parseId(storage.get(threadKey(slug)));
@@ -288,10 +298,40 @@ export function mountChat(artifact, options = {}) {
     openButton.setAttribute("aria-expanded", String(open));
     toggleButton.textContent = isWide() ? "Hide" : "Close";
     toggleButton.setAttribute("aria-label", isWide() ? "Hide the tutor side bar" : "Close the tutor");
+    openButton.classList.remove("is-tucked");
+    fitOverlay();
     if (open) {
       updateOffset();
       autoGrow();
+      stickToBottom(); // a thread loaded while the panel was closed was never scrolled
     }
+  }
+
+  // The overlay spans the visual viewport (app.css reads these properties), which shrinks and
+  // moves when an on-screen keyboard opens. Without the API the stylesheet's 100dvh applies.
+  const viewport = window.visualViewport || null;
+  function fitOverlay() {
+    if (!viewport || isWide() || panel.hidden) {
+      panel.style.removeProperty("--tutor-vv-top");
+      panel.style.removeProperty("--tutor-vv-height");
+      return;
+    }
+    panel.style.setProperty("--tutor-vv-top", `${Math.round(viewport.offsetTop)}px`);
+    panel.style.setProperty("--tutor-vv-height", `${Math.round(viewport.height)}px`);
+    stickToBottom();
+  }
+
+  // Narrow screens: the floating button tucks away while the page scrolls down (it would sit on
+  // the text being read) and comes back on scrolling up, near the top and near the end.
+  let lastScrollY = window.scrollY;
+  function tuckOpenButton() {
+    const y = window.scrollY;
+    const dy = y - lastScrollY;
+    if (Math.abs(dy) < TUCK_SLACK_PX) return;
+    lastScrollY = y;
+    const nearEnd =
+      y + window.innerHeight >= document.documentElement.scrollHeight - UNTUCK_NEAR_END_PX;
+    openButton.classList.toggle("is-tucked", !isWide() && dy > 0 && y > TUCK_AFTER_PX && !nearEnd);
   }
 
   function setOpen(open, { focus = true } = {}) {
@@ -302,7 +342,11 @@ export function mountChat(artifact, options = {}) {
       overlayOpen = open;
     }
     paintLayout();
-    if (focus) (open ? input : openButton).focus({ preventScroll: true });
+    if (!focus) return;
+    // On a touch screen focusing the composer would raise the on-screen keyboard over half of
+    // the conversation the reader opened the panel to see: the message list takes focus instead.
+    const target = open ? (touch.matches && !isWide() ? list : input) : openButton;
+    target.focus({ preventScroll: true });
   }
 
   // -- small UI pieces -----------------------------------------------------------------------
@@ -519,7 +563,8 @@ export function mountChat(artifact, options = {}) {
       "div",
       { class: "tutor-msg tutor-msg-assistant" },
       h("span", { class: "visually-hidden" }, "Tutor: "),
-      body
+      body,
+      replyCost(msg)
     );
   }
 
@@ -626,6 +671,7 @@ export function mountChat(artifact, options = {}) {
       }
       loading.remove();
       for (const msg of thread.messages) list.append(messageElement(msg));
+      renderThreadCost(panel, thread);
     } catch (err) {
       loading.remove();
       if (err instanceof ApiError && err.status === 404) {
@@ -896,12 +942,14 @@ export function mountChat(artifact, options = {}) {
     } finally {
       setBusy(false);
       paintEmpty();
+      if (userStored) refreshThreadCost(panel, base, usedThread); // a failed reply costs too
     }
   }
 
   function startNewConversation() {
     if (busy) return;
     forgetThread();
+    renderThreadCost(panel, null);
     setChildren(list, emptyState);
     paintEmpty();
     setHint(null);
@@ -946,6 +994,7 @@ export function mountChat(artifact, options = {}) {
     autoGrow();
     if (!hint.hidden && hint.classList.contains("is-error")) setHint(null);
   });
+  input.enterKeyHint = "send"; // Enter sends (above): an on-screen keyboard says so on the key
   newButton.addEventListener("click", startNewConversation);
   toggleButton.addEventListener("click", () => setOpen(false));
   openButton.addEventListener("click", () => setOpen(true));
@@ -1033,12 +1082,18 @@ export function mountChat(artifact, options = {}) {
     paintWidth();
   });
   window.addEventListener("scroll", queueOffset, { passive: true });
+  window.addEventListener("scroll", tuckOpenButton, { passive: true });
+  if (viewport) {
+    viewport.addEventListener("resize", fitOverlay);
+    viewport.addEventListener("scroll", fitOverlay);
+  }
   window.addEventListener("resize", () => {
     queueOffset();
     paintWidth();
   });
 
   if (blocksRoot) setupSelectionButton(blocksRoot, attach);
+  mountScrollHints(list);
 
   layout.classList.add("has-tutor");
   paintRefs();

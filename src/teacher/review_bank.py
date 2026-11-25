@@ -27,7 +27,8 @@ A refusal, a truncated reply, a reply that does not parse and every API failure 
 
 Storing (`build_review_bank`). The build is recorded as a generation run of stage
 `REVIEW_BANK_STAGE` on the artifact (model, tokens, error, and the output file
-`generation/review_bank.json`); a run that fails records why. A successful build replaces the
+`generation/review_bank.json`); a run that fails records why. Its model call is recorded in
+the cost ledger (`teacher.costs`, purpose "review_bank") with the artifact and the run. A successful build replaces the
 page's variants in one transaction; a failed one leaves them as they were (so a page whose
 rebuild failed keeps an older bank, and says so: `bank_status`). A bank never changes or fails
 the page itself: without variants, reviews ask the original questions.
@@ -60,6 +61,7 @@ from sqlalchemy.orm import Session
 from teacher.blocks import is_question_type, validate_block_content
 from teacher.claude_api import default_client, describe_api_error
 from teacher.config import Settings
+from teacher.costs import cost_scope, record_reply, require_meter
 from teacher.db.engine import session_scope
 from teacher.db.models import Artifact, ArtifactBlock, GenerationRun, ReviewVariant, utcnow
 from teacher.labs import LAB_KIND
@@ -468,6 +470,7 @@ class ClaudeReviewBankBuilder:
     def build(self, questions: Sequence[BankQuestion], *, model: str) -> BankBuild:
         request = self.request(questions, model=model)
         client = self._get_client()
+        meter = require_meter(what="review bank call to Claude")
         try:
             with client.messages.stream(**request) as stream:
                 message = stream.get_final_message()
@@ -475,6 +478,7 @@ class ClaudeReviewBankBuilder:
             raise _unavailable(
                 describe_api_error(exc, model=model, timeout=self.timeout, with_api_message=True)
             ) from exc
+        record_reply(message, meter=meter, purpose="review_bank", step="review_bank")
         tokens = _tokens(message)
         text = self._text(message, tokens)
         try:
@@ -617,11 +621,15 @@ def build_review_bank(
             runs.fail(latest, "interrupted: the build never finished (the server probably "
                       "stopped while it ran)")
         run_id = runs.start(artifact, stage=REVIEW_BANK_STAGE, model=model).id
+        artifact_id = artifact.id
         path = ArtifactManager(session, settings).dir(artifact) / OUTPUT_DIR / BANK_FILE
     tokens: tuple[int | None, int | None] = (None, None)
     try:
         builder.check_available()
-        result = builder.build(questions, model=model)
+        with cost_scope(
+            settings, purpose="review_bank", artifact_id=artifact_id, generation_run_id=run_id
+        ):
+            result = builder.build(questions, model=model)
         tokens = (result.input_tokens, result.output_tokens)
         _write(path, {
             **result.record,

@@ -1,0 +1,19 @@
+{
+  "question": "Suppose a company has a large, routine task of wiring dozens of schedules into a balance sheet with exact instructions. Based on the page's findings, what is the sensible model choice?",
+  "options": [
+    "Choose the model with the most turns, since more turns means more verification and accuracy",
+    "Avoid models that recalculate, since recalculation steps tend to lower their final scores",
+    "Always pick the most expensive model, since higher cost reliably reflects higher accuracy on wiring",
+    "Try a cheaper model like Gemini first, since one routine wiring case saw it match the costlier Opus"
+  ],
+  "private": {
+    "correct_index": 3,
+    "explanation": "The authors suggest reserving expensive reasoning models for ambiguous or novel tasks, and using cheaper ones for routine wiring. This rests on one case study, so treat it as a starting point rather than a rule.",
+    "option_explanations": [
+      "GPT-5.5 used fewer turns yet scored near the top; turn count is not the measure.",
+      "Recalculation lets models self-verify; weaker models skip it and score worse on perturbation.",
+      "The cost-performance frontier shows cost does not track accuracy; Opus is dominated.",
+      "Correct: the balance-sheet case study showed Gemini 100% at $3.00 versus Opus 95% at $83.05."
+    ]
+  }
+}

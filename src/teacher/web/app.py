@@ -10,24 +10,34 @@ registry of concepts with a relating run in progress), `review_bank_builder` (wr
 queue's question variants, `teacher.review_bank`; None when the app has none),
 `reference_extractor` (lists each source's references, `teacher.reference_extraction`; None
 when the app has none) and `clock` (the
-review queue's time: a callable returning naive UTC). On startup the lifespan migrates the
+review queue's time: a callable returning naive UTC) and `password_gate` (the sign-in gate,
+`teacher.web.auth`, or None when the app has no password). Every request runs under a base cost
+meter (`CostMeterMiddleware`, `teacher.costs`), so every API call the app makes is recorded. On startup the lifespan logs
+which database it uses (the provider's `describe()`, never a password), migrates the
 database to head and marks any
 artifact left in status `generating` as `failed` (a generation job cannot survive a restart).
 """
 
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI
+from sqlalchemy import select
 
 from teacher.config import ModelSettings, Settings
+from teacher.costs import Meter, metering
 from teacher.db.engine import session_scope
 from teacher.db.migrate import upgrade_to_head
+from teacher.db.providers import create_db_provider
+from teacher.db.models import GenerationRun
 from teacher.managers import ArtifactManager
+from teacher.managers.generation_runs import GenerationRunManager
 from teacher.url_sources import UrlFetcher
+from teacher.web.auth import install_password_gate
 from teacher.web.errors import install_error_handlers
 from teacher.web.routers import (
     artifacts,
@@ -46,6 +56,25 @@ from teacher.web.routers import (
 )
 
 
+class CostMeterMiddleware:
+    """Runs every HTTP request (its endpoint, a streamed body and its background tasks) under a
+    base cost meter for `settings` with no links (`teacher.costs`), so an API call made without
+    a closer scope is still recorded. A pure ASGI middleware: the meter is a context variable
+    set in the request's task, which the threadpool running a sync endpoint, a streamed body
+    or a background task copies."""
+
+    def __init__(self, app: Any, *, settings: Settings) -> None:
+        self.app = app
+        self.settings = settings
+
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        with metering(Meter.for_settings(self.settings)):
+            await self.app(scope, receive, send)
+
+
 def fail_interrupted_generations(settings: Settings) -> list[str]:
     """Mark every artifact still `generating` as `failed`; return their slugs."""
     with session_scope(settings) as session:
@@ -54,6 +83,22 @@ def fail_interrupted_generations(settings: Settings) -> list[str]:
         for artifact in stale:
             manager.mark_failed(artifact)
         return [artifact.slug for artifact in stale]
+
+
+INTERRUPTED_RUN_ERROR = "interrupted: the server stopped while this stage ran"
+
+
+def fail_interrupted_runs(settings: Settings) -> int:
+    """Mark every generation run still `running` as `failed`; return how many. Runs execute
+    inside the server process, so at startup none can be running: one left `running` (for
+    example a page's review variants, built after the page is ready) would otherwise be shown
+    as in progress until it is old enough to count as stale."""
+    with session_scope(settings) as session:
+        runs = GenerationRunManager(session, settings)
+        stale = list(session.scalars(select(GenerationRun).where(GenerationRun.status == "running")))
+        for run in stale:
+            runs.fail(run, INTERRUPTED_RUN_ERROR)
+        return len(stale)
 
 
 def create_app(
@@ -76,6 +121,7 @@ def create_app(
     reference_extractor: Any = None,
     clock: Any = None,
     max_attempts: int = 2,
+    password: str | None = None,
 ) -> FastAPI:
     """Build the API app. `settings` defaults to `Settings.from_env()`.
 
@@ -131,6 +177,10 @@ def create_app(
     makes no reference call unless an extractor is passed (e.g.
     `teacher.reference_extraction.StubReferenceExtractor()` offline); without one, extraction
     is reported as unavailable and every source's state stays "never run".
+
+    `password` puts the password gate in front of every route (`teacher.web.auth`; `teacher
+    serve` passes `$TEACHER_PASSWORD`). None (the default): no gate, the app is open. `GET
+    /healthz` (an empty 200) exists either way.
     """
     if settings is None:
         settings = Settings.from_env()
@@ -255,8 +305,13 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        # uvicorn's server logger, which prints its own startup lines at INFO.
+        logging.getLogger("uvicorn.error").info(
+            "Database: %s", create_db_provider(app.state.settings).describe()
+        )
         upgrade_to_head(app.state.settings)
         fail_interrupted_generations(app.state.settings)
+        fail_interrupted_runs(app.state.settings)
         yield
 
     app = FastAPI(title="Teacher", version="0.1.0", lifespan=lifespan)
@@ -282,6 +337,7 @@ def create_app(
     app.state.clock = clock
 
     install_error_handlers(app)
+    app.add_middleware(CostMeterMiddleware, settings=settings)
 
     @app.get("/api/health", tags=["meta"])
     def health() -> dict[str, str]:
@@ -310,7 +366,10 @@ def create_app(
     app.include_router(review.page_router)
     # --- end pages ---
 
+    # Last, so its middleware is the outermost: a request without a session goes no further.
+    install_password_gate(app, password)
+
     return app
 
 
-__all__ = ["create_app", "fail_interrupted_generations"]
+__all__ = ["create_app", "fail_interrupted_generations", "fail_interrupted_runs"]

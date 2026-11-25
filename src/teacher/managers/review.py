@@ -58,6 +58,7 @@ from sqlalchemy.orm import Session, aliased
 
 from teacher.blocks import private_content, public_content
 from teacher.config import Settings
+from teacher.costs import cost_scope
 from teacher.db.models import (
     REVIEW_QUESTION_TYPES,
     Artifact,
@@ -431,7 +432,8 @@ class ReviewManager:
         grader = graders.get(view.block.type)
         if grader is None:
             raise ValueError(f"no grader for block type {view.block.type!r}")
-        result = grader.grade(content, graded)
+        with cost_scope(self.settings, purpose="grading", artifact_id=view.block.artifact_id):
+            result = grader.grade(content, graded)
         schedule = reschedule(item.interval_days, result.verdict, now)
         attempt = ReviewAttempt(
             item_id=item.id,

@@ -1,0 +1,4 @@
+{
+  "markdown": "## Overall results\n\nOn the held-out set (75 manipulation, 9 synthesis, 36 interrogation), overall scores were GPT-5.5 49.6, Opus 4.7 49.2, Gemini 45.9, Sonnet 42.9 and Grok 31.3. Non-completions count as zero.\n\nSynthesis was easiest (Opus 66.7). The authors suggest this is because building from scratch is more flexible than modifying a workbook whose formulas, layouts and references impose brittle integration constraints. Manipulation, the bulk of real finance work, is harder. The paper contrasts this with SWE-bench Pro, which the same models are rapidly saturating.",
+  "role": "explanation"
+}

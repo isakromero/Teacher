@@ -39,7 +39,7 @@ def upgrade() -> None:
     sa.Column('definition', sa.Text(), nullable=False),
     sa.Column('aliases', sa.JSON(), server_default='[]', nullable=False),
     sa.CheckConstraint("kind IN ('acronym', 'term', 'symbol')", name=op.f('ck_glossary_terms_kind')),
-    sa.CheckConstraint('json_valid(aliases)', name=op.f('ck_glossary_terms_aliases_json')),
+    sa.CheckConstraint('json_valid(aliases)', name=op.f('ck_glossary_terms_aliases_json')).ddl_if(dialect='sqlite'),
     sa.ForeignKeyConstraint(['artifact_id'], ['artifacts.id'], name=op.f('fk_glossary_terms_artifact_id_artifacts'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_glossary_terms')),
     sa.UniqueConstraint('artifact_id', 'position', name=op.f('uq_glossary_terms_artifact_id_position')),

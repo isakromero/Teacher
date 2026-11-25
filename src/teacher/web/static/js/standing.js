@@ -141,30 +141,34 @@ export function standingTable(data, { all = false } = {}) {
       "No study-page block is tagged with a concept yet, so there is no standing to show. New study pages are tagged when they are made; `teacher concepts tag-blocks --all` tags the existing ones."
     );
   }
+  // On phones the history page shows each row as a card, each cell under its column's name
+  // (`data-label`, history.css); the explicit roles keep it a table for screen readers when its
+  // display changes.
+  const cell = (label, value) => h("td", { role: "cell", "data-label": label }, value);
   return [
     h("p", { class: "muted small" }, thresholdsText(data.thresholds)),
     h(
       "table",
-      { class: "history-table standing-table" },
+      { class: "history-table standing-table", role: "table" },
       h(
         "thead",
-        {},
-        h("tr", {}, ["Concept", "Standing", "Answered", "First time", "Attempts", "Time on it", "Last studied"].map((t) => h("th", { scope: "col" }, t)))
+        { role: "rowgroup" },
+        h("tr", { role: "row" }, ["Concept", "Standing", "Answered", "First time", "Attempts", "Time on it", "Last studied"].map((t) => h("th", { scope: "col", role: "columnheader" }, t)))
       ),
       h(
         "tbody",
-        {},
+        { role: "rowgroup" },
         rows.map((c) =>
           h(
             "tr",
-            {},
-            h("th", { scope: "row" }, conceptLink(c.concept)),
-            h("td", {}, statusChip(c.status)),
-            h("td", {}, `${c.questions_answered} of ${c.questions}`),
-            h("td", {}, c.questions_answered ? `${c.first_attempt_passed} (${rateText(c.first_attempt_pass_rate)})` : "-"),
-            h("td", {}, String(c.attempts)),
-            h("td", {}, formatDuration(c.active_seconds)),
-            h("td", {}, c.last_studied_at ? formatDate(c.last_studied_at) : "-")
+            { role: "row" },
+            h("th", { scope: "row", role: "rowheader" }, conceptLink(c.concept)),
+            cell("Standing", statusChip(c.status)),
+            cell("Answered", `${c.questions_answered} of ${c.questions}`),
+            cell("First time", c.questions_answered ? `${c.first_attempt_passed} (${rateText(c.first_attempt_pass_rate)})` : "-"),
+            cell("Attempts", String(c.attempts)),
+            cell("Time on it", formatDuration(c.active_seconds)),
+            cell("Last studied", c.last_studied_at ? formatDate(c.last_studied_at) : "-")
           )
         )
       )

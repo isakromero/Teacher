@@ -1,0 +1,19 @@
+{
+  "question": "Which pair of findings best explains why average scores sit below 50% even when many formulas look right?",
+  "options": [
+    "Models pass most perturbation checks but far fewer formula checks, since they rarely recalculate",
+    "Models pass most output-validation checks but far fewer static formula and presentation checks",
+    "Models pass most checks on manipulation but far fewer on synthesis, which pulls averages down",
+    "Models pass most static formula checks but far fewer output-validation and perturbation checks"
+  ],
+  "private": {
+    "correct_index": 3,
+    "explanation": "The sharpest finding is the static-versus-dynamic gap, which the summed score hides.",
+    "option_explanations": [
+      "Perturbation had the lowest pass rates (15-37%), and recalculation was common among stronger models.",
+      "Output Validation pass rates (20-48%) were lower than Formula Correctness (50-68%), not higher.",
+      "Manipulation scores were lower than synthesis, so this reverses the finding.",
+      "Correct: a roughly 30-point gap separates static from dynamic criteria."
+    ]
+  }
+}

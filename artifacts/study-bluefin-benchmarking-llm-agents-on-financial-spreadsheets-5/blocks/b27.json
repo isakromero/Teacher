@@ -1,0 +1,17 @@
+{
+  "prompt": "Explain why BLUEFIN uses an agentic LLM judge with tools rather than simple automated tests, and what evidence the authors give that it can be trusted.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "Many criteria, like usability, presentation and how outputs respond to changed inputs, are hard to check programmatically, so the judge inspects the workbook with tools and runs perturbation tests. The authors validated it against expert labels on 384 criteria, getting Krippendorff's alpha 0.826 and macro-F1 0.839.",
+    "rubric": [
+      {
+        "criterion": "Explains that the criteria are not easily programmatically verifiable and need inspection or perturbation",
+        "required": true
+      },
+      {
+        "criterion": "Cites validation against expert labels (alpha 0.826 or macro-F1 0.839)",
+        "required": true
+      }
+    ]
+  }
+}

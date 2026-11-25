@@ -1,0 +1,1116 @@
+{
+  "tagger": "claude-block-concepts-v1",
+  "trigger": "generation",
+  "model": "claude-sonnet-5-5",
+  "page": null,
+  "calls": [
+    {
+      "step": "block concepts",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChNz9mq2Vfus5FHkzDPoM",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 17598,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 3379
+      }
+    }
+  ],
+  "concepts": [
+    {
+      "id": 32,
+      "slug": "agentic-evaluation-harness",
+      "name": "agentic evaluation harness",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 104,
+      "slug": "benchmark-data-leakage-and-held-out-sets",
+      "name": "Benchmark data leakage and held-out sets",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 100,
+      "slug": "benchmark-for-llm-agents",
+      "name": "Benchmark for LLM agents",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 40,
+      "slug": "circular-reference-in-spreadsheets",
+      "name": "circular reference in spreadsheets",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 37,
+      "slug": "discounted-cash-flow-valuation",
+      "name": "discounted cash flow valuation",
+      "in_source": "assumes",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "assumes"
+        ]
+      ]
+    },
+    {
+      "id": 103,
+      "slug": "financial-modeling-conventions",
+      "name": "Financial modeling conventions",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 101,
+      "slug": "hardcoding-versus-formula-driven-modeling",
+      "name": "Hardcoding versus formula-driven modeling",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 29,
+      "slug": "inter-annotator-agreement",
+      "name": "inter-annotator agreement",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 30,
+      "slug": "krippendorff-s-alpha",
+      "name": "Krippendorff's alpha",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 102,
+      "slug": "leveraged-buyout-and-debt-schedule-modeling",
+      "name": "Leveraged buyout and debt schedule modeling",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 18,
+      "slug": "llm-as-a-judge",
+      "name": "LLM-as-a-judge",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 31,
+      "slug": "macro-averaged-f1-score",
+      "name": "macro-averaged F1 score",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 97,
+      "slug": "micro-averaging-versus-macro-averaging",
+      "name": "micro-averaging versus macro-averaging",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 42,
+      "slug": "minimal-elicitation-prompting",
+      "name": "minimal-elicitation prompting",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 43,
+      "slug": "pareto-frontier-of-cost-and-performance",
+      "name": "Pareto frontier of cost and performance",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 34,
+      "slug": "perturbation-testing",
+      "name": "perturbation testing",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 47,
+      "slug": "programmatic-verifiability",
+      "name": "programmatic verifiability",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 28,
+      "slug": "rubric-based-evaluation",
+      "name": "rubric-based evaluation",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 44,
+      "slug": "sandboxed-code-execution",
+      "name": "sandboxed code execution",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 94,
+      "slug": "spreadsheet-formula-dependency",
+      "name": "spreadsheet formula dependency",
+      "in_source": "uses",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "uses"
+        ]
+      ]
+    },
+    {
+      "id": 38,
+      "slug": "weighted-average-cost-of-capital",
+      "name": "weighted average cost of capital",
+      "in_source": "assumes",
+      "sources": [
+        [
+          "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+          "assumes"
+        ]
+      ]
+    }
+  ],
+  "output": {
+    "counts": {
+      "blocks": 25,
+      "questions": 7,
+      "tags": 81,
+      "main": 47,
+      "incidental": 34,
+      "concepts_used": 20,
+      "concepts_offered": 21,
+      "blocks_untagged": 0,
+      "questions_with_main": 7
+    },
+    "blocks": [
+      {
+        "number": 1,
+        "key": "b01",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Introduces BLUEFIN as a benchmark for LLM agents on finance spreadsheet tasks."
+          },
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Mentions that models break when an input changes."
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "key": "b02",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Motivates the benchmark and contrasts it with existing spreadsheet benchmarks."
+          },
+          {
+            "id": 47,
+            "slug": "programmatic-verifiability",
+            "name": "programmatic verifiability",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Explains that much of finance model quality cannot be checked by automatic tests, unlike code."
+          },
+          {
+            "id": 103,
+            "slug": "financial-modeling-conventions",
+            "name": "Financial modeling conventions",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Notes that financial modeling has its own conventions."
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "key": "b03",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 47,
+            "slug": "programmatic-verifiability",
+            "name": "programmatic verifiability",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Tests that usability and convention criteria resist automatic tests."
+          },
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Asks why few benchmarks exist."
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "key": "b04",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes the task families and task counts of the benchmark."
+          },
+          {
+            "id": 104,
+            "slug": "benchmark-data-leakage-and-held-out-sets",
+            "name": "Benchmark data leakage and held-out sets",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Notes that most tasks are held out and only a few are public."
+          },
+          {
+            "id": 37,
+            "slug": "discounted-cash-flow-valuation",
+            "name": "discounted cash flow valuation",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "The synthesis example is a DCF valuation."
+          },
+          {
+            "id": 38,
+            "slug": "weighted-average-cost-of-capital",
+            "name": "weighted average cost of capital",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "The DCF example includes a WACC tab."
+          },
+          {
+            "id": 102,
+            "slug": "leveraged-buyout-and-debt-schedule-modeling",
+            "name": "Leveraged buyout and debt schedule modeling",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "The manipulation example adds a debt schedule."
+          },
+          {
+            "id": 94,
+            "slug": "spreadsheet-formula-dependency",
+            "name": "spreadsheet formula dependency",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Interrogation requires tracing changes through chains of dependent cells."
+          }
+        ]
+      },
+      {
+        "number": 5,
+        "key": "b05",
+        "type": "figure",
+        "concepts": [
+          {
+            "id": 28,
+            "slug": "rubric-based-evaluation",
+            "name": "rubric-based evaluation",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Shows sample rubric criteria for each task family."
+          },
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Highlights the perturbation items that recompute after an input change."
+          },
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Figure presents the benchmark's tasks."
+          }
+        ]
+      },
+      {
+        "number": 6,
+        "key": "b06",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes how the benchmark tasks were authored."
+          },
+          {
+            "id": 28,
+            "slug": "rubric-based-evaluation",
+            "name": "rubric-based evaluation",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Rubric criteria were drafted by a model and refined by humans."
+          },
+          {
+            "id": 104,
+            "slug": "benchmark-data-leakage-and-held-out-sets",
+            "name": "Benchmark data leakage and held-out sets",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "The private set exists to prevent leakage into training data."
+          },
+          {
+            "id": 94,
+            "slug": "spreadsheet-formula-dependency",
+            "name": "spreadsheet formula dependency",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Interrogation questions use multi-step calculation chains."
+          }
+        ]
+      },
+      {
+        "number": 7,
+        "key": "b07",
+        "type": "prediction",
+        "concepts": [
+          {
+            "id": 28,
+            "slug": "rubric-based-evaluation",
+            "name": "rubric-based evaluation",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Concerns the design of rubric sections and why structure was dropped."
+          }
+        ]
+      },
+      {
+        "number": 8,
+        "key": "b08",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 28,
+            "slug": "rubric-based-evaluation",
+            "name": "rubric-based evaluation",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Defines the six binary weighted rubric categories."
+          },
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Explains the Perturbation category."
+          },
+          {
+            "id": 101,
+            "slug": "hardcoding-versus-formula-driven-modeling",
+            "name": "Hardcoding versus formula-driven modeling",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Model Integration penalizes hardcoding instead of linking."
+          },
+          {
+            "id": 94,
+            "slug": "spreadsheet-formula-dependency",
+            "name": "spreadsheet formula dependency",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Integration requires linking values to their source cells."
+          },
+          {
+            "id": 103,
+            "slug": "financial-modeling-conventions",
+            "name": "Financial modeling conventions",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Presentation covers conventions such as blue-font inputs."
+          }
+        ]
+      },
+      {
+        "number": 9,
+        "key": "b09",
+        "type": "blurb",
+        "concepts": [
+          {
+            "id": 101,
+            "slug": "hardcoding-versus-formula-driven-modeling",
+            "name": "Hardcoding versus formula-driven modeling",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Re-typing a value instead of linking it is hardcoding."
+          },
+          {
+            "id": 94,
+            "slug": "spreadsheet-formula-dependency",
+            "name": "spreadsheet formula dependency",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Requires linking to the source cell so changes propagate."
+          },
+          {
+            "id": 28,
+            "slug": "rubric-based-evaluation",
+            "name": "rubric-based evaluation",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Asks which rubric category flags the defect."
+          },
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "A perturbation check would also fail."
+          }
+        ]
+      },
+      {
+        "number": 10,
+        "key": "b10",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 32,
+            "slug": "agentic-evaluation-harness",
+            "name": "agentic evaluation harness",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes the 20-tool harness the agent runs in."
+          },
+          {
+            "id": 42,
+            "slug": "minimal-elicitation-prompting",
+            "name": "minimal-elicitation prompting",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes the deliberately minimal 61-word agent system prompt."
+          },
+          {
+            "id": 18,
+            "slug": "llm-as-a-judge",
+            "name": "LLM-as-a-judge",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes the agentic LLM judge applying the rubric."
+          },
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Describes the five-step perturbation check."
+          },
+          {
+            "id": 44,
+            "slug": "sandboxed-code-execution",
+            "name": "sandboxed code execution",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "The execute_python tool runs in a sandbox with no file or network access."
+          },
+          {
+            "id": 29,
+            "slug": "inter-annotator-agreement",
+            "name": "inter-annotator agreement",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Expert annotators' agreement is used to validate the judge."
+          },
+          {
+            "id": 30,
+            "slug": "krippendorff-s-alpha",
+            "name": "Krippendorff's alpha",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Reports Krippendorff's alpha of 0.826."
+          },
+          {
+            "id": 31,
+            "slug": "macro-averaged-f1-score",
+            "name": "macro-averaged F1 score",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Compares judges by macro-F1."
+          }
+        ]
+      },
+      {
+        "number": 11,
+        "key": "b11",
+        "type": "prediction",
+        "concepts": [
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Perturbation check exposes a hardcode that a value check misses."
+          },
+          {
+            "id": 101,
+            "slug": "hardcoding-versus-formula-driven-modeling",
+            "name": "Hardcoding versus formula-driven modeling",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "The scenario is a hardcoded constant in a Profit cell."
+          },
+          {
+            "id": 18,
+            "slug": "llm-as-a-judge",
+            "name": "LLM-as-a-judge",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "The judge runs the checks."
+          }
+        ]
+      },
+      {
+        "number": 12,
+        "key": "b12",
+        "type": "interactable",
+        "concepts": [
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Widget runs the perturbation check on three builds."
+          },
+          {
+            "id": 101,
+            "slug": "hardcoding-versus-formula-driven-modeling",
+            "name": "Hardcoding versus formula-driven modeling",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Compares the hardcoded cell with the formula-driven one."
+          },
+          {
+            "id": 94,
+            "slug": "spreadsheet-formula-dependency",
+            "name": "spreadsheet formula dependency",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Profit depends on Revenue and Cost via formulas."
+          }
+        ]
+      },
+      {
+        "number": 13,
+        "key": "b13",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 42,
+            "slug": "minimal-elicitation-prompting",
+            "name": "minimal-elicitation prompting",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Minimal agent prompt measures raw capability."
+          },
+          {
+            "id": 18,
+            "slug": "llm-as-a-judge",
+            "name": "LLM-as-a-judge",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "The judge's rich prompt lets it act as an expert rater."
+          },
+          {
+            "id": 32,
+            "slug": "agentic-evaluation-harness",
+            "name": "agentic evaluation harness",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Agent and judge use the same tool harness."
+          }
+        ]
+      },
+      {
+        "number": 14,
+        "key": "b14",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Reports headline benchmark results across models and task types."
+          },
+          {
+            "id": 104,
+            "slug": "benchmark-data-leakage-and-held-out-sets",
+            "name": "Benchmark data leakage and held-out sets",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Uses the held-out set versus a small public run."
+          }
+        ]
+      },
+      {
+        "number": 15,
+        "key": "b15",
+        "type": "chart",
+        "concepts": [
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Chart shows benchmark scores by task type and model."
+          }
+        ]
+      },
+      {
+        "number": 16,
+        "key": "b16",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Perturbation failures arise from hardcodes and non-converging structures."
+          },
+          {
+            "id": 101,
+            "slug": "hardcoding-versus-formula-driven-modeling",
+            "name": "Hardcoding versus formula-driven modeling",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Hardcoded intermediates cause failures."
+          },
+          {
+            "id": 40,
+            "slug": "circular-reference-in-spreadsheets",
+            "name": "circular reference in spreadsheets",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Circular structures that never converge cause failures."
+          },
+          {
+            "id": 28,
+            "slug": "rubric-based-evaluation",
+            "name": "rubric-based evaluation",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Analyzes pass rates by rubric category."
+          },
+          {
+            "id": 37,
+            "slug": "discounted-cash-flow-valuation",
+            "name": "discounted cash flow valuation",
+            "in_source": "assumes",
+            "role": "incidental",
+            "rationale": "DCF discounting timing errors are listed."
+          }
+        ]
+      },
+      {
+        "number": 17,
+        "key": "b17",
+        "type": "figure",
+        "concepts": [
+          {
+            "id": 28,
+            "slug": "rubric-based-evaluation",
+            "name": "rubric-based evaluation",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Shows per-category rubric pass rates."
+          },
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Perturbation is among the weakest categories."
+          }
+        ]
+      },
+      {
+        "number": 18,
+        "key": "b18",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 28,
+            "slug": "rubric-based-evaluation",
+            "name": "rubric-based evaluation",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Tests how penalty criteria in the Pitfalls category behave."
+          }
+        ]
+      },
+      {
+        "number": 19,
+        "key": "b19",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 43,
+            "slug": "pareto-frontier-of-cost-and-performance",
+            "name": "Pareto frontier of cost and performance",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Explains the cost-performance Pareto frontier and dominated models."
+          },
+          {
+            "id": 32,
+            "slug": "agentic-evaluation-harness",
+            "name": "agentic evaluation harness",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Discusses agent tool use habits such as execute_python and recalc_workbook."
+          },
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Links recalculation habits to Perturbation scores."
+          }
+        ]
+      },
+      {
+        "number": 20,
+        "key": "b20",
+        "type": "blurb",
+        "concepts": [
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Requires explaining how the perturbation check relies on recalculation."
+          },
+          {
+            "id": 32,
+            "slug": "agentic-evaluation-harness",
+            "name": "agentic evaluation harness",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Concerns the recalc_workbook tool."
+          }
+        ]
+      },
+      {
+        "number": 21,
+        "key": "b21",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 94,
+            "slug": "spreadsheet-formula-dependency",
+            "name": "spreadsheet formula dependency",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Failures involve linking to wrong cells and off-by-one row references."
+          },
+          {
+            "id": 101,
+            "slug": "hardcoding-versus-formula-driven-modeling",
+            "name": "Hardcoding versus formula-driven modeling",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Gemini linked EBITDA to a hardcoded input."
+          },
+          {
+            "id": 40,
+            "slug": "circular-reference-in-spreadsheets",
+            "name": "circular reference in spreadsheets",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Opus built a partially circular revolver formula."
+          },
+          {
+            "id": 102,
+            "slug": "leveraged-buyout-and-debt-schedule-modeling",
+            "name": "Leveraged buyout and debt schedule modeling",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Revolver borrowings and cash flow relate to debt modeling."
+          },
+          {
+            "id": 43,
+            "slug": "pareto-frontier-of-cost-and-performance",
+            "name": "Pareto frontier of cost and performance",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Cost comparison between models."
+          }
+        ]
+      },
+      {
+        "number": 22,
+        "key": "b22",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 32,
+            "slug": "agentic-evaluation-harness",
+            "name": "agentic evaluation harness",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "The limitations discuss the uniform minimal harness."
+          },
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Discusses the benchmark's limits and aims."
+          }
+        ]
+      },
+      {
+        "number": 23,
+        "key": "b23",
+        "type": "prose",
+        "concepts": [
+          {
+            "id": 18,
+            "slug": "llm-as-a-judge",
+            "name": "LLM-as-a-judge",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Critiques possible self-preference bias of the LLM judge."
+          },
+          {
+            "id": 29,
+            "slug": "inter-annotator-agreement",
+            "name": "inter-annotator agreement",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Mentions judge agreement with experts."
+          },
+          {
+            "id": 31,
+            "slug": "macro-averaged-f1-score",
+            "name": "macro-averaged F1 score",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Cites the macro-F1 of 0.839."
+          },
+          {
+            "id": 32,
+            "slug": "agentic-evaluation-harness",
+            "name": "agentic evaluation harness",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Notes the fixed harness limitation."
+          },
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Critiques the benchmark's reporting."
+          }
+        ]
+      },
+      {
+        "number": 24,
+        "key": "b24",
+        "type": "multiple_choice",
+        "concepts": [
+          {
+            "id": 34,
+            "slug": "perturbation-testing",
+            "name": "perturbation testing",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "A value-only check misses hardcodes that only perturbation reveals."
+          },
+          {
+            "id": 101,
+            "slug": "hardcoding-versus-formula-driven-modeling",
+            "name": "Hardcoding versus formula-driven modeling",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "The correct option is hardcoded totals matching today's values."
+          },
+          {
+            "id": 28,
+            "slug": "rubric-based-evaluation",
+            "name": "rubric-based evaluation",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Concerns the grading design."
+          }
+        ]
+      },
+      {
+        "number": 25,
+        "key": "b25",
+        "type": "blurb",
+        "concepts": [
+          {
+            "id": 94,
+            "slug": "spreadsheet-formula-dependency",
+            "name": "spreadsheet formula dependency",
+            "in_source": "uses",
+            "role": "main",
+            "rationale": "Manipulation requires integrating with existing references and links."
+          },
+          {
+            "id": 101,
+            "slug": "hardcoding-versus-formula-driven-modeling",
+            "name": "Hardcoding versus formula-driven modeling",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Evidence may include hardcoded links."
+          },
+          {
+            "id": 100,
+            "slug": "benchmark-for-llm-agents",
+            "name": "Benchmark for LLM agents",
+            "in_source": "uses",
+            "role": "incidental",
+            "rationale": "Concerns the benchmark's task families."
+          }
+        ]
+      }
+    ],
+    "tokens": {
+      "input": 17598,
+      "output": 3379
+    }
+  }
+}

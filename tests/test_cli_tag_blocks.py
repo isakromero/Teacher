@@ -10,7 +10,6 @@ import pytest
 
 from teacher import cli
 from teacher.block_tagging import BlockTagger
-from teacher.config import ENV_HOME
 from teacher.db.engine import session_scope
 from teacher.managers import ArtifactBlockManager, ArtifactManager, BlockConceptManager
 
@@ -25,10 +24,10 @@ def tagging(fake: Any, blocks: dict[int, list[tuple[int, str, str]]], tokens: in
 
 
 @pytest.fixture
-def home(tag_library: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
+def home(tag_library: Any, settings_env: Any) -> Any:
     """$TEACHER_HOME at the tag library, with a second ready page `second` (2 blocks)."""
     lib = tag_library
-    monkeypatch.setenv(ENV_HOME, str(lib.settings.root))
+    settings_env(lib.settings)
     with session_scope(lib.settings) as session:
         artifacts = ArtifactManager(session, lib.settings)
         source = artifacts.sources(artifacts.get_by_slug(lib.page))[0][0]
@@ -98,7 +97,7 @@ def test_tag_all_stops_at_the_first_error_and_resumes(
 ) -> None:
     lib = home
     bad = tagging(fake_anthropic, {1: [(999, "main", "No such concept.")], 2: []}, tokens=70)
-    use(monkeypatch, fake_anthropic(first_page(lib, fake_anthropic), bad))
+    use(monkeypatch, fake_anthropic(first_page(lib, fake_anthropic), bad, bad))
     assert cli.main(["concepts", "tag-blocks", "--all"]) == 1
     captured = capsys.readouterr()
     assert ("2 study page(s) to tag; 0 tagged before skipped; 1 not ready (failed or "
@@ -107,7 +106,7 @@ def test_tag_all_stops_at_the_first_error_and_resumes(
     assert ("Stopped at 'second' (2 of 2); the tags of the 1 page(s) before it are kept. Run it "
             "again to continue.") in captured.err
     assert "concept id 999 is not one of the page's concepts" in captured.err
-    assert "(the call used 70 input / 50 output tokens)" in captured.err
+    assert "(the 2 call(s) used 140 input / 100 output tokens)" in captured.err
     assert tags(lib, "study-paper") and tags(lib, "second") == []
 
     a = lib.concepts["attention"]

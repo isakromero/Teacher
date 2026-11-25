@@ -1,17 +1,26 @@
 """Concept search: the five match tiers, their order, the trigram index and its upkeep.
 
 Pure helpers (`teacher.concept_search`) first, then `ConceptManager.search_hits` against a small
-library of real concept names, then index sync, drift and missing-feature errors.
+library of real concept names, then index sync, drift and missing-feature errors. Everything
+runs on the test database of the run (SQLite, or Postgres with TEACHER_TEST_DB=postgres), with
+the same expectations: the two backends (`teacher.db.search`) must agree. At the end: the
+Postgres backend's own parts (FTS5's tokenizer and bm25 in Python, checked against this
+SQLite's FTS5 on every run), its Postgres-only failure modes, and a parity test that runs the
+same queries on a SQLite and a Postgres database and compares the hits exactly.
 """
 
 from __future__ import annotations
 
+import math
+import random
 import sqlite3
+from fractions import Fraction
+from pathlib import Path
 from typing import Any
 
 import pytest
 from sqlalchemy import text
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import DBAPIError, OperationalError
 from sqlalchemy.orm import Session
 
 from teacher.concept_search import (
@@ -28,8 +37,13 @@ from teacher.concept_search import (
     words,
 )
 from teacher.config import Settings
+from teacher.db import fts
+from teacher.db.engine import dispose_engine, session_scope
 from teacher.db.fts import TRIGRAM_SLOTS, ConceptSearchUnavailableError
+from teacher.db.migrate import upgrade_to_head
 from teacher.db.models import Concept
+from teacher.db.search import _unicode61_data as unicode61_data
+from teacher.db.search import postgres, unicode61
 from teacher.managers import (
     ConceptManager,
     ConceptRelationManager,
@@ -592,9 +606,10 @@ def test_check_reports_and_rebuild_repairs_trigram_drift(
 
 
 def test_missing_trigram_table_is_a_clear_error_and_rolls_back(
-    concepts: ConceptManager, session: Session
+    concepts: ConceptManager, session: Session, test_db: str
 ) -> None:
     session.execute(text("DROP TABLE concept_trigram"))
+    session.commit()
     missing = "concept_trigram trigram table is missing"
     with pytest.raises(ConceptSearchUnavailableError, match=missing):
         concepts.create("Attention", "S.", "paper")
@@ -607,13 +622,19 @@ def test_missing_trigram_table_is_a_clear_error_and_rolls_back(
         "INSERT INTO concept_search (rowid, name, aliases, summary) "
         "VALUES (1, 'Attention', '', 'S.')"
     ))
+    if test_db == "postgres":  # the row's word
+        session.execute(text("INSERT INTO concept_search_tokens VALUES (1, 0, 0, 'attention')"))
+    session.commit()
+    assert concepts.search("attention", kinds={"exact", "word"}) == concepts.list()
     for query in ("attention", "tention", "atention"):
         with pytest.raises(ConceptSearchUnavailableError, match="upgrade_to_head"):
             concepts.search(query)
+        session.rollback()  # on Postgres a failed statement ends the transaction
     with pytest.raises(ConceptSearchUnavailableError):
         concepts.check()
 
 
+@pytest.mark.sqlite_only("SQLite's FTS5 trigram tokenizer")
 def test_missing_trigram_tokenizer_at_use_is_a_clear_error(
     concepts: ConceptManager, session: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -637,3 +658,298 @@ def test_missing_trigram_tokenizer_at_use_is_a_clear_error(
         concepts.rebuild_search_index()
     # tiers that do not use the trigram index still work: nothing silently replaces it
     assert [c.slug for c in concepts.search("attention", kinds={"exact", "word"})] == ["attention"]
+
+
+# --- the Postgres backend's parts, checked against this SQLite's FTS5 ----------------------
+
+
+def test_unicode61_tables_match_this_sqlite() -> None:
+    """The tokenizer's tables are what this SQLite's FTS5 does with every code point."""
+    connection = sqlite3.connect(":memory:")
+    try:
+        ranges, folds = unicode61.probe_fts5(connection)
+    finally:
+        connection.close()
+    assert unicode61.render_tables(ranges, folds) == (
+        unicode61_data.SEPARATOR_RANGES.strip(),
+        unicode61_data.FOLDS.strip(),
+    ), (
+        f"FTS5's unicode61 tokenizer in SQLite {sqlite3.sqlite_version} differs from the tables "
+        f"probed from SQLite {unicode61_data.SQLITE_VERSION}: regenerate them with "
+        "`python -m teacher.db.search.unicode61 src/teacher/db/search/_unicode61_data.py`"
+    )
+
+
+def _fts5_tokens(connection: sqlite3.Connection, value: str) -> list[str]:
+    connection.execute("DELETE FROM t")
+    connection.execute("INSERT INTO t (rowid, x) VALUES (1, ?)", (value,))
+    return [term for (term,) in connection.execute("SELECT term FROM v ORDER BY offset")]
+
+
+def test_unicode61_tokenizer_matches_fts5() -> None:
+    connection = sqlite3.connect(":memory:")
+    connection.execute(
+        "CREATE VIRTUAL TABLE t USING fts5(x, tokenize = 'unicode61 remove_diacritics 2')"
+    )
+    connection.execute("CREATE VIRTUAL TABLE v USING fts5vocab(t, 'instance')")
+    rng = random.Random(7)
+    pool = (
+        list("abcXYZ019 -_.,'\"\n\t()*:") + [chr(c) for c in range(0xC0, 0x250)]
+        + [chr(c) for c in range(0x300, 0x370)] + list("αβΓΔάἀ∇ε①ßﬁİǅ😀中文한‍॑ि")
+    )
+    samples = [name for _, name, _, _ in LIBRARY] + [s for *_, aliases in LIBRARY for s in aliases]
+    samples += ["", " ", "́", "é", "a" * 40000, "é" * 20000]
+    samples += ["".join(rng.choice(pool) for _ in range(rng.randint(0, 30))) for _ in range(2000)]
+    for value in samples:
+        assert list(unicode61.tokens(value)) == _fts5_tokens(connection, value), value
+    connection.close()
+    assert unicode61.tokenize("k-NN, Café\nβ-VAE") == [
+        ("k", 0), ("nn", 2), ("cafe", 6), ("β", 11), ("vae", 13)
+    ]
+
+
+def _unfused_bm25(freqs: list[float], idfs: list[float], size: int, avgdl: float) -> float:
+    score = 0.0
+    for f, idf in zip(freqs, idfs, strict=True):
+        score += idf * ((f * 2.2) / (f + 1.2 * (1 - 0.75 + 0.75 * size / avgdl)))
+    return -1.0 * score
+
+
+def test_bm25_is_fts5s() -> None:
+    """`postgres.bm25` and `postgres.idf` give FTS5's bm25(t, 10, 5, 1) for every row of a
+    random corpus: bit for bit when this SQLite build fuses multiply-adds as the backend does
+    (clang/arm64 builds), else the unfused formula bit for bit and ours within rounding."""
+    connection = sqlite3.connect(":memory:")
+    connection.execute("CREATE VIRTUAL TABLE t USING fts5(a, b, c)")
+    rng = random.Random(3)
+    vocabulary = [f"w{i}" for i in range(10)]
+    docs = {}
+    for rowid in range(1, 300):
+        cols = [[rng.choice(vocabulary) for _ in range(rng.randint(0, 8))] for _ in range(3)]
+        docs[rowid] = cols
+        connection.execute(
+            "INSERT INTO t (rowid, a, b, c) VALUES (?, ?, ?, ?)",
+            (rowid, *(" ".join(col) for col in cols)),
+        )
+    avgdl = float(sum(len(c) for d in docs.values() for c in d)) / float(len(docs))
+    ours, unfused, theirs = [], [], []
+    for _ in range(200):
+        query = rng.sample(vocabulary, rng.randint(1, 3))
+        idfs = [
+            postgres.idf(len(docs), sum(1 for d in docs.values() if any(w in c for c in d)))
+            for w in query
+        ]
+        for rowid, rank in connection.execute(
+            "SELECT rowid, bm25(t, 10.0, 5.0, 1.0) FROM t WHERE t MATCH ?",
+            (" ".join(f'"{w}"' for w in query),),
+        ):
+            cols = docs[rowid]
+            freqs = [sum(wt * c.count(w) for wt, c in zip((10.0, 5.0, 1.0), cols)) for w in query]
+            size = sum(len(c) for c in cols)
+            ours.append(postgres.bm25(freqs, idfs, size, avgdl))
+            unfused.append(_unfused_bm25(freqs, idfs, size, avgdl))
+            theirs.append(rank)
+    connection.close()
+    assert len(theirs) > 5000
+    if ours == theirs:
+        return
+    assert unfused == theirs, "FTS5's bm25 is neither the fused nor the unfused formula"
+    assert all(math.isclose(a, b, rel_tol=1e-14) for a, b in zip(ours, theirs, strict=True))
+
+
+def test_fma_is_exact() -> None:
+    rng = random.Random(0)
+    for _ in range(20000):
+        a, b, c = (rng.uniform(-50, 50) * 10 ** rng.randint(-6, 6) for _ in range(3))
+        assert postgres.fma(a, b, c) == float(Fraction(a) * Fraction(b) + Fraction(c))
+
+
+class _FakeConnection:
+    """Answers require_pg_trgm's queries: whether pg_trgm is installed, offered, and whether
+    there is an `extensions` schema; CREATE EXTENSION raises `create_error` if set."""
+
+    def __init__(self, *, installed: str | None, offered: bool, extensions_schema: bool,
+                 create_error: Exception | None = None) -> None:
+        self.installed, self.offered, self.extensions_schema = installed, offered, extensions_schema
+        self.create_error = create_error
+        self.statements: list[str] = []
+
+    def exec_driver_sql(self, statement: str) -> Any:
+        self.statements.append(statement)
+        if statement.startswith("CREATE EXTENSION"):
+            if self.create_error is not None:
+                raise self.create_error
+            self.installed = "extensions" if "WITH SCHEMA extensions" in statement else "public"
+            return None
+        if "FROM pg_extension" in statement:
+            value: object = self.installed
+        elif "pg_available_extensions" in statement:
+            value = int(self.offered)
+        else:
+            value = int(self.extensions_schema)
+        return type("Result", (), {"scalar": staticmethod(lambda: value)})()
+
+
+def test_require_pg_trgm() -> None:
+    assert fts.require_pg_trgm(
+        _FakeConnection(installed="public", offered=True, extensions_schema=True)
+    ) == "public"  # an installed pg_trgm is used where it is
+    supabase = _FakeConnection(installed=None, offered=True, extensions_schema=True)
+    assert fts.require_pg_trgm(supabase) == "extensions"
+    assert "CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA extensions" in supabase.statements
+    plain = _FakeConnection(installed=None, offered=True, extensions_schema=False)
+    assert fts.require_pg_trgm(plain) == "public"
+    assert "CREATE EXTENSION IF NOT EXISTS pg_trgm" in plain.statements
+    with pytest.raises(ConceptSearchUnavailableError, match="does not offer the pg_trgm"):
+        fts.require_pg_trgm(_FakeConnection(installed=None, offered=False, extensions_schema=True))
+    denied = DBAPIError(
+        "CREATE EXTENSION", {}, Exception("permission denied to create extension \"pg_trgm\"")
+    )
+    with pytest.raises(
+        ConceptSearchUnavailableError,
+        match=r"could not install the pg_trgm extension \(permission denied.*CREATE privilege",
+    ):
+        fts.require_pg_trgm(
+            _FakeConnection(
+                installed=None, offered=True, extensions_schema=True, create_error=denied
+            )
+        )
+
+
+def test_words_are_fts5s_tokens_and_aliases_are_one_column(
+    concepts: ConceptManager, session: Session, test_db: str
+) -> None:
+    concept = concepts.create("k-NN Café", "Ångström's R1-Zero, β-VAE.", "paper",
+                              aliases=["ε-greedy", "AB"], slug="knn-cafe")
+    if test_db == "postgres":  # the words the Postgres backend stores
+        rows = session.execute(
+            text("SELECT col, pos, token FROM concept_search_tokens WHERE rowid = :r "
+                 "ORDER BY col, pos"), {"r": concept.id}
+        ).all()
+        assert [tuple(row) for row in rows] == [
+            (0, 0, "k"), (0, 1, "nn"), (0, 2, "cafe"),
+            (1, 0, "ab"), (1, 1, "ε"), (1, 2, "greedy"),  # aliases in alias order
+            (2, 0, "angstrom"), (2, 1, "s"), (2, 2, "r1"), (2, 3, "zero"), (2, 4, "β"),
+            (2, 5, "vae"),
+        ]
+    # a phrase may run across two aliases (one column, as FTS5 has it); the first alias
+    # holding a matched word is named
+    assert brief(concepts.search_hits("ab-ε", kinds={"word"})) == [
+        ("knn-cafe", "word", "alias", "AB")
+    ]
+    assert brief(concepts.search_hits("greedy ab", kinds={"word"})) == [
+        ("knn-cafe", "word", "alias", "AB")
+    ]
+    assert brief(concepts.search_hits("s-r1", kinds={"word"})) == [
+        ("knn-cafe", "word", "summary", None)
+    ]
+    assert concepts.search("cafe-angstrom", kinds={"word", "prefix"}) == []  # not one column
+
+
+# --- Postgres only --------------------------------------------------------------------------
+
+
+@pytest.mark.postgres_only("the Postgres trigram indexes")
+def test_missing_trigram_index_is_a_clear_error(
+    concepts: ConceptManager, library: dict[str, Concept], session: Session
+) -> None:
+    session.execute(text("DROP INDEX ix_concept_trigram_compact"))
+    session.commit()
+    for kinds in ({"word"}, {"substring"}, {"fuzzy"}):
+        with pytest.raises(
+            ConceptSearchUnavailableError,
+            match=r"ix_concept_trigram_compact are missing.*pg_trgm.*CREATE INDEX "
+            r"ix_concept_trigram_compact ON concept_trigram USING gin \(compact gin_trgm_ops\)",
+        ):
+            concepts.search("dient", kinds=kinds)
+        session.rollback()
+    session.execute(
+        text("CREATE INDEX ix_concept_trigram_compact ON concept_trigram USING gin "
+             "(compact gin_trgm_ops)")
+    )
+    session.commit()
+    assert concepts.search("dient", kinds={"substring"}) == [
+        library["policy-gradient"], library["gradient-descent"]
+    ]
+
+
+@pytest.mark.postgres_only("the Postgres word table")
+def test_check_reports_word_table_drift(
+    concepts: ConceptManager, library: dict[str, Concept], session: Session
+) -> None:
+    pg, knn = library["policy-gradient"], library["k-nn"]
+    session.execute(text("DELETE FROM concept_search_tokens WHERE rowid = :r AND pos = 0"),
+                    {"r": pg.id})
+    session.execute(text("UPDATE concept_search_tokens SET token = 'x' WHERE rowid = :r"),
+                    {"r": knn.id})
+    session.execute(text("INSERT INTO concept_search_tokens VALUES (99, 0, 0, 'ghost')"))
+    detail = "concept_search row differs from the concept"
+    assert concepts.check() == [
+        Issue("stale_search_row", "k-nn", detail),
+        Issue("stale_search_row", "policy-gradient", detail),
+        Issue("orphan_search_row", "#99", "concept_search row 99 has no concept"),
+    ]
+    with pytest.raises(IntegrityCheckError, match="has no concept_search row"):
+        concepts.search("ghost", kinds={"word"})
+    assert concepts.rebuild_search_index() == len(LIBRARY)
+    assert concepts.check() == []
+    assert concepts.search("ghost") == []
+
+
+# --- parity: the same queries on SQLite and on Postgres ------------------------------------
+
+
+PARITY_QUERIES = [
+    "attention", "transformer", "policy gradient", "gradient", "grad", "dient", "transfomer",
+    "learning", "a", "ion", "k-nn", "rl", "st", "k nearest", "steepest descent", "former",
+    "reinforcment learning", "graident", "cafe", "café effect", "β", "ε", "∇", "nabla",
+    "r1", "r1zero", "betavae", "vae", "the", "a sequence", "polcy gradent", "atention",
+    '"steepest descent"', "grad*", "-gradient", "NOT gradient", "model", "weights",
+    "learned weights", "partial", "lines", "x" * 50, "pre", "pretrainig", "neighbour",
+    "variational", "autoencoder", "kl", "image patches", "first target", "trained",
+]
+
+
+@pytest.mark.postgres_only("compares this Postgres database with a SQLite one")
+def test_sqlite_and_postgres_give_the_same_hits(
+    concepts: ConceptManager, library: dict[str, Concept], session: Session, tmp_path: Path
+) -> None:
+    """Every tier on its own and all together, with the same scores (bm25 bit for bit when
+    the local SQLite fuses multiply-adds; see test_bm25_is_fts5s)."""
+    extra = [  # more rows, so that bm25's corpus statistics matter
+        ("Pre-training", "Train a model on unlabeled data first.", ["pretraining"]),
+        ("Fine-tuning", "Adapt a pre-trained model with learned weights.", ["finetuning"]),
+        ("Variational autoencoder", "An autoencoder with a KL term.", ["VAE"]),
+        ("Learning rate", "How far a gradient step goes.", ["step size", "LR"]),
+        ("Self-attention", "Attention of a sequence to itself.", ["intra-attention"]),
+        ("Gradient clipping", "Cap the gradient norm.", []),
+        ("Natural gradient", "Gradient in the Fisher metric; learning faster.", ["NG"]),
+    ]
+    for name, summary, aliases in extra:
+        concepts.create(name, summary, "paper", aliases=aliases)
+    session.commit()
+    sqlite_settings = Settings(root=tmp_path / "sqlite")
+    upgrade_to_head(sqlite_settings)
+    try:
+        with session_scope(sqlite_settings) as sqlite_session:
+            sqlite_concepts = ConceptManager(sqlite_session, sqlite_settings)
+            for concept in sorted(concepts.list(), key=lambda c: c.id):
+                created = sqlite_concepts.create(
+                    concept.name, concept.summary, "paper",
+                    aliases=[a.alias for a in concept.aliases], slug=concept.slug,
+                )
+                assert created.id == concept.id
+            sqlite_session.flush()
+            compared = 0
+            for query in PARITY_QUERIES:
+                for kinds in [KINDS, *({kind} for kind in KINDS)]:
+                    want = sqlite_concepts.search_hits(query, limit=100, kinds=kinds)
+                    got = concepts.search_hits(query, limit=100, kinds=kinds)
+                    assert brief(got) == brief(want), (query, kinds)
+                    for a, b in zip(got, want, strict=True):
+                        assert math.isclose(a.score, b.score, rel_tol=1e-14), (query, a, b)
+                    compared += len(want)
+            assert compared > 300
+            assert sqlite_concepts.check() == [] and concepts.check() == []
+    finally:
+        dispose_engine(sqlite_settings)

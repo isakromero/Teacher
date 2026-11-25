@@ -342,26 +342,30 @@ async function loadTotals() {
     setChildren(totalsEl, h("p", { class: "muted" }, "Nothing studied yet."));
     return;
   }
+  // On phones history.css shows each row as a card, each cell under its column's name
+  // (`data-label`); the explicit roles keep it a table for screen readers when its display
+  // changes.
+  const cell = (label, value) => h("td", { role: "cell", "data-label": label }, value);
   setChildren(
     totalsEl,
     h(
       "table",
-      { class: "history-table" },
-      h("thead", {}, h("tr", {}, ["Page", "Time on page", "In its labs", "Sessions", "Answers", "Pass rate", "Last studied"].map((t) => h("th", { scope: "col" }, t)))),
+      { class: "history-table", role: "table" },
+      h("thead", { role: "rowgroup" }, h("tr", { role: "row" }, ["Page", "Time on page", "In its labs", "Sessions", "Answers", "Pass rate", "Last studied"].map((t) => h("th", { scope: "col", role: "columnheader" }, t)))),
       h(
         "tbody",
-        {},
+        { role: "rowgroup" },
         studied.map((r) =>
           h(
             "tr",
-            {},
-            h("th", { scope: "row" }, artifactLink(r.artifact), r.artifact.kind === "lab" ? h("span", { class: "tag tag-lab" }, "Lab") : null),
-            h("td", {}, formatDuration(r.active_seconds)),
-            h("td", {}, r.artifact.kind === "lab" ? "-" : formatDuration(r.lab_seconds)),
-            h("td", {}, String(r.sessions)),
-            h("td", {}, `${r.answers_passed} of ${r.answers} passed`),
-            h("td", {}, r.pass_rate === null ? "-" : `${Math.round(r.pass_rate * 100)}%`),
-            h("td", {}, formatDate(r.last_activity_at))
+            { role: "row" },
+            h("th", { scope: "row", role: "rowheader" }, artifactLink(r.artifact), r.artifact.kind === "lab" ? h("span", { class: "tag tag-lab" }, "Lab") : null),
+            cell("Time on page", formatDuration(r.active_seconds)),
+            cell("In its labs", r.artifact.kind === "lab" ? "-" : formatDuration(r.lab_seconds)),
+            cell("Sessions", String(r.sessions)),
+            cell("Answers", `${r.answers_passed} of ${r.answers} passed`),
+            cell("Pass rate", r.pass_rate === null ? "-" : `${Math.round(r.pass_rate * 100)}%`),
+            cell("Last studied", formatDate(r.last_activity_at))
           )
         )
       )

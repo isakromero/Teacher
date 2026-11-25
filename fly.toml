@@ -1,0 +1,45 @@
+# Fly.io configuration of the hosted Teacher (see README "Hosting"; the image is the Dockerfile).
+# Checked against https://docs.fly.io/reference/configuration (2026-11-25).
+#
+# No secrets here: ANTHROPIC_API_KEY, OPENAI_API_KEY, SUPABASE_DB_URL and TEACHER_PASSWORD are
+# set with `fly secrets set`. Without TEACHER_PASSWORD the server refuses to start.
+
+app = "airistotle"
+# Ashburn, Virginia: next to the Supabase project (us-east-1), which matters more than being
+# next to the reader, since a page load makes many database queries.
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  TEACHER_DB = "supabase"
+  TEACHER_HOME = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # One machine, always running: study page generation runs in background threads inside the
+  # server process, so a machine stopped (or suspended) while idle would kill a run half way.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "20s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+# The files (sources, generated pages, derived data) live on this volume until a storage
+# provider exists. A volume belongs to one machine, so the app runs on exactly one.
+[[mounts]]
+  source = "teacher_data"
+  destination = "/data"
+  initial_size = "3gb"
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

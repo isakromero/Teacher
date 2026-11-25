@@ -1,0 +1,21 @@
+{
+  "prompt": "Suppose a model builds a revenue forecast where the 2027 revenue cell is the typed number 10,342 instead of a formula. Which rubric category would catch this when the judge changes a driving input, and why?",
+  "min_words": 25,
+  "private": {
+    "model_answer": "A Perturbation criterion would catch it: when the judge changes a driving input and recalculates, the hardcoded revenue won't update, so the check fails. Formula Correctness or Model Integration could also fail, since the value is not computed or linked from its source, though Output Validation might still pass today.",
+    "rubric": [
+      {
+        "criterion": "Identifies Perturbation as catching the hardcode because changing an input does not change the output",
+        "required": true
+      },
+      {
+        "criterion": "Notes that Output Validation alone could pass because the current number is right",
+        "required": false
+      },
+      {
+        "criterion": "Mentions Formula Correctness or Model Integration as also failing",
+        "required": false
+      }
+    ]
+  }
+}

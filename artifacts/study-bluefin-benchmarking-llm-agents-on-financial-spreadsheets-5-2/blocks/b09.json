@@ -1,0 +1,12 @@
+{
+  "prompt": "Imagine an agent computes an intermediate value correctly but types it into the cell as a plain number instead of a formula. The final output therefore shows the right figure. Which check will catch this?",
+  "options": [
+    "Neither, because the delivered numbers all match the reference within tolerance",
+    "Perturbation, because the output will not move when an upstream input is changed",
+    "Output Validation, because the judge sees that the output is not formula-driven"
+  ],
+  "private": {
+    "correct_index": 1,
+    "resolution": "Output Validation only compares the current value with the reference, so a correct typed-in number passes it. Perturbation changes an input and recalculates, and the hardcoded cell then stops the change from reaching the output. Try it in the widget below."
+  }
+}

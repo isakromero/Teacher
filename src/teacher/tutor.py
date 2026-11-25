@@ -38,6 +38,11 @@ earlier thinking blocks valid):
    next user turn in an `exercise_results` section. A turn of kind `exercise_answer` carries
    only that (the page sends it right after the reader answers).
 
+Costs: every round's model call is recorded in the cost ledger (`teacher.costs`) through the
+meter `Tutor.stream` is given (the chat router's: the thread, then the stored reply). The
+document breakpoint has the 1-hour TTL and the history's the 5-minute one, and the ledger
+prices each share of the cache writes at its own rate (`usage.cache_creation`).
+
 Block content is only ever obtained through `teacher.reading.split_content` for blocks that
 `teacher.reading.reading_state` reports visible, so locked blocks and the private content of
 uncleared gates cannot reach a request.
@@ -111,6 +116,7 @@ from teacher.claude_generator import (
     exercise_problems,
 )
 from teacher.config import DEFAULT_TUTOR_MODEL, Settings
+from teacher.costs import Meter, record_reply, require_meter
 from teacher.db.models import Artifact, ChatMessage, LabRunRecord
 from teacher.labs import LAB_KIND, LabFile, LabSpec
 from teacher.managers import (
@@ -1442,21 +1448,30 @@ class Tutor:
     # -- streaming ------------------------------------------------------------------------
 
     def stream(
-        self, request: dict[str, Any]
+        self, request: dict[str, Any], *, meter: Meter | None = None
     ) -> Iterator[str | PresentedBlock | TutorReply]:
         """Yield the reply's text deltas and each `PresentedBlock` as its tool call is
         accepted, then a `TutorReply`. Runs the tool loop (see the module doc). Raises
         TutorError (API or connection error, refusal, truncation, empty reply, a tool loop
         that does not finish); everything already yielded is then incomplete and must be
-        discarded."""
+        discarded.
+
+        Each round's model call is recorded in the cost ledger (`teacher.costs`, purpose
+        "tutor", step "tutor reply") through `meter`, else the current meter, as soon as it
+        returns, so a reply that fails later still has its calls recorded. The meter is passed
+        explicitly by the web app because a threadpool iterates this generator one step at a
+        time, so a context variable set around it would not reach every step."""
         client = self._get_client()
+        meter = require_meter(meter, what="tutor call to Claude")
         exchange: list[dict[str, Any]] = []  # the API messages this reply adds
         text = ""
         blocks: list[PresentedBlock] = []
         usage = {key: 0 for key in _USAGE_KEYS}
         for _round in range(MAX_ROUNDS):
             call = {**request, "messages": [*request["messages"], *exchange]}
-            message = yield from self._call(client, call, lead="\n\n" if text.strip() else "")
+            message = yield from self._call(
+                client, call, lead="\n\n" if text.strip() else "", meter=meter
+            )
             self._check_stop(message)
             for key, value in _usage(message).items():
                 usage[key] += value
@@ -1526,9 +1541,11 @@ class Tutor:
             blocks=tuple(blocks),
         )
 
-    def _call(self, client: Any, request: dict[str, Any], *, lead: str) -> Iterator[str]:
+    def _call(
+        self, client: Any, request: dict[str, Any], *, lead: str, meter: Meter
+    ) -> Iterator[str]:
         """One streamed model call: yields its text deltas (`lead` first, if there are any)
-        and returns the final message."""
+        and returns the final message, recorded through `meter`."""
         try:
             with client.messages.stream(**request) as stream:
                 for delta in stream.text_stream:
@@ -1548,6 +1565,7 @@ class Tutor:
                 "The tutor's reply failed: the connection to the Anthropic API was interrupted "
                 f"({exc.__class__.__name__}). Try again."
             ) from exc
+        record_reply(message, meter=meter, purpose="tutor", step="tutor reply")
         return message
 
     @staticmethod

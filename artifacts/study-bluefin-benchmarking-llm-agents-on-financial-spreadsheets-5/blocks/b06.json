@@ -1,0 +1,12 @@
+{
+  "prompt": "Before we see how the dataset was made: the rubric criteria for each task were first drafted by an AI model (Claude Opus 4.6). What do you expect happened next?",
+  "options": [
+    "The criteria were discarded and replaced by automatically generated unit tests",
+    "The drafted criteria were used as-is, since the judge only needs consistency",
+    "Human reviewers validated and refined the drafted criteria"
+  ],
+  "private": {
+    "correct_index": 2,
+    "resolution": "The AI drafted candidates, but reviewers were tasked with validating and refining them. The next section explains the wider pipeline of human involvement."
+  }
+}

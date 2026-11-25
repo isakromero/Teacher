@@ -251,13 +251,13 @@ mark {
 .skip-link {
   position: absolute;
   left: -9999px;
+  padding: 0.7rem var(--space-3);
 }
 .skip-link:focus {
   left: var(--space-3);
   top: var(--space-2);
   z-index: 40;
   background: var(--surface);
-  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
 }
@@ -346,23 +346,87 @@ mark {
 .nav-add {
   margin-left: auto;
 }
+/* "Local SQLite": shown only when the app runs on the local database, never on Supabase. Small
+   and quiet; it shrinks (with an ellipsis) rather than push the header sideways on a phone. */
+.db-badge {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .nav-add[aria-current="page"] {
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
 }
+/* Touch screens at any width (a phone on its side, a tablet): 44px-tall links, the current
+   one's bar on the header's bottom edge. */
+@media (pointer: coarse) {
+  .site-nav .brand,
+  .site-nav-links a {
+    min-height: 2.75rem;
+  }
+  .site-nav-links a {
+    display: inline-flex;
+    align-items: center;
+  }
+  .site-nav-links a[aria-current="page"]::after {
+    bottom: calc(-1 * var(--space-2));
+  }
+}
 
-@media (max-width: 40rem) {
+/* Phones: two rows. The brand and "Add" on top; under them the five links share the full width
+   like a tab bar (each at least 44px tall, the current one underlined against the header's
+   bottom edge). Nothing scrolls sideways or hides: if the links ever need more room than one
+   row (a 320px screen with large text), they wrap onto a second row. Up to 48rem, not 40rem:
+   below about 760px the one-row header no longer fits and "Add a source" would drop onto a row
+   of its own. */
+@media (max-width: 48rem) {
   .site-nav {
-    gap: var(--space-1) var(--space-3);
+    gap: 0 var(--space-3);
+    padding-bottom: 0;
+  }
+  .site-nav .brand {
+    min-height: 2.75rem;
   }
   .site-nav-links {
     order: 3;
     flex-basis: 100%;
-    margin: 0 calc(-1 * var(--space-2));
-    overflow-x: auto;
-    scrollbar-width: none;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: var(--space-1) calc(-1 * var(--space-2)) 0;
+  }
+  .site-nav-links a {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0 0.3rem;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    font-size: 0.9375rem;
   }
   .site-nav-links a[aria-current="page"]::after {
+    left: 0.3rem;
+    right: 0.3rem;
     bottom: 0;
+    height: 3px;
+  }
+  .site-nav-links .nav-count {
+    margin-left: 0.3rem;
+    padding: 0 0.4rem;
+    font-size: 0.8125rem;
+  }
+  .nav-add {
+    min-height: 2.75rem;
+    padding: 0.3rem 0.9rem;
+    font-size: 0.9375rem;
   }
   .nav-add-long {
     position: absolute;
@@ -371,6 +435,21 @@ mark {
     overflow: hidden;
     clip: rect(0 0 0 0);
     white-space: nowrap;
+  }
+}
+/* The narrowest phones (320-359px): a size smaller so the five links still fit on one row. */
+@media (max-width: 22.4375rem) {
+  .site-nav-links a {
+    padding: 0 0.125rem;
+    font-size: 0.875rem;
+  }
+  .site-nav-links a[aria-current="page"]::after {
+    left: 0.125rem;
+    right: 0.125rem;
+  }
+  .site-nav-links .nav-count {
+    margin-left: 0.2rem;
+    padding: 0 0.3rem;
   }
 }
 
@@ -424,6 +503,13 @@ mark {
 }
 .crumbs > a:first-child::before {
   content: "\2190\00a0"; /* a left arrow */
+}
+@media (pointer: coarse) {
+  .crumbs a {
+    display: inline-block;
+    padding: 0.7rem 0.5rem 0.7rem 0;
+    margin: -0.7rem 0;
+  }
 }
 
 .page-error {
@@ -663,6 +749,13 @@ p.status-text:empty {
   background: var(--accent-soft);
   font-weight: 600;
 }
+/* Phones: the two choices one under the other, full width (side by side they wrap unevenly). */
+@media (max-width: 40rem) {
+  .form .source-mode .choice {
+    flex: 1 1 100%;
+    min-height: 3rem;
+  }
+}
 .form .input-row {
   display: flex;
   gap: var(--space-2);
@@ -678,6 +771,13 @@ p.status-text:empty {
 }
 .form .field-check label {
   font-weight: 500;
+}
+/* Touch screens: a checkbox's label (which toggles it) is a 44px-tall target. */
+@media (pointer: coarse) {
+  .form .field-check label {
+    flex: 1 1 auto;
+    padding: 0.6rem 0;
+  }
 }
 label {
   font-weight: 600;
@@ -857,6 +957,30 @@ textarea:disabled {
   font-size: 0.85rem;
   gap: var(--space-1);
 }
+/* Touch screens: every button and text field is at least 44px tall (compact ones too: a
+   finger is no smaller in a dense toolbar); the look is otherwise the same. */
+@media (pointer: coarse) {
+  .button,
+  .button.compact {
+    min-height: 2.75rem;
+  }
+  .button.compact {
+    padding-inline: 0.85rem;
+  }
+  input[type="text"],
+  input[type="search"],
+  input[type="url"],
+  input[type="date"],
+  input[type="number"],
+  input[type="file"],
+  select {
+    min-height: 2.75rem;
+  }
+  input[type="file"]::file-selector-button {
+    min-height: 2.25rem;
+    font-size: 1rem;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .button {
     transition: none;
@@ -916,6 +1040,17 @@ textarea:disabled {
   background: var(--accent-soft);
   border-color: transparent;
 }
+/* Phones and other touch screens: no label smaller than 13px. */
+@media (max-width: 40rem), (pointer: coarse) {
+  .badge,
+  .tag,
+  .badge-kind,
+  .eyebrow,
+  .section-label,
+  .subsection-label {
+    font-size: 0.8125rem;
+  }
+}
 
 /* -- library and source lists ----------------------------------------------------------- */
 
@@ -970,7 +1105,8 @@ textarea:disabled {
   font-weight: 550;
 }
 /* The date and progress on their own line under the title and its badges. */
-.sources .artifact-item > .muted.small {
+.sources .artifact-item > .muted.small,
+#artifact-list .artifact-item > .muted.small {
   display: block;
 }
 .lab-sublist {
@@ -982,6 +1118,42 @@ textarea:disabled {
   border-top: 0;
   padding: 0.15rem 0;
 }
+/* Failed and superseded artifacts, closed by default (artifact_list.js). */
+.source-item .artifact-lists {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+.source-item .artifact-lists > .artifact-list,
+.source-item .artifact-lists > .empty-inline {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.artifact-history {
+  margin-top: var(--space-2);
+}
+.artifact-history > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 0.35rem 0;
+}
+.artifact-history > summary:hover {
+  color: var(--accent);
+}
+.artifact-history > .artifact-list {
+  margin-top: var(--space-1);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--border);
+}
+@media (pointer: coarse) {
+  .artifact-history > summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
 .artifact-item.is-superseded > a {
   color: var(--muted);
 }
@@ -992,6 +1164,47 @@ textarea:disabled {
 }
 .concept-list li {
   padding: 0.2rem 0;
+}
+/* Touch screens: in the library and on a source page each list row is the tap target, not only
+   its link text: the row's link covers the row (its ::after), rows are at least 44px tall, and
+   anything else interactive in a row (a lab nested under its study page, a link in a related
+   source's text) sits above that cover. */
+@media (pointer: coarse) {
+  .sources .artifact-item,
+  #artifact-list .artifact-item,
+  .concept-list li,
+  .related-item {
+    position: relative;
+  }
+  .sources .artifact-item > a::after,
+  #artifact-list .artifact-item > a::after,
+  .concept-list li > a::after,
+  .related-item > a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+  .sources .lab-sublist,
+  #artifact-list .lab-sublist,
+  .related-text a {
+    position: relative;
+    z-index: 1;
+  }
+  .sources .artifact-item,
+  #artifact-list .artifact-item {
+    padding: 0.55rem 0;
+  }
+  .concept-list li {
+    padding: 0.6rem 0;
+  }
+  .concept-list li + li {
+    border-top: 1px solid var(--border);
+  }
+  .source-title a {
+    display: block;
+    padding: 0.45rem 0;
+    margin: -0.45rem 0;
+  }
 }
 .concept-group h3 {
   font-size: 1rem;
@@ -1010,6 +1223,11 @@ textarea:disabled {
 }
 .related-item {
   padding: 0.35rem 0;
+}
+@media (pointer: coarse) {
+  .related-item {
+    padding: 0.55rem 0;
+  }
 }
 .related-item + .related-item {
   border-top: 1px solid var(--border);
@@ -1042,6 +1260,17 @@ textarea:disabled {
 }
 p.filter-status {
   margin: 0;
+}
+/* Phones: the filter box full width, its status under it; the page header's "Add a source"
+   button gives way to the header's own "Add" just above it. */
+@media (max-width: 40rem) {
+  .filter-bar .search-field-compact {
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .page-header-add {
+    display: none;
+  }
 }
 .filter-empty {
   margin-top: var(--space-3);
@@ -1210,7 +1439,7 @@ p.filter-status {
 }
 .progress-label {
   margin: 0.2rem 0 0;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 
@@ -1232,7 +1461,7 @@ p.filter-status {
 }
 .block-sources {
   margin: var(--space-2) 0 0;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 
@@ -1340,6 +1569,22 @@ p.filter-status {
   font-family: var(--font-mono);
 }
 
+/* Wide content that scrolls sideways in its own box (display maths, tables, code, a chart's
+   data table): scroll_hints.js sets data-overflow to the side(s) with more to see, and that edge
+   fades out, so a narrow screen shows there is more. A mask, so it works on any background. */
+[data-overflow="right"] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
+[data-overflow="left"] {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 2.5rem), transparent);
+}
+[data-overflow="both"] {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
+}
+
 /* -- gates ------------------------------------------------------------------------------ */
 
 .gate {
@@ -1364,14 +1609,14 @@ p.filter-status {
 }
 .gate-label {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
 }
 .gate-state {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--muted);
 }
@@ -1408,11 +1653,10 @@ p.filter-status {
   padding: 0;
   min-width: 0;
 }
+/* The label carries the padding, so (almost) the whole row is the hit area, not just its text. */
 .option {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
-  padding: 0.55rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   margin-bottom: var(--space-2);
@@ -1422,13 +1666,24 @@ p.filter-status {
   background: var(--surface-2);
 }
 .option input {
-  margin-top: 0.3rem;
+  flex: none;
+  margin: 0.85rem 0 0 0.75rem;
 }
 .option label {
   font-weight: 400;
   font-size: 1rem;
   flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.75rem 0.55rem var(--space-3);
   cursor: pointer;
+}
+@media (pointer: coarse) {
+  .option input {
+    margin-top: 1.05rem;
+  }
+  .option label {
+    padding-block: 0.75rem;
+  }
 }
 .options:disabled .option {
   opacity: 0.7;
@@ -1643,6 +1898,20 @@ p.filter-status {
 .confidence:disabled .confidence-choice {
   opacity: 0.7;
 }
+/* Touch: the confidence pills and the prediction's "Check" summary are 44px targets. */
+@media (pointer: coarse) {
+  .confidence-choice {
+    min-height: 2.75rem;
+    padding-inline: 0.9rem 1rem;
+  }
+  .prediction-check > summary {
+    padding-block: 0.6rem;
+    margin-block: -0.5rem;
+  }
+  .prediction-check[open] > summary {
+    margin-bottom: 0;
+  }
+}
 /* Each option's explanation, once a multiple-choice question is cleared. */
 .option-explanations {
   list-style: none;
@@ -1676,7 +1945,7 @@ p.filter-status {
 }
 .prose-critique-label {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1813,37 +2082,56 @@ p.filter-status {
   cursor: col-resize;
   user-select: none;
 }
+/* The overlay spans the visible part of the viewport: chat.js sets --tutor-vv-top and
+   --tutor-vv-height from window.visualViewport, which shrinks when an on-screen keyboard opens,
+   so the composer stays above the keyboard. */
 .tutor[data-mode="overlay"] {
   position: fixed;
   z-index: 30;
-  top: 0;
+  top: var(--tutor-vv-top, 0px);
   right: 0;
-  bottom: 0;
+  height: 100vh;
+  height: var(--tutor-vv-height, 100dvh);
   width: min(26rem, 100%);
   border-left: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
+/* Phones: the whole screen, inside the safe areas; the page behind does not scroll. */
 @media (max-width: 600px) {
   .tutor[data-mode="overlay"] {
-    top: auto;
     left: 0;
     width: auto;
-    height: 85vh;
-    height: 85dvh;
     border-left: 0;
-    border-top: 1px solid var(--border-strong);
-    border-radius: 12px 12px 0 0;
+    box-shadow: none;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0
+      env(safe-area-inset-left, 0px);
+  }
+  html:has(.tutor[data-mode="overlay"]:not([hidden])) {
+    overflow: hidden;
   }
 }
 
 .tutor-fab {
   position: fixed;
   z-index: 25;
-  right: var(--space-3);
+  right: calc(var(--space-3) + env(safe-area-inset-right, 0px));
   bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
   border-radius: 999px;
   padding: 0.7rem 1.4rem;
   box-shadow: var(--shadow);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+/* Tucked away while the reader scrolls down (chat.js), so it does not sit on the text being
+   read; it comes back on scrolling up, near the end of the page, or on keyboard focus. */
+.tutor-fab.is-tucked:not(:focus-visible) {
+  transform: translateY(calc(100% + var(--space-3) + env(safe-area-inset-bottom, 0px)));
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tutor-fab {
+    transition: none;
+  }
 }
 
 .tutor-header {
@@ -2051,7 +2339,7 @@ p.filter-status {
 }
 .tutor-keys {
   margin: var(--space-1) 0 0;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 .tutor-actions {
@@ -2064,6 +2352,26 @@ p.filter-status {
 .tutor-actions .button {
   min-height: 2.25rem;
   padding: 0.5rem 0.85rem;
+}
+/* Touch: 16px text in the composer (smaller makes iOS zoom the page on focus), 44px targets,
+   and no keyboard-shortcut line (it stays the textarea's description for screen readers). */
+@media (pointer: coarse) {
+  .tutor-composer textarea {
+    font-size: 1rem;
+  }
+  .tutor-actions .button,
+  .tutor-ref-remove {
+    min-height: 2.75rem;
+  }
+  .tutor-keys {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }
 .tutor-refs {
   list-style: none;
@@ -2099,7 +2407,7 @@ p.filter-status {
 .tutor-ref-remove {
   flex: none;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--muted);
   background: none;
@@ -2366,6 +2674,19 @@ p.filter-status {
     grid-column: 1;
   }
 }
+/* Phones: a study page's (often long) title, and the boxes nested inside a question, a little
+   tighter so the text inside them keeps a readable width. */
+@media (max-width: 480px) {
+  .artifact-header h1 {
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+  .gate-feedback,
+  .gate-details,
+  .gate-revealed {
+    padding: var(--space-3) 0.75rem;
+  }
+}
 
 /* -- interactable blocks (a model-written widget in a sandboxed iframe) ---------------------- */
 
@@ -2381,7 +2702,7 @@ p.filter-status {
 }
 .interactable-label {
   margin: 0 0 var(--space-1);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2480,7 +2801,7 @@ p.filter-status {
 .figure-label {
   display: block;
   margin-bottom: var(--space-1);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2504,9 +2825,14 @@ p.filter-status {
 .figure-source p {
   margin: var(--space-1) 0 0;
 }
+/* The enlarged figure: a dialog that fills most of the screen, a bar (label, zoom, Close) and
+   a scrolling frame holding the image at the size figure_zoom.js sets (it opens at "fit"). */
 .figure-dialog {
-  max-width: 96vw;
-  max-height: 94vh;
+  width: 96vw;
+  max-width: none;
+  height: 94vh;
+  height: 94dvh;
+  max-height: none;
   padding: var(--space-3);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
@@ -2514,10 +2840,18 @@ p.filter-status {
   color: var(--fg);
   box-shadow: var(--shadow);
 }
+.figure-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+html:has(.figure-dialog[open]) {
+  overflow: hidden;
+}
 .figure-dialog::backdrop {
   background: rgba(20, 19, 18, 0.6);
 }
 .figure-dialog-bar {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2526,14 +2860,90 @@ p.filter-status {
 }
 .figure-dialog-title {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-family: var(--font-ui);
   font-weight: 650;
 }
-/* As wide as the screen allows, up to the image's own pixel width (set inline). */
+.figure-dialog-tools {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.figure-zoom {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.figure-zoom-step {
+  min-width: 2.25rem;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.figure-zoom-reset {
+  min-width: 4rem;
+  font-variant-numeric: tabular-nums;
+}
+.figure-dialog-frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-x pan-y; /* one finger scrolls; two fingers pinch (figure_zoom.js) */
+}
+.figure-dialog-frame:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
 .figure-dialog-image {
   display: block;
-  width: calc(96vw - 4rem);
-  height: auto;
+  flex: none;
+  max-width: none;
+  margin: auto; /* centred while it fits, and still scrollable to every edge when it does not */
+  cursor: zoom-in;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.figure-dialog-frame.is-zoomed .figure-dialog-image {
+  cursor: zoom-out;
+}
+.figure-dialog-frame.is-dragging .figure-dialog-image {
+  cursor: grabbing;
+}
+@media (pointer: coarse) {
+  .figure-source summary {
+    padding-block: 0.6rem;
+  }
+  .figure-zoom-step {
+    min-width: 2.75rem;
+  }
+}
+/* Phones: the dialog is the whole screen, inside the safe areas. */
+@media (max-width: 600px) {
+  .figure-dialog {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+      env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    border: 0;
+    border-radius: 0;
+  }
+  .figure-dialog-bar {
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+  .figure-dialog-tools {
+    gap: var(--space-2);
+  }
+  .figure-dialog-frame {
+    border: 0;
+    border-radius: 0;
+  }
 }
 
 /* -- charts (blocks/chart.js) ----------------------------------------------------------- */
@@ -2620,7 +3030,7 @@ p.filter-status {
 }
 
 .chart-axis-label {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.35;
   color: var(--muted);
   overflow-wrap: anywhere;
@@ -2652,7 +3062,7 @@ p.filter-status {
   display: block;
   overflow: visible;
   font-family: var(--font-ui);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
   touch-action: pan-y; /* a horizontal drag scrubs the tooltip; vertical still scrolls */
   -webkit-user-select: none;
@@ -2716,7 +3126,7 @@ p.filter-status {
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   box-shadow: var(--shadow);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   line-height: 1.4;
   pointer-events: none;
   overflow-wrap: anywhere;
@@ -2753,7 +3163,7 @@ p.filter-status {
 }
 .chart-source {
   margin: var(--space-2) 0 0;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--muted);
   overflow-wrap: anywhere;
 }
@@ -2765,6 +3175,12 @@ p.filter-status {
 .chart-data summary {
   cursor: pointer;
   color: var(--muted);
+}
+@media (pointer: coarse) {
+  .chart-data summary {
+    width: fit-content;
+    padding-block: 0.65rem;
+  }
 }
 .chart-table-wrap {
   overflow-x: auto;
@@ -2845,6 +3261,17 @@ p.filter-status {
 .regenerate-confirm .actions {
   margin-bottom: 0;
 }
+/* Touch: the header's "Notes from generating" and the glossary's summary are 44px targets. */
+@media (pointer: coarse) {
+  .stage-notes > summary {
+    padding-block: 0.6rem;
+    margin-block: -0.5rem;
+    cursor: pointer;
+  }
+  .glossary-summary {
+    padding-block: 0.7rem;
+  }
+}
 
 /* -- model choice (generate / regenerate a study page) -- */
 .model-field {
@@ -2857,17 +3284,24 @@ p.filter-status {
 .model-field[hidden] {
   display: none;
 }
+@media (max-width: 40rem) {
+  .model-field {
+    max-width: none;
+  }
+}
 
 /* -- concept graph (/graph) ---------------------------------------------------------------- */
-/* Ported from the context-graph explorer's graph view. Wide screens: the page fills the
-   viewport below the site header, the canvas takes the free height and the inspector sits on
-   its right. Narrow screens: the page scrolls, the inspector is stacked under the canvas. */
+/* Ported from the context-graph explorer's graph view. The page fills the viewport below the
+   site header (it does not scroll, so a swipe on the canvas never fights a page scroll) and the
+   canvas takes the free height. Wide screens: the inspector sits on the canvas's right. Phones
+   (below 700px): the inspector is a bottom sheet over the canvas (.graph-sheet, graph.js).
+   Short screens (a phone on its side): the page scrolls and the graph is one screen tall. */
 
 .page-graph {
   max-width: none;
   padding: var(--space-3);
 }
-@media (min-width: 700px) {
+@media (min-height: 480px) {
   body:has(.page-graph) {
     display: flex;
     flex-direction: column;
@@ -2928,7 +3362,9 @@ p.graph-search-status {
   left: 0;
   right: 0;
   max-height: min(24rem, 60vh);
+  max-height: min(24rem, 60dvh);
   overflow-y: auto;
+  overscroll-behavior: contain;
   margin: 0;
   padding: var(--space-1);
   list-style: none;
@@ -3025,6 +3461,7 @@ p.graph-status {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none; /* a long press on a concept starts a drag, not the iOS menu */
   font-family: var(--font-ui);
 }
 .graph-svg:active {
@@ -3068,6 +3505,43 @@ p.graph-status {
   fill: var(--node-caption);
   pointer-events: none;
 }
+/* Zoomed out (graph_view.js: the captions would be too small to read): no captions in the
+   circles; instead the concepts graph_view.js picks get their name under the circle, at a
+   fixed size on screen (--k is the zoom, so 13px / --k graph units are 13 screen pixels). */
+.node-label {
+  display: none;
+  font-size: calc(13px / var(--k, 1));
+  font-weight: 600;
+  fill: var(--fg);
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: calc(3.5px / var(--k, 1));
+  stroke-linejoin: round;
+}
+.zoomed-out .node-caption {
+  display: none;
+}
+.zoomed-out .node-label.is-shown {
+  display: inline;
+}
+.node-label.is-selected {
+  fill: var(--accent);
+  font-weight: 700;
+}
+.tracing .node-label {
+  opacity: 0.3;
+}
+.tracing .node-label.lit {
+  opacity: 1;
+}
+/* A finger held on a concept long enough to drag it (graph_view.js). */
+.node.is-held .halo {
+  display: inline;
+  stroke: var(--accent);
+  stroke-width: calc(6px / var(--k, 1));
+  opacity: 0.35;
+}
 .node .halo,
 .node .halo-lit {
   fill: none;
@@ -3078,6 +3552,11 @@ p.graph-status {
   stroke: var(--accent);
   stroke-width: 5;
   opacity: 0.5;
+}
+/* zoomed out, the selection ring keeps a size that can be seen (6 screen pixels) */
+.zoomed-out .node.is-selected .halo {
+  stroke-width: calc(6px / var(--k, 1));
+  opacity: 0.7;
 }
 .pin-mark,
 .legend-pin {
@@ -3112,6 +3591,8 @@ p.graph-status {
   fill: none;
   stroke: transparent;
   stroke-width: 12;
+  /* never thinner than 16 screen pixels, so a zoomed-out relation can still be tapped */
+  stroke-width: max(12px, calc(16px / var(--k, 1)));
 }
 .rel.t-different_version_of .rel-line,
 .legend-line.t-different_version_of {
@@ -3173,6 +3654,16 @@ p.graph-status {
 .rel.is-selected .rel-label {
   fill: var(--accent);
 }
+/* zoomed out, relation labels would be specks: only the selected relation's shows, at 13
+   screen pixels (the inspector names the others) */
+.zoomed-out .rel-label {
+  display: none;
+}
+.zoomed-out .rel.is-selected .rel-label {
+  display: inline;
+  font-size: calc(13px / var(--k, 1));
+  stroke-width: calc(3.5px / var(--k, 1));
+}
 .arrowhead-reviewed,
 .legend-arrow {
   fill: var(--rel);
@@ -3223,11 +3714,12 @@ p.graph-status {
   }
 }
 
-/* canvas overlays */
+/* canvas overlays; --graph-obscured is the height of the phone layout's inspector sheet over
+   the canvas (graph.js; 0 on wider screens), so they stay above it */
 .zoom-controls {
   position: absolute;
   right: var(--space-2);
-  bottom: var(--space-2);
+  bottom: calc(var(--graph-obscured, 0px) + var(--space-2));
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -3247,11 +3739,17 @@ p.graph-status {
 .zoom-controls button:hover {
   background: var(--surface-2);
 }
+@media (pointer: coarse) {
+  .zoom-controls button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
 .node-legend {
   position: absolute;
   left: var(--space-2);
   right: 3.5rem;
-  bottom: var(--space-2);
+  bottom: calc(var(--graph-obscured, 0px) + var(--space-2));
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1) var(--space-3);
@@ -3309,6 +3807,14 @@ p.graph-status {
 .graph-note a {
   color: inherit;
   font-weight: 600;
+}
+@media (pointer: coarse) {
+  /* a finger-sized target without making the note taller */
+  .graph-note a {
+    display: inline-block;
+    padding: 0.75rem 0;
+    margin: -0.75rem 0;
+  }
 }
 
 /* chips */
@@ -3553,20 +4059,181 @@ p.graph-status {
   overflow: visible;
 }
 
-@media (max-width: 699px) {
+/* every concept on the canvas, A to Z (the overview; graph_inspector.js conceptIndex) */
+.concept-index {
+  margin: var(--space-3) 0;
+}
+.concept-index > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.concept-index-list {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.concept-index-list li {
+  padding: 0.1rem 0;
+}
+
+/* The inspector sheet's wrapper and toggle (graph.html): nothing on wide screens. */
+.graph-sheet {
+  display: contents;
+}
+.graph-sheet-toggle {
+  display: none;
+}
+
+/* Short screens (a phone on its side): the page scrolls, and the graph is a little less than a
+   screen tall, so a swipe above or below it still scrolls the page. */
+@media (max-height: 479.98px) {
   .graph-view {
-    flex-direction: column;
+    flex: none;
+    height: calc(100vh - 3rem);
+    height: calc(100dvh - 3rem);
+    min-height: 15rem;
   }
   .graph-canvas {
-    flex: none;
-    height: 65vh;
-    height: 65dvh;
-    min-height: 20rem;
+    min-height: 0;
   }
-  .inspector {
+}
+
+/* Phones: the inspector is a sheet over the bottom of the canvas. Collapsed it is one bar (what
+   it holds, and a chevron); selecting something opens it (graph.js). Open, it takes at most 60%
+   of the canvas and scrolls inside, and the view keeps the selected concept above it. */
+@media (max-width: 699px) {
+  .graph-toolbar {
+    gap: var(--space-2);
+    padding-bottom: 0;
+  }
+  .graph-view {
+    position: relative;
+  }
+  .graph-canvas {
+    min-height: 0;
+  }
+  .graph-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-top: 1px solid var(--border-strong);
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: var(--surface);
+    box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.18);
+  }
+  .graph-sheet.is-open {
+    height: min(58%, 34rem);
+  }
+  /* with the sheet open, the floating legend would leave too little canvas (the sheet's
+     overview has the full legend) */
+  .graph-view:has(.graph-sheet.is-open) .node-legend {
+    display: none;
+  }
+  p.graph-status:empty {
+    min-height: 0;
+  }
+  .graph-sheet-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     flex: none;
-    border-left: 0;
-    border-top: 1px solid var(--border);
+    width: 100%;
+    min-height: 3rem;
+    padding: var(--space-3) var(--space-3) var(--space-2);
+    border: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: none;
+    color: var(--fg);
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+  .graph-sheet-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+  .graph-sheet-grip {
+    position: absolute;
+    top: 0.35rem;
+    left: calc(50% - 1.125rem);
+    width: 2.25rem;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border-strong);
+  }
+  .graph-sheet-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .graph-sheet-chevron {
+    flex: none;
+    transition: transform 0.2s;
+  }
+  .graph-sheet.is-open .graph-sheet-chevron {
+    transform: rotate(180deg);
+  }
+  .graph-sheet .inspector {
+    display: none;
+  }
+  .graph-sheet.is-open .inspector {
+    display: block;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-2) var(--space-3) var(--space-4);
+    border: 0;
+    font-size: 1rem;
+  }
+  .inspector .md {
+    font-size: 1rem;
+  }
+  /* a compact floating legend, so that on a 320px screen it stays two lines */
+  .node-legend {
+    gap: 0.1rem var(--space-2);
+    padding: 0.15rem 0.45rem;
+    font-size: 0.8125rem;
+  }
+}
+/* Phones and other touch screens: the graph page's real controls at least 44px tall. */
+@media (max-width: 699px), (pointer: coarse) {
+  .graph-search input,
+  .graph-search .button,
+  .inspector .button,
+  .inspector select,
+  .inspector .concept-link {
+    min-height: 2.75rem;
+  }
+  .concept-index > summary {
+    padding-block: 0.6rem;
+  }
+  .inspector select {
+    font-size: 1rem; /* iOS zooms into a smaller one */
+  }
+  /* and no text under 13px */
+  .inspector h3,
+  .origin-chip,
+  .type-chip,
+  .inspector code,
+  .inspector .standing-chip,
+  .graph-result-match {
+    font-size: 0.8125rem;
+  }
+}
+@media (max-width: 699px) and (prefers-reduced-motion: reduce) {
+  .graph-sheet-chevron {
+    transition: none;
   }
 }
 
@@ -3590,7 +4257,9 @@ p.graph-status {
 /* The lab page (lab.html, lab.js): wider than a study page, since it holds code. In a narrow
    container the brief, the steps, the editor and the output are one column; from 62rem of
    container width (whether or not the tutor side bar is open) the brief and steps sit on the
-   left and the code and its output on the right. */
+   left and the code and its output on the right. Below 1100px of window (phones, tablets) a
+   narrow container shows one half at a time, switched by "Instructions" / "Code" (lab.js reads
+   whether the switch is displayed), with the Run bar stuck to the bottom of the screen. */
 
 .page-lab {
   --lab-max: 88rem;
@@ -3613,6 +4282,28 @@ p.graph-status {
     grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
     align-items: start;
   }
+}
+
+/* the Instructions / Code switch of the narrow layout */
+.lab-views {
+  display: none;
+}
+.lab-view-button {
+  flex: 1 1 0;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.75rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: calc(var(--radius) - 3px);
+  cursor: pointer;
+}
+.lab-view-button[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .lab h2 {
   margin: 0 0 var(--space-2);
@@ -3673,10 +4364,11 @@ p.graph-status {
 }
 .lab-step-kind {
   margin-left: 0;
+  font-size: 0.8125rem; /* not below 13px */
 }
 .lab-step-state {
   display: inline-block;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
   padding: 0.05rem 0.5rem;
@@ -3710,6 +4402,16 @@ p.graph-status {
   color: var(--accent);
   font-size: 0.95rem;
 }
+@media (pointer: coarse) {
+  .lab-hint summary,
+  .lab-check-code summary {
+    padding-block: 0.6rem;
+  }
+  .lab-hint,
+  .lab-check-code {
+    margin-top: 0;
+  }
+}
 .lab-hint > .md {
   margin-top: var(--space-1);
   padding-left: var(--space-3);
@@ -3722,6 +4424,9 @@ p.graph-status {
   border-radius: 6px;
   overflow-x: auto;
   font-size: 0.85rem;
+}
+.lab-check-code pre code {
+  font-size: inherit;
 }
 .lab-step-actions {
   display: flex;
@@ -3817,13 +4522,64 @@ p.graph-status {
   border-radius: 0 6px 6px 6px;
   resize: vertical;
 }
-.lab-editor-keys {
+/* 16px in the file on phones and touch screens: smaller text makes iOS zoom the page in. */
+@media (max-width: 600px), (pointer: coarse) {
+  .lab-code {
+    font-size: 1rem;
+  }
+}
+.lab-editor-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-1) var(--space-3);
   margin-top: var(--space-1);
+}
+.lab-editor-keys {
+  flex: 1 1 16rem;
+  margin: 0;
+}
+/* Indent and Outdent: only on touch screens, whose keyboards have no Tab key (there the key
+   help, which is about a hardware keyboard, gives way to them). */
+.lab-indent-tools {
+  display: none;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+@media (pointer: coarse) {
+  .lab-indent-tools {
+    display: flex;
+  }
+  .lab-keys-text {
+    display: none;
+  }
+  .lab-tab {
+    min-height: 2.75rem;
+  }
+  .lab-editor-keys {
+    align-self: center;
+  }
 }
 .lab-cursor {
   display: block;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
+}
+.lab-step-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 40rem;
+  margin-top: var(--space-3);
+}
+.lab-step-choice label {
+  flex: none;
+}
+.lab-step-choice select {
+  min-width: 0;
+  flex: 1;
+  padding: 0.35rem 0.5rem;
 }
 .lab-run-bar {
   display: flex;
@@ -3832,21 +4588,10 @@ p.graph-status {
   gap: var(--space-2) var(--space-3);
   margin-top: var(--space-3);
 }
-.lab-step-choice {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  flex: 1 1 14rem;
-}
-.lab-step-choice select {
-  min-width: 0;
-  flex: 1;
-  padding: 0.35rem 0.5rem;
-}
 .lab-run-status {
-  margin: var(--space-2) 0 0;
+  margin: var(--space-1) 0 0;
   min-height: 1.5em;
+  overflow-wrap: anywhere;
 }
 .lab-tools {
   margin: var(--space-3) 0 var(--space-2);
@@ -3950,6 +4695,72 @@ p.graph-status {
   background: #ffffff; /* matplotlib draws on white; keep it legible in dark mode */
   border: 1px solid var(--border);
   border-radius: 6px;
+}
+
+/* The narrow layout (phones, tablets): one half at a time, the Run bar stuck to the bottom.
+   (After the rules above, which it overrides.) */
+@media (max-width: 1099.98px) {
+  @container (max-width: 61.99rem) {
+    .lab-views {
+      display: flex;
+      gap: var(--space-1);
+      margin: 0 0 var(--space-4);
+      padding: 3px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    /* in the long instructions the switch stays at hand; over the code it would take room */
+    .lab[data-view="text"] .lab-views {
+      position: sticky;
+      top: calc(var(--space-2) + env(safe-area-inset-top, 0px));
+      z-index: 5;
+      box-shadow: var(--shadow);
+    }
+    .lab[data-view="text"] .lab-workspace,
+    .lab[data-view="code"] .lab-text {
+      display: none;
+    }
+    .lab-code {
+      max-height: 62vh;
+      max-height: 62dvh;
+      min-height: min(16rem, 50vh);
+      min-height: min(16rem, 50dvh);
+    }
+    /* Run (and Check) stay at the bottom of the screen while the code is in view. The right
+       end is left for the tutor's floating button, which then sits in the bar. */
+    .lab-run-bar {
+      position: sticky;
+      bottom: 0;
+      z-index: 4;
+      flex-wrap: nowrap;
+      margin: var(--space-3) calc(-1 * var(--gutter)) 0;
+      padding: var(--space-3) var(--gutter) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+    .artifact-layout.has-tutor[data-tutor="closed"] .lab-run-bar {
+      padding-right: calc(var(--gutter) + 6.5rem);
+    }
+    .lab-run-bar {
+      gap: var(--space-2);
+    }
+    .lab-run-bar .button {
+      min-height: 2.75rem;
+      padding-inline: 0.9rem;
+    }
+    .lab-run-bar #lab-run {
+      min-width: 5.5rem;
+    }
+  }
+}
+@media (max-width: 359.98px) {
+  .lab-check-word {
+    display: none;
+  }
+  .lab-run-bar #lab-run {
+    min-width: 0;
+  }
 }
 
 /* the labs of a study page, and labs in the library and source lists */

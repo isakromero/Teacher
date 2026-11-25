@@ -24,6 +24,11 @@ with the blocks (and stamps `artifacts.block_concepts_tagged_at`), or, if none w
 the page untagged (NULL). A failed tagging stage fails the generation, as a failed `concepts`
 stage does.
 
+Costs. Every API call of a generation is recorded in the cost ledger (`teacher.costs`) with
+purpose `generation` (`lab_generation` for a lab), the artifact and, inside a stage, the
+stage's run: `run_generation` and `GenerationContext.stage` set the scopes. A ledger row is
+committed on its own, so a failed generation keeps the rows of the calls it made.
+
 `run_generation(settings, artifact_slug, generator)` drives one job (typically from a FastAPI
 background task, i.e. in another thread). It opens its own short sessions, validates every draft
 with `teacher.blocks.validate_block_content`, writes the blocks and marks the artifact `ready`. On
@@ -52,9 +57,11 @@ from sqlalchemy.orm import Session
 
 from teacher.blocks import is_gate_type, validate_block_content
 from teacher.config import Settings
+from teacher.costs import cost_scope
 from teacher.db.engine import session_scope
 from teacher.db.models import Artifact, ArtifactBlock, Concept, GenerationRun, SourceSegment
 from teacher.glossary import GlossaryEntry
+from teacher.labs import LAB_KIND
 from teacher.managers import (
     ArtifactBlockManager,
     ArtifactManager,
@@ -140,6 +147,11 @@ def _error_text(exc: BaseException) -> str:
     return f"{name}: {message}" if message else name
 
 
+def generation_purpose(kind: str) -> str:
+    """The cost-ledger purpose of generating an artifact of `kind` (`teacher.costs`)."""
+    return "lab_generation" if kind == LAB_KIND else "generation"
+
+
 class GenerationContext:
     """Everything a generator gets: settings, the artifact slug, params, sources, and `stage()`."""
 
@@ -164,6 +176,9 @@ class GenerationContext:
         self.glossary: list[GlossaryEntry] | None = None
         # The concepts each block covers, if the generator tagged them (stored with the blocks).
         self.block_concepts: BlockConceptsPlan | None = None
+        # Set by `run_generation`: what the generation's model calls are recorded with.
+        self.artifact_id: int | None = None
+        self.purpose: str = "generation"
 
     def set_glossary(self, entries: list[GlossaryEntry]) -> None:
         """Hand over the page's glossary; `run_generation` stores it with the blocks. An empty
@@ -186,7 +201,8 @@ class GenerationContext:
 
         The run records `model` if given (a stage that calls a model of its own, such as
         `concepts`), else the generation model. Each transition is committed in its own short
-        transaction. Stages cannot be nested.
+        transaction. Stages cannot be nested. Every API call made inside the stage is recorded
+        in the cost ledger with the artifact and this run (`teacher.costs.cost_scope`).
         """
         if self.open_run_id is not None:
             raise RuntimeError(f"stage {name!r} started while another stage is still open")
@@ -196,9 +212,14 @@ class GenerationContext:
                 artifact, stage=name, model=model if model is not None else self.model
             )
             self.open_run_id = run.id
+            artifact_id, purpose = artifact.id, generation_purpose(artifact.kind)
         handle = StageHandle()
         try:
-            yield handle
+            with cost_scope(
+                self.settings, purpose=purpose, artifact_id=artifact_id,
+                generation_run_id=run.id,
+            ):
+                yield handle
         except BaseException as exc:
             self.fail_open_run(_error_text(exc), handle)
             self.recorded_exception = exc
@@ -585,8 +606,11 @@ def _load_context(settings: Settings, artifact_slug: str, generator: Generator) 
             return None
         sources = source_infos(session, settings, artifact)
         params = dict(artifact.params or {})
+        artifact_id, kind = artifact.id, artifact.kind
     model = generation_model(generator, params)
-    return GenerationContext(settings, artifact_slug, params, sources, model=model)
+    ctx = GenerationContext(settings, artifact_slug, params, sources, model=model)
+    ctx.artifact_id, ctx.purpose = artifact_id, generation_purpose(kind)
+    return ctx
 
 
 def _store(
@@ -722,7 +746,8 @@ def run_generation(settings: Settings, artifact_slug: str, generator: Generator)
         if ctx is None:
             return None
         phase = STAGE_GENERATE
-        drafts = generator.generate(ctx)
+        with cost_scope(settings, purpose=ctx.purpose, artifact_id=ctx.artifact_id):
+            drafts = generator.generate(ctx)
         if ctx.open_run_id is not None:  # defensive: a stage left open without the context manager
             raise RuntimeError("generator returned while a stage was still open")
         phase = STAGE_STORE
@@ -776,6 +801,7 @@ __all__ = [
     "StubGenerator",
     "StubTaggingRun",
     "generation_model",
+    "generation_purpose",
     "run_generation",
     "source_infos",
     "supports_model_choice",

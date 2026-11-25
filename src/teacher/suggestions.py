@@ -56,6 +56,7 @@ from teacher.db.models import (
     Concept,
     KnowledgeSource,
     SourceConcept,
+    by_code_point,
     utcnow,
 )
 from teacher.labs import LAB_KIND
@@ -164,7 +165,7 @@ class _Library:
         for concept_id, role, source in session.execute(
             select(SourceConcept.concept_id, SourceConcept.role, KnowledgeSource)
             .join(KnowledgeSource, KnowledgeSource.id == SourceConcept.source_id)
-            .order_by(KnowledgeSource.title, KnowledgeSource.slug)
+            .order_by(by_code_point(KnowledgeSource.title), KnowledgeSource.slug)
         ):
             links.setdefault(concept_id, []).append((source, role))
         pages: dict[int, list[Artifact]] = {}

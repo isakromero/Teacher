@@ -1,0 +1,310 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-sonnet-5-5",
+  "message_id": "msg_011ChP4c9s2igwZL7KRannq8",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 11318,
+    "cache_creation_input_tokens": 81493,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 2672
+  },
+  "source": {
+    "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+    "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+    "media_type": "application/pdf"
+  },
+  "trigger": "generation",
+  "proposed": 35,
+  "dropped": [],
+  "merged": [],
+  "dropped_aliases": [
+    {
+      "term": "rubric criteria",
+      "alias": "rubric criterion",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "seed workbooks",
+      "alias": "seed workbook",
+      "reason": "does not occur in the study page text"
+    },
+    {
+      "term": "Perturbation",
+      "alias": "Perturbation items",
+      "reason": "does not occur in the study page text"
+    }
+  ],
+  "output": {
+    "terms": [
+      {
+        "term": "LLM",
+        "kind": "acronym",
+        "expansion": "large language model",
+        "definition": "An AI system trained on large amounts of text that can read instructions and produce text or code. Here, LLMs act as agents that build spreadsheets and as the judge that grades them.",
+        "aliases": []
+      },
+      {
+        "term": "benchmark",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A fixed set of tasks with a scoring method, used to compare how well different AI systems perform.",
+        "aliases": []
+      },
+      {
+        "term": "workbooks",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Spreadsheet files, such as Excel files, that can contain multiple sheets (tabs) of cells, formulas and formatting.",
+        "aliases": [
+          "workbook"
+        ]
+      },
+      {
+        "term": "rubric criteria",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Individual yes/no checks, each with a point weight, used to grade an output. Together they form the rubric for a task.",
+        "aliases": [
+          "rubric"
+        ]
+      },
+      {
+        "term": "programmatic verifiability",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Whether a computer program can automatically check that an output is correct, as with running code against tests.",
+        "aliases": [
+          "programmatically verifiable"
+        ]
+      },
+      {
+        "term": "DCF",
+        "kind": "acronym",
+        "expansion": "discounted cash flow",
+        "definition": "A valuation method that estimates a company's worth by projecting future cash flows and discounting them back to present value.",
+        "aliases": []
+      },
+      {
+        "term": "Synthesis",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In this benchmark, a task family where the agent builds a new workbook from a natural-language prompt alone.",
+        "aliases": []
+      },
+      {
+        "term": "Manipulation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A task family where the agent modifies an existing workbook according to a natural-language instruction.",
+        "aliases": []
+      },
+      {
+        "term": "Interrogation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A task family where the agent answers a question about an existing workbook, with the answer compared to a known correct value.",
+        "aliases": []
+      },
+      {
+        "term": "investment banking",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The finance profession that advises companies on deals such as mergers and raising capital. Its analysts spend much of their time building spreadsheet models.",
+        "aliases": []
+      },
+      {
+        "term": "private equity",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Investment in privately held companies, typically by firms that buy and later sell them. Its analysts also rely heavily on spreadsheet models.",
+        "aliases": []
+      },
+      {
+        "term": "seed workbooks",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Starting spreadsheets given to contributors, from which they built tasks by modifying the workbook or creating a target output.",
+        "aliases": []
+      },
+      {
+        "term": "multi-step calculation chains",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Sequences of dependent calculations where a changed input flows through several formulas before affecting the final output.",
+        "aliases": []
+      },
+      {
+        "term": "Formula Correctness",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category checking whether a formula implements the intended financial calculation, accepting any valid way of writing it.",
+        "aliases": []
+      },
+      {
+        "term": "Model Integration",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category checking that a value is linked to its authoritative source tab instead of being recomputed or hardcoded locally.",
+        "aliases": []
+      },
+      {
+        "term": "Output Validation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category checking whether a key output number lands within a stated tolerance of the reference answer.",
+        "aliases": []
+      },
+      {
+        "term": "Perturbation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category that changes a driving input and checks whether the dependent output recomputes to the correct new value.",
+        "aliases": []
+      },
+      {
+        "term": "Presentation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category checking formatting and labeling conventions, such as font colors or column labels, without changing the underlying numbers.",
+        "aliases": []
+      },
+      {
+        "term": "Pitfalls",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A rubric category of penalty checks for defects such as error values or truncated text; failing a check subtracts points.",
+        "aliases": []
+      },
+      {
+        "term": "hardcoded",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Typed in as a fixed number rather than computed by a formula, so it does not update when inputs change.",
+        "aliases": [
+          "hardcode",
+          "hardcodes",
+          "hardcoding"
+        ]
+      },
+      {
+        "term": "WACC",
+        "kind": "acronym",
+        "expansion": "weighted average cost of capital",
+        "definition": "The blended rate a company pays to finance itself through debt and equity, used as the discount rate in a DCF.",
+        "aliases": []
+      },
+      {
+        "term": "Enterprise Value",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An estimate of the total value of a company's operating business, including both debt and equity holders' claims.",
+        "aliases": []
+      },
+      {
+        "term": "harness",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The software setup that gives a model its tools, prompt and environment so its task attempts can be run and logged consistently.",
+        "aliases": []
+      },
+      {
+        "term": "recalc_workbook",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The harness tool that recomputes all formulas in a workbook, so changed inputs propagate to their dependent cells.",
+        "aliases": []
+      },
+      {
+        "term": "LibreOffice",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A free office software suite; here it is run without a visual interface to recalculate spreadsheet formulas.",
+        "aliases": []
+      },
+      {
+        "term": "circular",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Describing formulas that depend on each other in a loop, as in debt schedules where interest affects cash and cash affects interest. They need iterative calculation to settle on a value.",
+        "aliases": [
+          "circular structures"
+        ]
+      },
+      {
+        "term": "execute_python",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A harness tool that lets the model run restricted Python code to read or edit a workbook in bulk.",
+        "aliases": []
+      },
+      {
+        "term": "openpyxl",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A Python library for reading and writing Excel files. The harness uses it to expose the workbook to code.",
+        "aliases": []
+      },
+      {
+        "term": "agentic LLM judge",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An LLM that grades outputs by actively using tools to inspect and test a workbook, rather than just reading a text answer.",
+        "aliases": [
+          "LLM judge",
+          "judge"
+        ]
+      },
+      {
+        "term": "Krippendorff's alpha",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A statistic measuring how well different raters agree on labels, where 1 is perfect agreement and 0 is chance-level agreement.",
+        "aliases": [
+          "alpha"
+        ]
+      },
+      {
+        "term": "macro-F1",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A score that averages the F1 (a balance of precision and recall) across classes, treating each class equally. It is used here to compare the judge's verdicts to expert labels.",
+        "aliases": []
+      },
+      {
+        "term": "held-out",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Kept private and not released publicly, to prevent models from being trained on or tuned to the test tasks.",
+        "aliases": [
+          "hold-out"
+        ]
+      },
+      {
+        "term": "SWE-bench Pro",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A benchmark of long-horizon software engineering tasks for AI agents, cited here as a coding benchmark that models are rapidly saturating.",
+        "aliases": []
+      },
+      {
+        "term": "Pareto frontier",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The set of options for which no other option is both cheaper and better. Options not on it are called dominated.",
+        "aliases": [
+          "dominated"
+        ]
+      },
+      {
+        "term": "micro-averaged",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Averaged over all individual tasks together, rather than averaging each task type separately and then combining.",
+        "aliases": [
+          "macro score"
+        ]
+      }
+    ]
+  }
+}

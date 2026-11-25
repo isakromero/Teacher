@@ -1,0 +1,4 @@
+{
+  "markdown": "## Human check and limits\n\nTwo former finance professionals asked of each output on the release set: would it substantially help, or need significant rework? Opus was rated usable 75% of the time, GPT-5.5 68.75%, Grok 0%, and formatting was a consistent weakness, with models defaulting to their own styling instead of matching the workbook.\n\nThe authors state limitations: each task has at most one workbook as context (no slide decks or documents), the uniform harness may disadvantage models trained for particular harnesses, and automation could have mixed or negative effects on jobs. The public set (11 tasks) is very small, so open-model results there (Kimi, MiniMax) are only suggestive. The conclusion notes that AI benchmarks over-represent coding and math relative to employment.",
+  "role": "explanation"
+}

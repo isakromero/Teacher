@@ -18,6 +18,9 @@ own.
    but an assumed one; no alias equal to its own name or repeated; and no name or alias shared
    by two concepts (all compared normalised, `teacher.concepts.normalize_name`). The prompt
    forbids each of these, so a violation is an error (ConceptOutputError), never a silent fix.
+   A rejected reply (one that broke a rule or was not valid `WireConcepts`) is asked for once
+   more, with the reason added to the request (`retry_request`); the rejection is kept on the
+   call in the record and reported as the stage's note. A second rejection is the error.
 
 2. Resolve every candidate against the graph (`_resolve`):
    a. Exact: `ConceptManager.find_by_name` on the candidate's name and on each alias. When the
@@ -63,6 +66,10 @@ Fail loudly: missing credentials or keys, API errors, refusals, truncation, inva
 embedding failures, an unusable source and a concurrently changed graph all raise a
 `ConceptExtractionError` subclass with a key-free message starting "Concepts could not be
 extracted: ", which the generation records on its failed `concepts` run.
+
+Costs: `run` records every API call (both Claude calls, a retried one included, and the
+embeddings) in the cost ledger (`teacher.costs`) with the source; as `concept_extraction` on
+its own (`teacher concepts extract`), as part of the generation inside one.
 """
 
 from __future__ import annotations
@@ -93,6 +100,7 @@ from teacher.claude_generator import (
 from teacher.concept_search import parse_query
 from teacher.concepts import SOURCE_ROLES, normalize_name, stronger_role
 from teacher.config import DEFAULT_CONCEPT_MODEL, Settings
+from teacher.costs import cost_scope
 from teacher.db.engine import session_scope
 from teacher.db.fts import ConceptSearchUnavailableError
 from teacher.db.models import Concept
@@ -816,6 +824,21 @@ class ConceptRun:
         return lines
 
 
+RETRY_INSTRUCTIONS = """\
+An earlier reply to this request was rejected by the application, which said: {rejected}
+
+Reply again with the complete list, obeying every rule above."""
+
+
+def retry_request(request: dict[str, Any], rejected: str) -> dict[str, Any]:
+    """`request` (an extraction request) with the reason its reply was rejected added after
+    the instructions, so the document's prompt cache is still read."""
+    turn = request["messages"][0]
+    again = {"type": "text", "text": RETRY_INSTRUCTIONS.format(rejected=rejected)}
+    content = [*turn["content"], again]
+    return {**request, "messages": [{**turn, "content": content}]}
+
+
 class _Tally:
     """Adds up the tokens of the run's Claude calls and reports them to the stage handle."""
 
@@ -954,9 +977,26 @@ class ConceptExtractor:
         }
 
     def _call(self, step: str, request: dict[str, Any], tally: _Tally) -> Any:
-        message = stream_message(self._get_client(), request, stage_name=step, error=_unavailable)
+        message = stream_message(
+            self._get_client(), request, stage_name=step, error=_unavailable,
+            purpose="concept_extraction",
+        )
         tally.add(step, message)
         return message
+
+    def _extract(self, request: dict[str, Any], tally: _Tally) -> list[Candidate]:
+        """One extraction call and its checks."""
+        message = self._call(EXTRACT_STEP, request, tally)
+        wire = parse_reply(
+            EXTRACT_STEP,
+            message,
+            WireConcepts,
+            EXTRACT_MAX_TOKENS,
+            stopped=_unavailable,
+            invalid=_output,
+            outcome="no concepts were extracted",
+        )
+        return check_candidates(wire)
 
     # -- embeddings and the database ------------------------------------------------------------
 
@@ -1018,25 +1058,49 @@ class ConceptExtractor:
         """Extract, resolve and write the concepts of `source` (see the module docstring).
         `document`: the source's document block as the generator built it (with its cache
         breakpoint); built here without one when omitted. `stage` receives the token totals
-        after each call, so a failed run still records them."""
+        after each call, so a failed run still records them. Every API call (both model calls
+        and the embeddings) is recorded in the cost ledger with the source, as
+        `concept_extraction` unless the enclosing scope names the job (a page generation)."""
         if source is None:
             raise _input("there is no linked source to extract concepts from")
+        with session_scope(settings) as session:  # reads only
+            source_id = KnowledgeSourceManager(session, settings).get_by_slug(source.slug).id
+        with cost_scope(settings, purpose="concept_extraction", knowledge_source_id=source_id):
+            return self._run(settings, source, document=document, stage=stage)
+
+    def _run(
+        self,
+        settings: Settings,
+        source: SourceInfo,
+        *,
+        document: dict[str, Any] | None,
+        stage: StageHandle | None,
+    ) -> ConceptRun:
         if document is None:
             document, _is_pdf = document_block(source, error=_input)
             document = {key: value for key, value in document.items() if key != "cache_control"}
         tally = _Tally(stage)
 
-        message = self._call(EXTRACT_STEP, self.extract_request(document), tally)
-        wire = parse_reply(
-            EXTRACT_STEP,
-            message,
-            WireConcepts,
-            EXTRACT_MAX_TOKENS,
-            stopped=_unavailable,
-            invalid=_output,
-            outcome="no concepts were extracted",
-        )
-        candidates = check_candidates(wire)
+        request = self.extract_request(document)
+        try:
+            candidates = self._extract(request, tally)
+        except ConceptOutputError as first:
+            # One second attempt that names the broken rule; nothing is repaired here.
+            rejected = str(first).removeprefix(ERROR_PREFIX)
+            tally.calls[-1]["rejected"] = rejected
+            try:
+                candidates = self._extract(retry_request(request, rejected), tally)
+            except ConceptOutputError as second:
+                tally.calls[-1]["rejected"] = str(second).removeprefix(ERROR_PREFIX)
+                raise _output(
+                    f"{str(second).removeprefix(ERROR_PREFIX)} (second attempt; the first "
+                    f"reply was rejected too: {rejected})"
+                ) from second
+            if stage is not None:
+                stage.set_note(
+                    f"The first concepts reply was rejected ({rejected}); a second reply was "
+                    "asked for and passed every check."
+                )
 
         count, stale_embedded = self._refresh_index(settings)
         vectors = self._embed([candidate.text for candidate in candidates])

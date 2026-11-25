@@ -81,6 +81,7 @@ import numpy as np
 import pypdfium2 as pdfium
 import pypdfium2.raw as pdfium_c
 
+from teacher.files import sync_file
 from teacher.locators import PdfRegion
 
 FIGURES_STAGE = "figures"
@@ -780,6 +781,7 @@ def extract_figures(path: Path, assets_dir: Path) -> FigureScan:
             png = encode_png(pixels)
             name = _file_name(figure.label, png)
             (folder / name).write_bytes(png)
+            sync_file(folder / name)  # the page's blocks will name it (teacher.files)
             rendered.append(
                 Figure(
                     label=figure.label,

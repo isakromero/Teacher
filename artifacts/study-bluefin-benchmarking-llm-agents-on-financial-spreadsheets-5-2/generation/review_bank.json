@@ -1,0 +1,643 @@
+{
+  "builder": "claude-review-bank-v1",
+  "model": "claude-opus-5-5",
+  "reply": {
+    "multiple_choice": [
+      {
+        "question_number": 1,
+        "question": "A benchmark designer makes spreadsheet tasks 'long-horizon' by stringing together ten clearly specified edits, such as 'add a column', then 'sum these rows', then 'link this cell'. On the same grounds the authors use to criticise SheetRM, what does this design fail to capture about real finance work?",
+        "options": [
+          "The agent never has to work out a plan or meet unstated domain expectations",
+          "The workbooks stay small, so the agent never struggles to read whole sheets",
+          "The tasks come from coding repositories instead of real finance workflows",
+          "The grading collapses every attempt into one overall correctness score"
+        ],
+        "correct_index": 0,
+        "explanation": "Chaining well-defined instructions adds length but not underspecification. Real finance requests are underspecified, so a capable agent must infer a viable plan and satisfy implicit domain expectations. The authors make exactly this criticism of SheetRM.",
+        "option_explanations": [
+          "Right. Explicit step-by-step edits hand the agent the plan. Real requests leave the plan, and the implicit expectations, for the agent to work out.",
+          "The criticism is not about workbook size or how much of a sheet the agent can read. Consider how the instructions themselves are written.",
+          "Nothing in the scenario concerns where the tasks come from. The issue is how the difficulty is produced.",
+          "Single-score grading is a separate criticism aimed at other benchmarks. The concern here is how clearly the instructions spell out what to do."
+        ]
+      },
+      {
+        "question_number": 1,
+        "question": "Which statement best captures why SheetRM, despite targeting long-horizon spreadsheet tasks, is said to fall short of realistic finance work?",
+        "options": [
+          "Its long tasks rely on vague prompts, so the expected output is unclear",
+          "Its long tasks come from huge workbooks, testing reading more than reasoning",
+          "Its long tasks chain explicit instructions, unlike underspecified real requests",
+          "Its long tasks use multi-tab models that are built from code, not finance work"
+        ],
+        "correct_index": 2,
+        "explanation": "SheetRM raises difficulty by concatenating relatively well-defined manipulation instructions. Real finance requests are underspecified and require the agent to infer the plan and meet implicit expectations, which SheetRM's tasks never demand.",
+        "option_explanations": [
+          "This reverses the criticism. SheetRM's instructions are explicit rather than vague.",
+          "SheetRM's difficulty is not described as coming from workbook size or reading limits.",
+          "Right. Concatenating clear instructions makes tasks longer without making them underspecified, so the agent never has to plan the work itself.",
+          "Nothing ties SheetRM to code repositories. The criticism concerns how its instructions are written."
+        ]
+      },
+      {
+        "question_number": 3,
+        "question": "Two agents both build valid financial models for the same task. One copies the reference workbook's tab layout closely; the other organises its tabs differently but computes everything correctly. Why did the authors drop an explicit 'structural completeness' rubric section in situations like this?",
+        "options": [
+          "It would count formatting such as labels and fonts twice in the score",
+          "It would favour the copied layout and penalise the valid alternative",
+          "It would give tab-existence verdicts that often clash with the experts",
+          "It would reward empty tabs carrying the right names as if they were complete"
+        ],
+        "correct_index": 1,
+        "explanation": "Preliminary experiments showed that explicit structural-completeness sections over-rewarded copying a template and over-penalised valid alternatives. Structure is therefore assessed indirectly, through formula, integration, output and perturbation checks that any valid build can pass.",
+        "option_explanations": [
+          "Formatting is handled under presentation. Double-counting it was not the reported problem.",
+          "Right. Explicit structure checks rewarded matching the reference layout, which is unfair to the differently organised but valid model.",
+          "The judge routinely and reliably checks whether tabs exist. The problem was what such a section rewarded.",
+          "Hollow tabs gaming the checks was not the concern. Think about how builds that differ from the reference were treated."
+        ]
+      },
+      {
+        "question_number": 3,
+        "question": "How does the BLUEFIN rubric now assess whether a model is properly structured, and why?",
+        "options": [
+          "Directly, with a tab checklist, since the judge detects tabs reliably",
+          "Through presentation checks, since structure is mainly about formatting",
+          "Indirectly, through behaviour checks, since layout checks favoured template copies",
+          "Only through expert review, since judges disagreed too often on structure"
+        ],
+        "correct_index": 2,
+        "explanation": "Explicit structural-completeness and input-accuracy sections over-rewarded copying a template and over-penalised valid alternatives. Structure is therefore captured indirectly, through formula, integration, output and perturbation checks.",
+        "option_explanations": [
+          "A dedicated structure checklist is exactly what was removed. The judge's ability to detect tabs was not the reason for that decision.",
+          "Presentation covers formatting conventions, but structure is not assessed as a formatting matter.",
+          "Right. Behaviour-based checks let any valid build pass, while explicit layout checks rewarded copying the reference.",
+          "No judge-reliability problem with structure was reported, and structure is still assessed by the judge."
+        ]
+      },
+      {
+        "question_number": 4,
+        "question": "An agent building a revenue forecast cannot get a growth formula to work. It types the forecast revenue figures in as constants instead, and they exactly match the reference values. The BLUEFIN judge then changes the growth-rate assumption and recalculates. What is the most likely result on these checks?",
+        "options": [
+          "Output Validation fails because the judge rejects values typed in as constants",
+          "Both pass, because the delivered values match the reference within tolerance",
+          "Output Validation fails at base case, but Perturbation passes as outputs still move",
+          "Output Validation passes at base case, but Perturbation fails after the change"
+        ],
+        "correct_index": 3,
+        "explanation": "Output Validation is a static check: it compares delivered values with the reference within a tolerance. Perturbation is dynamic: the judge changes an input, recalculates and reads whether outputs reach the new expected values. Hardcoded figures pass the first but not the second.",
+        "option_explanations": [
+          "Output Validation only compares values with the reference. It does not examine how a value was produced.",
+          "Matching values satisfies the static check, but the judge also edits inputs and checks the recalculated results.",
+          "The base-case values are correct, so the static check would not fail. Perturbation also requires reaching the correct new value, not just any movement.",
+          "Right. The typed-in numbers match today's reference, but they cannot respond when the growth rate changes, so the perturbed outputs are wrong."
+        ]
+      },
+      {
+        "question_number": 4,
+        "question": "A model passes every Output Validation check at the base case. When the judge raises the interest-rate input and recalculates, several downstream outputs miss their new expected values. What is the most likely cause?",
+        "options": [
+          "Some intermediate values were pasted in as constants rather than formulas",
+          "Its base-case outputs differ from the reference by more than the tolerance",
+          "The judge forgot to restore the input before reading the changed outputs",
+          "The workbook breaks presentation conventions for labels and number formats"
+        ],
+        "correct_index": 0,
+        "explanation": "Passing static value checks while failing perturbation is the signature of hardcoding. The numbers are right today, but they do not respond to input changes. Hardcoded intermediate values are a named cause of perturbation failure.",
+        "option_explanations": [
+          "Right. Constants show correct base-case numbers but do not update when an input changes, so the dependent outputs miss their new values.",
+          "This contradicts the scenario: the base-case outputs passed Output Validation, so they are within tolerance.",
+          "The judge restores the input after reading the perturbed output. The failure lies in the model, not in the procedure.",
+          "Formatting is assessed under presentation. It does not determine whether outputs recalculate correctly."
+        ]
+      },
+      {
+        "question_number": 6,
+        "question": "A colleague reads that the GPT-5.4 judge reached Krippendorff's α = 0.826 against expert consensus on 384 binary criteria. Which conclusion does this result actually support?",
+        "options": [
+          "GPT-5.4 judged clearly better than the other two candidate judges tested",
+          "The judge's verdicts on each criterion agree with experts near human level",
+          "The rubric captures every aspect of model quality that matters to experts",
+          "The judge's total task scores match the experts' scores within a few points"
+        ],
+        "correct_index": 1,
+        "explanation": "The validation compares the judge's yes/no verdicts on individual criteria with expert labels and finds agreement near the human inter-rater ceiling. It does not show that the rubric is complete, it does not compare task-level scores, and it does not show a large gap between candidate judges.",
+        "option_explanations": [
+          "All three candidates agreed with experts at comparable levels. GPT-5.4 was chosen for a modestly higher macro-F1, not a clear advantage.",
+          "Right. Agreement on criterion-level binary verdicts approaches the level at which experts agree with each other.",
+          "The validation takes the rubric as given. It does not test whether the rubric covers everything that matters.",
+          "The comparison was made per binary criterion, and no whole-task score comparison is reported."
+        ]
+      },
+      {
+        "question_number": 6,
+        "question": "In the judge validation study for BLUEFIN, what exactly was compared with what?",
+        "options": [
+          "The judge's overall workbook scores with the experts' overall scores",
+          "The rubric criteria the judge wrote with criteria the experts wrote",
+          "The judge's yes/no verdicts per criterion with expert consensus labels",
+          "GPT-5.4's model rankings with rankings from two other candidate judges"
+        ],
+        "correct_index": 2,
+        "explanation": "The study took 384 binary rubric criteria and checked whether the judge's met/not-met verdicts matched expert consensus. It found α = 0.826, close to the human inter-rater ceiling.",
+        "option_explanations": [
+          "The analysis worked at the level of individual binary criteria, not whole-workbook scores.",
+          "The judge applied existing criteria; writing criteria was not evaluated.",
+          "Right. Criterion-level binary verdicts from the judge were compared with expert consensus labels.",
+          "The candidate judges were each compared with expert labels, not ranked against one another's outputs."
+        ]
+      }
+    ],
+    "blurb": [
+      {
+        "question_number": 2,
+        "prompt": "Consider two versions of the same task prompt. Version A: 'Step 1: add a Debt tab. Step 2: link interest to SOFR. Step 3: feed interest into the income statement.' Version B: 'Add a debt schedule so the model reflects the new financing.' Explain what each version would actually measure about an agent, and why the authors chose to write prompts like Version B.",
+        "model_answer": "Version A hands the agent the plan, so success mostly shows that it can follow explicit instructions, much like benchmarks that chain well-defined edits. Version B states only the intent and the desired output. Real finance requests are underspecified like this, so the agent must work out a viable plan itself and meet implicit domain expectations, such as properly integrating the schedule. The authors chose intent-based prompts so the benchmark measures that planning ability rather than instruction following.",
+        "rubric": [
+          {
+            "criterion": "Explains that the step-by-step version gives the agent the plan, so it tests instruction following rather than planning",
+            "required": true
+          },
+          {
+            "criterion": "Explains that intent-only prompts mirror underspecified real finance requests, so the agent must infer the plan or meet implicit expectations",
+            "required": true
+          },
+          {
+            "criterion": "Notes that removing step-by-step scaffolding can reveal tasks that are too simple and need their complexity recalibrated",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 2,
+        "prompt": "A critic argues that rewriting benchmark prompts to describe only the desired output and intent, without listing the steps, is unfair to agents because they cannot know exactly what is expected. Respond using the reasoning behind this design choice: what would prescriptive prompts measure instead, and why is the uncertainty intentional?",
+        "model_answer": "With prescriptive prompts the plan is supplied, so the benchmark would mostly measure instruction following, as benchmarks that concatenate explicit edits do. The uncertainty is intentional because real finance requests are underspecified: a capable analyst or agent has to infer a viable plan and meet implicit domain expectations. Leaving the path open tests exactly that skill, which is what realistic finance work requires.",
+        "rubric": [
+          {
+            "criterion": "States that prescriptive prompts would reduce the task to following instructions rather than planning",
+            "required": true
+          },
+          {
+            "criterion": "Argues that the ambiguity reflects underspecified real-world finance requests, which require inferring the path and meeting implicit expectations",
+            "required": true
+          },
+          {
+            "criterion": "Mentions that removing the steps exposed overly simple tasks, which led to recalibrating their complexity",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 5,
+        "prompt": "In the balance-sheet case study, one model scored 100% at a cost of $3.00 and another scored 95% at a cost of $83.05. State how much the costs differ, and explain what a leaderboard ranking models only by average score would fail to show here.",
+        "model_answer": "The costs differ by about 27.7x ($83.05 vs $3.00), while the scores are nearly the same (100% vs 95%). A leaderboard of average scores would show the two models as roughly equal and hide that one delivers the same quality far more cheaply. On routine, well-specified wiring tasks like this, cost per correct output can vary enormously even when quality barely differs.",
+        "rubric": [
+          {
+            "criterion": "Identifies the near-equal scores alongside the large cost gap (about 27.7x, or $3.00 vs $83.05)",
+            "required": true
+          },
+          {
+            "criterion": "Explains that average-score rankings ignore cost per correct output, so models that look equal can differ greatly in practical value",
+            "required": true
+          },
+          {
+            "criterion": "Explains the higher cost (broad reads, large writes, many output tokens) or notes that pricier models may suit ambiguous or novel tasks",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 5,
+        "prompt": "A team lead plans to choose a model for routine balance-sheet wiring work by picking whichever ranks highest on an average-score leaderboard. Using the case study in which Gemini scored 100% for $3.00 and Opus scored 95% for $83.05, explain what this approach misses and what the team lead should look at instead.",
+        "model_answer": "Both models score highly and appear nearly tied on an average-score leaderboard, but Opus cost about 27.7x more for slightly lower quality. Ranking by average score ignores cost, so the team lead would miss that cost per correct output differs enormously. For routine, well-specified tasks, they should compare cost per correct output, since quality is similar and the cheaper model does the job.",
+        "rubric": [
+          {
+            "criterion": "Uses the case figures to show similar scores but very different costs (about 27.7x)",
+            "required": true
+          },
+          {
+            "criterion": "Explains that the team lead should consider cost per correct output, because average scores hide cost differences",
+            "required": true
+          },
+          {
+            "criterion": "Notes that expensive models may still be justified for ambiguous or novel tasks, or explains why Opus used more tokens",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 7,
+        "prompt": "A model passes most formula checks on BLUEFIN yet answers only about a third to half of the interrogation questions correctly. Explain how the way interrogation questions are built accounts for this gap, and connect it to the model's broader failure patterns.",
+        "model_answer": "Interrogation questions are deliberately built around inputs that reach the answer through multi-step calculation chains. To answer, the agent must change an assumption, let it propagate through several layers of the model and read the recalculated result. Writing correct-looking formulas is a static skill; following changes through the model is dynamic correctness, where models are weakest. They pass far fewer perturbation and output-validation checks than formula checks, and some rarely recalculate, so high formula scores do not translate into correct interrogation answers.",
+        "rubric": [
+          {
+            "criterion": "Explains that the questions require changing inputs and tracing them through multi-step calculation chains, not reading a value directly",
+            "required": true
+          },
+          {
+            "criterion": "Links the gap to weak dynamic correctness, such as lower perturbation or output-validation pass rates than formula pass rates, or failing to recalculate",
+            "required": true
+          },
+          {
+            "criterion": "Notes that a single exact answer allows little partial credit",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 7,
+        "prompt": "A colleague expects interrogation tasks to be the easiest part of the benchmark, since each has one correct answer and no subjective rubric. Frontier models scored only 34.7–50% on them. Explain why the colleague's expectation is wrong, referring to how the questions were designed and to where models tend to fail.",
+        "model_answer": "Having one correct answer does not make a question easy. The questions were designed so that the answer depends on inputs flowing through multi-step calculation chains: the agent must alter assumptions, let them propagate through several layers and read the new result. That exercises dynamic correctness, the area where models are weakest. They pass far fewer perturbation and output checks than formula checks, and several rarely recalculate. A single exact answer also leaves no room for partial credit.",
+        "rubric": [
+          {
+            "criterion": "Explains that answering requires changing assumptions and following them through multi-step calculation chains",
+            "required": true
+          },
+          {
+            "criterion": "Connects the low scores to models' weakness at dynamic correctness, such as poor perturbation or output-validation performance or not recalculating",
+            "required": true
+          },
+          {
+            "criterion": "Points out that a single exact answer leaves no partial credit",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "trigger": "after_generation",
+  "stage": "review_bank",
+  "questions": [
+    {
+      "number": 1,
+      "block": "b03",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 2,
+      "block": "b07",
+      "type": "blurb"
+    },
+    {
+      "number": 3,
+      "block": "b11",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 4,
+      "block": "b18",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 5,
+      "block": "b21",
+      "type": "blurb"
+    },
+    {
+      "number": 6,
+      "block": "b24",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 7,
+      "block": "b25",
+      "type": "blurb"
+    }
+  ],
+  "variants": [
+    {
+      "question": 1,
+      "block": "b03",
+      "content": {
+        "question": "A benchmark designer makes spreadsheet tasks 'long-horizon' by stringing together ten clearly specified edits, such as 'add a column', then 'sum these rows', then 'link this cell'. On the same grounds the authors use to criticise SheetRM, what does this design fail to capture about real finance work?",
+        "options": [
+          "The agent never has to work out a plan or meet unstated domain expectations",
+          "The workbooks stay small, so the agent never struggles to read whole sheets",
+          "The tasks come from coding repositories instead of real finance workflows",
+          "The grading collapses every attempt into one overall correctness score"
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "Chaining well-defined instructions adds length but not underspecification. Real finance requests are underspecified, so a capable agent must infer a viable plan and satisfy implicit domain expectations. The authors make exactly this criticism of SheetRM.",
+          "option_explanations": [
+            "Right. Explicit step-by-step edits hand the agent the plan. Real requests leave the plan, and the implicit expectations, for the agent to work out.",
+            "The criticism is not about workbook size or how much of a sheet the agent can read. Consider how the instructions themselves are written.",
+            "Nothing in the scenario concerns where the tasks come from. The issue is how the difficulty is produced.",
+            "Single-score grading is a separate criticism aimed at other benchmarks. The concern here is how clearly the instructions spell out what to do."
+          ]
+        }
+      }
+    },
+    {
+      "question": 1,
+      "block": "b03",
+      "content": {
+        "question": "Which statement best captures why SheetRM, despite targeting long-horizon spreadsheet tasks, is said to fall short of realistic finance work?",
+        "options": [
+          "Its long tasks rely on vague prompts, so the expected output is unclear",
+          "Its long tasks come from huge workbooks, testing reading more than reasoning",
+          "Its long tasks chain explicit instructions, unlike underspecified real requests",
+          "Its long tasks use multi-tab models that are built from code, not finance work"
+        ],
+        "private": {
+          "correct_index": 2,
+          "explanation": "SheetRM raises difficulty by concatenating relatively well-defined manipulation instructions. Real finance requests are underspecified and require the agent to infer the plan and meet implicit expectations, which SheetRM's tasks never demand.",
+          "option_explanations": [
+            "This reverses the criticism. SheetRM's instructions are explicit rather than vague.",
+            "SheetRM's difficulty is not described as coming from workbook size or reading limits.",
+            "Right. Concatenating clear instructions makes tasks longer without making them underspecified, so the agent never has to plan the work itself.",
+            "Nothing ties SheetRM to code repositories. The criticism concerns how its instructions are written."
+          ]
+        }
+      }
+    },
+    {
+      "question": 2,
+      "block": "b07",
+      "content": {
+        "prompt": "Consider two versions of the same task prompt. Version A: 'Step 1: add a Debt tab. Step 2: link interest to SOFR. Step 3: feed interest into the income statement.' Version B: 'Add a debt schedule so the model reflects the new financing.' Explain what each version would actually measure about an agent, and why the authors chose to write prompts like Version B.",
+        "min_words": 30,
+        "private": {
+          "model_answer": "Version A hands the agent the plan, so success mostly shows that it can follow explicit instructions, much like benchmarks that chain well-defined edits. Version B states only the intent and the desired output. Real finance requests are underspecified like this, so the agent must work out a viable plan itself and meet implicit domain expectations, such as properly integrating the schedule. The authors chose intent-based prompts so the benchmark measures that planning ability rather than instruction following.",
+          "rubric": [
+            {
+              "criterion": "Explains that the step-by-step version gives the agent the plan, so it tests instruction following rather than planning",
+              "required": true
+            },
+            {
+              "criterion": "Explains that intent-only prompts mirror underspecified real finance requests, so the agent must infer the plan or meet implicit expectations",
+              "required": true
+            },
+            {
+              "criterion": "Notes that removing step-by-step scaffolding can reveal tasks that are too simple and need their complexity recalibrated",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 2,
+      "block": "b07",
+      "content": {
+        "prompt": "A critic argues that rewriting benchmark prompts to describe only the desired output and intent, without listing the steps, is unfair to agents because they cannot know exactly what is expected. Respond using the reasoning behind this design choice: what would prescriptive prompts measure instead, and why is the uncertainty intentional?",
+        "min_words": 30,
+        "private": {
+          "model_answer": "With prescriptive prompts the plan is supplied, so the benchmark would mostly measure instruction following, as benchmarks that concatenate explicit edits do. The uncertainty is intentional because real finance requests are underspecified: a capable analyst or agent has to infer a viable plan and meet implicit domain expectations. Leaving the path open tests exactly that skill, which is what realistic finance work requires.",
+          "rubric": [
+            {
+              "criterion": "States that prescriptive prompts would reduce the task to following instructions rather than planning",
+              "required": true
+            },
+            {
+              "criterion": "Argues that the ambiguity reflects underspecified real-world finance requests, which require inferring the path and meeting implicit expectations",
+              "required": true
+            },
+            {
+              "criterion": "Mentions that removing the steps exposed overly simple tasks, which led to recalibrating their complexity",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 3,
+      "block": "b11",
+      "content": {
+        "question": "Two agents both build valid financial models for the same task. One copies the reference workbook's tab layout closely; the other organises its tabs differently but computes everything correctly. Why did the authors drop an explicit 'structural completeness' rubric section in situations like this?",
+        "options": [
+          "It would count formatting such as labels and fonts twice in the score",
+          "It would favour the copied layout and penalise the valid alternative",
+          "It would give tab-existence verdicts that often clash with the experts",
+          "It would reward empty tabs carrying the right names as if they were complete"
+        ],
+        "private": {
+          "correct_index": 1,
+          "explanation": "Preliminary experiments showed that explicit structural-completeness sections over-rewarded copying a template and over-penalised valid alternatives. Structure is therefore assessed indirectly, through formula, integration, output and perturbation checks that any valid build can pass.",
+          "option_explanations": [
+            "Formatting is handled under presentation. Double-counting it was not the reported problem.",
+            "Right. Explicit structure checks rewarded matching the reference layout, which is unfair to the differently organised but valid model.",
+            "The judge routinely and reliably checks whether tabs exist. The problem was what such a section rewarded.",
+            "Hollow tabs gaming the checks was not the concern. Think about how builds that differ from the reference were treated."
+          ]
+        }
+      }
+    },
+    {
+      "question": 3,
+      "block": "b11",
+      "content": {
+        "question": "How does the BLUEFIN rubric now assess whether a model is properly structured, and why?",
+        "options": [
+          "Directly, with a tab checklist, since the judge detects tabs reliably",
+          "Through presentation checks, since structure is mainly about formatting",
+          "Indirectly, through behaviour checks, since layout checks favoured template copies",
+          "Only through expert review, since judges disagreed too often on structure"
+        ],
+        "private": {
+          "correct_index": 2,
+          "explanation": "Explicit structural-completeness and input-accuracy sections over-rewarded copying a template and over-penalised valid alternatives. Structure is therefore captured indirectly, through formula, integration, output and perturbation checks.",
+          "option_explanations": [
+            "A dedicated structure checklist is exactly what was removed. The judge's ability to detect tabs was not the reason for that decision.",
+            "Presentation covers formatting conventions, but structure is not assessed as a formatting matter.",
+            "Right. Behaviour-based checks let any valid build pass, while explicit layout checks rewarded copying the reference.",
+            "No judge-reliability problem with structure was reported, and structure is still assessed by the judge."
+          ]
+        }
+      }
+    },
+    {
+      "question": 4,
+      "block": "b18",
+      "content": {
+        "question": "An agent building a revenue forecast cannot get a growth formula to work. It types the forecast revenue figures in as constants instead, and they exactly match the reference values. The BLUEFIN judge then changes the growth-rate assumption and recalculates. What is the most likely result on these checks?",
+        "options": [
+          "Output Validation fails because the judge rejects values typed in as constants",
+          "Both pass, because the delivered values match the reference within tolerance",
+          "Output Validation fails at base case, but Perturbation passes as outputs still move",
+          "Output Validation passes at base case, but Perturbation fails after the change"
+        ],
+        "private": {
+          "correct_index": 3,
+          "explanation": "Output Validation is a static check: it compares delivered values with the reference within a tolerance. Perturbation is dynamic: the judge changes an input, recalculates and reads whether outputs reach the new expected values. Hardcoded figures pass the first but not the second.",
+          "option_explanations": [
+            "Output Validation only compares values with the reference. It does not examine how a value was produced.",
+            "Matching values satisfies the static check, but the judge also edits inputs and checks the recalculated results.",
+            "The base-case values are correct, so the static check would not fail. Perturbation also requires reaching the correct new value, not just any movement.",
+            "Right. The typed-in numbers match today's reference, but they cannot respond when the growth rate changes, so the perturbed outputs are wrong."
+          ]
+        }
+      }
+    },
+    {
+      "question": 4,
+      "block": "b18",
+      "content": {
+        "question": "A model passes every Output Validation check at the base case. When the judge raises the interest-rate input and recalculates, several downstream outputs miss their new expected values. What is the most likely cause?",
+        "options": [
+          "Some intermediate values were pasted in as constants rather than formulas",
+          "Its base-case outputs differ from the reference by more than the tolerance",
+          "The judge forgot to restore the input before reading the changed outputs",
+          "The workbook breaks presentation conventions for labels and number formats"
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "Passing static value checks while failing perturbation is the signature of hardcoding. The numbers are right today, but they do not respond to input changes. Hardcoded intermediate values are a named cause of perturbation failure.",
+          "option_explanations": [
+            "Right. Constants show correct base-case numbers but do not update when an input changes, so the dependent outputs miss their new values.",
+            "This contradicts the scenario: the base-case outputs passed Output Validation, so they are within tolerance.",
+            "The judge restores the input after reading the perturbed output. The failure lies in the model, not in the procedure.",
+            "Formatting is assessed under presentation. It does not determine whether outputs recalculate correctly."
+          ]
+        }
+      }
+    },
+    {
+      "question": 5,
+      "block": "b21",
+      "content": {
+        "prompt": "In the balance-sheet case study, one model scored 100% at a cost of $3.00 and another scored 95% at a cost of $83.05. State how much the costs differ, and explain what a leaderboard ranking models only by average score would fail to show here.",
+        "min_words": 30,
+        "private": {
+          "model_answer": "The costs differ by about 27.7x ($83.05 vs $3.00), while the scores are nearly the same (100% vs 95%). A leaderboard of average scores would show the two models as roughly equal and hide that one delivers the same quality far more cheaply. On routine, well-specified wiring tasks like this, cost per correct output can vary enormously even when quality barely differs.",
+          "rubric": [
+            {
+              "criterion": "Identifies the near-equal scores alongside the large cost gap (about 27.7x, or $3.00 vs $83.05)",
+              "required": true
+            },
+            {
+              "criterion": "Explains that average-score rankings ignore cost per correct output, so models that look equal can differ greatly in practical value",
+              "required": true
+            },
+            {
+              "criterion": "Explains the higher cost (broad reads, large writes, many output tokens) or notes that pricier models may suit ambiguous or novel tasks",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 5,
+      "block": "b21",
+      "content": {
+        "prompt": "A team lead plans to choose a model for routine balance-sheet wiring work by picking whichever ranks highest on an average-score leaderboard. Using the case study in which Gemini scored 100% for $3.00 and Opus scored 95% for $83.05, explain what this approach misses and what the team lead should look at instead.",
+        "min_words": 30,
+        "private": {
+          "model_answer": "Both models score highly and appear nearly tied on an average-score leaderboard, but Opus cost about 27.7x more for slightly lower quality. Ranking by average score ignores cost, so the team lead would miss that cost per correct output differs enormously. For routine, well-specified tasks, they should compare cost per correct output, since quality is similar and the cheaper model does the job.",
+          "rubric": [
+            {
+              "criterion": "Uses the case figures to show similar scores but very different costs (about 27.7x)",
+              "required": true
+            },
+            {
+              "criterion": "Explains that the team lead should consider cost per correct output, because average scores hide cost differences",
+              "required": true
+            },
+            {
+              "criterion": "Notes that expensive models may still be justified for ambiguous or novel tasks, or explains why Opus used more tokens",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 6,
+      "block": "b24",
+      "content": {
+        "question": "A colleague reads that the GPT-5.4 judge reached Krippendorff's α = 0.826 against expert consensus on 384 binary criteria. Which conclusion does this result actually support?",
+        "options": [
+          "GPT-5.4 judged clearly better than the other two candidate judges tested",
+          "The judge's verdicts on each criterion agree with experts near human level",
+          "The rubric captures every aspect of model quality that matters to experts",
+          "The judge's total task scores match the experts' scores within a few points"
+        ],
+        "private": {
+          "correct_index": 1,
+          "explanation": "The validation compares the judge's yes/no verdicts on individual criteria with expert labels and finds agreement near the human inter-rater ceiling. It does not show that the rubric is complete, it does not compare task-level scores, and it does not show a large gap between candidate judges.",
+          "option_explanations": [
+            "All three candidates agreed with experts at comparable levels. GPT-5.4 was chosen for a modestly higher macro-F1, not a clear advantage.",
+            "Right. Agreement on criterion-level binary verdicts approaches the level at which experts agree with each other.",
+            "The validation takes the rubric as given. It does not test whether the rubric covers everything that matters.",
+            "The comparison was made per binary criterion, and no whole-task score comparison is reported."
+          ]
+        }
+      }
+    },
+    {
+      "question": 6,
+      "block": "b24",
+      "content": {
+        "question": "In the judge validation study for BLUEFIN, what exactly was compared with what?",
+        "options": [
+          "The judge's overall workbook scores with the experts' overall scores",
+          "The rubric criteria the judge wrote with criteria the experts wrote",
+          "The judge's yes/no verdicts per criterion with expert consensus labels",
+          "GPT-5.4's model rankings with rankings from two other candidate judges"
+        ],
+        "private": {
+          "correct_index": 2,
+          "explanation": "The study took 384 binary rubric criteria and checked whether the judge's met/not-met verdicts matched expert consensus. It found α = 0.826, close to the human inter-rater ceiling.",
+          "option_explanations": [
+            "The analysis worked at the level of individual binary criteria, not whole-workbook scores.",
+            "The judge applied existing criteria; writing criteria was not evaluated.",
+            "Right. Criterion-level binary verdicts from the judge were compared with expert consensus labels.",
+            "The candidate judges were each compared with expert labels, not ranked against one another's outputs."
+          ]
+        }
+      }
+    },
+    {
+      "question": 7,
+      "block": "b25",
+      "content": {
+        "prompt": "A model passes most formula checks on BLUEFIN yet answers only about a third to half of the interrogation questions correctly. Explain how the way interrogation questions are built accounts for this gap, and connect it to the model's broader failure patterns.",
+        "min_words": 35,
+        "private": {
+          "model_answer": "Interrogation questions are deliberately built around inputs that reach the answer through multi-step calculation chains. To answer, the agent must change an assumption, let it propagate through several layers of the model and read the recalculated result. Writing correct-looking formulas is a static skill; following changes through the model is dynamic correctness, where models are weakest. They pass far fewer perturbation and output-validation checks than formula checks, and some rarely recalculate, so high formula scores do not translate into correct interrogation answers.",
+          "rubric": [
+            {
+              "criterion": "Explains that the questions require changing inputs and tracing them through multi-step calculation chains, not reading a value directly",
+              "required": true
+            },
+            {
+              "criterion": "Links the gap to weak dynamic correctness, such as lower perturbation or output-validation pass rates than formula pass rates, or failing to recalculate",
+              "required": true
+            },
+            {
+              "criterion": "Notes that a single exact answer allows little partial credit",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 7,
+      "block": "b25",
+      "content": {
+        "prompt": "A colleague expects interrogation tasks to be the easiest part of the benchmark, since each has one correct answer and no subjective rubric. Frontier models scored only 34.7–50% on them. Explain why the colleague's expectation is wrong, referring to how the questions were designed and to where models tend to fail.",
+        "min_words": 35,
+        "private": {
+          "model_answer": "Having one correct answer does not make a question easy. The questions were designed so that the answer depends on inputs flowing through multi-step calculation chains: the agent must alter assumptions, let them propagate through several layers and read the new result. That exercises dynamic correctness, the area where models are weakest. They pass far fewer perturbation and output checks than formula checks, and several rarely recalculate. A single exact answer also leaves no room for partial credit.",
+          "rubric": [
+            {
+              "criterion": "Explains that answering requires changing assumptions and following them through multi-step calculation chains",
+              "required": true
+            },
+            {
+              "criterion": "Connects the low scores to models' weakness at dynamic correctness, such as poor perturbation or output-validation performance or not recalculating",
+              "required": true
+            },
+            {
+              "criterion": "Points out that a single exact answer leaves no partial credit",
+              "required": false
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

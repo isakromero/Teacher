@@ -34,6 +34,7 @@ from teacher.managers import (
     ConceptManager,
     ConceptRelationManager,
 )
+from tests.conftest import raw_json
 
 MODEL = "claude-test-relations"
 WHY = "They are connected in a direct way."
@@ -249,7 +250,7 @@ def test_old_neighbours_are_always_judged_and_never_capped(
                                            "relation another model made")
         assert "relates_to" not in c["found_by"][0]  # the old type is not given as a hint
     rows = memo(settings)
-    assert rows[("alpha", "attention")]["found_by"] == '["existing"]'
+    assert raw_json(rows[("alpha", "attention")]["found_by"]) == ["existing"]
     assert run.counts()["existing"] == 2 and run.counts()["replaced"] == 2
 
 

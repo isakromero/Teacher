@@ -1,0 +1,4 @@
+{
+  "markdown": "## Three task families\n\nEach BLUEFIN task pairs a workbook context with a natural-language prompt.\n\n- **Synthesis** (10 tasks): build a workbook from a prompt alone, for instance a four-tab DCF model for a company. Graded by rubric.\n- **Manipulation** (82 tasks): given an existing workbook, modify it, for instance \"build a debt schedule at the bottom of the uploaded worksheet\". Graded by rubric. This is the largest family, mirroring the day-to-day of investment banking and private equity analysts; these tasks take at least 45 minutes of analyst work from scratch.\n- **Interrogation** (39 tasks): answer a question about a workbook, such as the maximum advance for week 20 after a multi-step scenario of price, advance-rate and grace-period changes. The answer is compared to a known correct value; there is no rubric.\n\nOnly 305 rubric criteria over 11 tasks are public; the rest are held out to guard against leakage.",
+  "role": "explanation"
+}

@@ -17,6 +17,13 @@
 // The reader's standing (GET /api/history/concepts) marks every node (graph_view.js
 // setStanding, with legend entries); the selected concept's standing and the questions that test
 // it (GET /api/history/concepts/{slug}) are shown in the inspector, fetched with its details.
+//
+// Phones (app.css shows the sheet's toggle only there): the inspector is a bottom sheet over the
+// canvas. Collapsed, only its toggle bar shows (the selection's name, or "Overview"); selecting
+// a concept or relation opens it, tapping the background (deselecting) closes it, and the toggle
+// or Escape close it by hand. The view is told how much of the canvas the sheet covers, so a
+// selected concept is moved out from under it. On wider screens the sheet wrapper is
+// `display: contents` and the inspector is the side panel, always shown.
 
 import { logEvent } from "./activity.js";
 import { api, describeError, seg } from "./api.js";
@@ -45,6 +52,8 @@ import { standingSection } from "./standing.js";
 import { STATUSES, statusById, statusLabel } from "./standing_model.js";
 import { RELATE_MODELS_URL, loadModelChoices, modelSelect } from "./model_choice.js";
 
+const FOCUS_ZOOM = 0.8; // on a phone, a concept chosen from a list is shown at least this close
+
 const page = byId("graph-page");
 const focusSlug = page.dataset.concept || null;
 const loadingEl = byId("graph-loading");
@@ -60,6 +69,9 @@ const searchInput = byId("graph-search-input");
 const searchStatus = byId("graph-search-status");
 const searchNotice = byId("graph-search-notice");
 const searchResults = byId("graph-search-results");
+const sheet = byId("graph-sheet");
+const sheetToggle = byId("graph-sheet-toggle");
+const sheetLabel = byId("graph-sheet-label");
 
 let graph = { nodes: [], edges: [] };
 let selection = null;
@@ -78,11 +90,20 @@ const view = createGraphView({
   svg: byId("graph-svg"),
   canvas: byId("graph-canvas"),
   buttons: { zoomIn: byId("graph-zoom-in"), zoomOut: byId("graph-zoom-out"), fit: byId("graph-fit") },
+  overlays: [byId("graph-zoom-in").parentElement, originLegend, noteEl],
+  // On a touch screen in-circle captions must be bigger to be read; below this they give way to
+  // name labels under the circles (graph_view.js).
+  captionMinPx: window.matchMedia("(pointer: coarse)").matches ? 11 : 9,
   onSelect: (next) => {
     const inspected = next?.kind === "node" && !(selection?.kind === "node" && selection.id === next.id);
     selection = next;
     if (inspected) logEvent("concept_inspected", { concept: nodeById(next.id)?.slug ?? null });
     confirming = null;
+    if (sheetLayout()) {
+      view.hold(); // opening the sheet must not refit the graph under the reader's finger
+      setSheet(Boolean(next));
+      if (next?.kind === "node") view.reveal(next.id);
+    }
     renderInspector();
   },
   onExpand: (id) => run(() => expand(id)),
@@ -121,6 +142,52 @@ async function run(action) {
 function say(message) {
   statusEl.textContent = message;
 }
+
+// -- the inspector sheet (phones) --------------------------------------------------------------
+
+/** Whether the inspector is a bottom sheet (the phone layout): app.css shows its toggle then. */
+function sheetLayout() {
+  return getComputedStyle(sheetToggle).display !== "none";
+}
+
+/** Open or close the sheet, and tell the view how much of the canvas it now covers. */
+function setSheet(open) {
+  sheet.classList.toggle("is-open", open);
+  sheetToggle.setAttribute("aria-expanded", String(open));
+  syncInsets();
+}
+
+function syncInsets() {
+  const bottom = sheetLayout() ? sheet.offsetHeight : 0;
+  viewEl.style.setProperty("--graph-obscured", `${bottom}px`);
+  view.setInsets({ bottom });
+}
+
+/** The toggle bar's words: what the sheet holds. */
+function sheetTitle() {
+  if (selection?.kind === "node") return nodeById(selection.id)?.name ?? "Concept";
+  if (selection?.kind === "edge") {
+    const edge = graph.edges.find((e) => e.id === selection.id);
+    const from = edge && nodeById(edge.from_id);
+    const to = edge && nodeById(edge.to_id);
+    return from && to ? `${from.name} – ${to.name}` : "Relation";
+  }
+  return roadmap ? "Roadmap and overview" : "Overview and all concepts";
+}
+
+sheetToggle.addEventListener("click", () => {
+  setSheet(!sheet.classList.contains("is-open"));
+});
+
+sheet.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && sheetLayout() && sheet.classList.contains("is-open")) {
+    event.preventDefault();
+    setSheet(false);
+    sheetToggle.focus();
+  }
+});
+
+new ResizeObserver(syncInsets).observe(sheet);
 
 /** Redraw after `graph` changed; keeps the roadmap's hot edges in step with the relations and
  * drops a selection that is no longer drawn. */
@@ -199,7 +266,11 @@ async function focusConcept(node) {
   selection = { kind: "node", id: shown.id };
   view.select(selection);
   logEvent("concept_inspected", { concept: shown.slug });
-  view.centreOn(shown.id);
+  // On a phone: open the sheet before centring, so the concept lands above it, and zoom in far
+  // enough for its neighbours' names to show.
+  const phone = sheetLayout();
+  if (phone) setSheet(true);
+  view.centreOn(shown.id, { minZoom: phone ? FOCUS_ZOOM : null });
   await renderInspector({ focus: true });
 }
 
@@ -335,6 +406,7 @@ function loadRelateModels() {
 function selectRelation(edge) {
   selection = { kind: "edge", id: edge.id };
   view.select(selection);
+  if (sheetLayout()) setSheet(true);
   renderInspector({ focus: true });
 }
 
@@ -353,6 +425,7 @@ function hideRoadmap() {
 async function renderInspector({ focus = false, focusKey = null } = {}) {
   const token = ++renderToken;
   const keepFocus = focus || focusKey !== null || inspector.contains(document.activeElement);
+  sheetLabel.textContent = sheetTitle();
   const top = roadmap
     ? roadmapPanel(roadmap.nodes, {
         selectedId: selection?.kind === "node" ? selection.id : null,
@@ -362,7 +435,9 @@ async function renderInspector({ focus = false, focusKey = null } = {}) {
     : null;
   let body;
   if (!selection) {
-    body = overviewPanel(graph.nodes, visibleEdges(graph));
+    body = overviewPanel(graph.nodes, visibleEdges(graph), {
+      onSelectConcept: (n) => run(() => focusConcept(n)),
+    });
   } else if (selection.kind === "edge") {
     const edge = graph.edges.find((e) => e.id === selection.id);
     body = relationPanel(edge, nodeById(edge.from_id), nodeById(edge.to_id), {
@@ -557,6 +632,8 @@ async function start() {
   viewEl.hidden = false; // shown before drawing, so the view knows its size
   redraw();
   view.select(selection);
+  // Opened on one concept (?concept=): on a phone, show it in the sheet straight away.
+  setSheet(Boolean(selection) && sheetLayout());
   loadStanding();
   await renderInspector();
 }

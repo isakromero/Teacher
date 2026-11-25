@@ -1,0 +1,40 @@
+/* What things cost (static/js/cost.js): the cost line under a page's or lab's meta line, the
+   tutor conversation's line under its header and the figure under each reply. Quiet text that
+   wraps at any width, never under 13px. */
+
+.cost-details {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: max(13px, var(--text-sm));
+  line-height: 1.45;
+}
+
+.cost-details > summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.cost-breakdown {
+  margin: 0.25rem 0 0 1rem;
+}
+
+.cost-breakdown p {
+  margin: 0.25rem 0;
+  overflow-wrap: anywhere;
+}
+
+.tutor-cost {
+  margin: 0;
+  padding: 0.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: max(13px, var(--text-xs));
+  overflow-wrap: anywhere;
+}
+
+.tutor-msg-cost {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: max(13px, var(--text-xs));
+  text-align: right;
+}

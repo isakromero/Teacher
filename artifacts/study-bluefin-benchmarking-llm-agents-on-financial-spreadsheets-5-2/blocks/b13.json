@@ -1,0 +1,12 @@
+{
+  "prompt": "Five frontier models were run on the 120 held-out tasks. On which task family do you expect them to score highest?",
+  "options": [
+    "Interrogation: answering a question about a workbook",
+    "Manipulation: modifying an existing workbook",
+    "Synthesis: building a new workbook from a prompt"
+  ],
+  "private": {
+    "correct_index": 2,
+    "resolution": "Synthesis scores are highest for every model, even though building from scratch sounds like the most work. The authors' explanation is that a blank sheet gives more freedom, while an existing workbook's formulas, layout and references impose brittle constraints."
+  }
+}

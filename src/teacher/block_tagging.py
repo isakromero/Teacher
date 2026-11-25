@@ -24,7 +24,9 @@ passing) and a one-sentence rationale. `check_tagging` validates the reply hard:
 the page answered exactly once, no block that is not on the page, only concept ids from the
 list, no concept twice on one block, at most `MAX_CONCEPTS_PER_BLOCK` per block, and every
 rationale one non-blank line of at most `MAX_RATIONALE_CHARS`. A violation is a
-TaggingOutputError: nothing is dropped or fixed silently.
+TaggingOutputError: nothing is dropped or fixed silently. A rejected reply is asked for once
+more, with the reason added to the request (`retry_request`); the rejection is kept on the call
+in the record and reported as the stage's note. A second rejection is the error.
 
 Two ways to run it:
 - In page generation (`BlockTagger.run`, the `block_concepts` stage of `ClaudeGenerator`, right
@@ -49,6 +51,9 @@ Fail loudly: missing credentials, API errors, refusals, truncation, invalid outp
 cannot be tagged (a lab, not ready, no blocks, sources without concepts, already tagged) and a
 concurrent change raise a `BlockTaggingError` subclass with a key-free message starting
 "Block concepts could not be tagged: ". An unknown slug is the manager's NotFoundError.
+
+Costs: the call is recorded in the cost ledger (`teacher.costs`): as part of the generation in
+`run`, as `block_tagging` with the page in `tag_page`.
 """
 
 from __future__ import annotations
@@ -79,6 +84,7 @@ from teacher.claude_generator import (
 from teacher.concept_extraction import _line, _Tally, _Wire
 from teacher.concepts import stronger_role
 from teacher.config import DEFAULT_CONCEPT_MODEL, GENERATION_MODEL_CHOICES, Settings
+from teacher.costs import cost_scope
 from teacher.db.engine import session_scope
 from teacher.db.models import (
     BLOCK_CONCEPT_ROLES,
@@ -581,6 +587,19 @@ class PageTagRun:
 # -- the tagger ---------------------------------------------------------------------------------
 
 
+RETRY_INSTRUCTIONS = """\
+An earlier reply to this request was rejected by the application, which said: {rejected}
+
+Reply again for every block, obeying every rule above."""
+
+
+def retry_request(request: dict[str, Any], rejected: str) -> dict[str, Any]:
+    """`request` (a tagging request) with the reason its reply was rejected added after it."""
+    turn = request["messages"][0]
+    again = {"type": "text", "text": RETRY_INSTRUCTIONS.format(rejected=rejected)}
+    return {**request, "messages": [{**turn, "content": [*turn["content"], again]}]}
+
+
 @dataclass(frozen=True)
 class _PageSnapshot:
     artifact_id: int
@@ -675,27 +694,33 @@ class BlockTagger:
             raise _input("no concepts to tag with")
         model = self.choose_model(model)
         tally = _Tally(stage)
-        message = stream_message(
-            self._get_client(),
-            self.request(blocks, concepts, model),
-            stage_name=TAG_STEP,
-            error=_unavailable,
-        )
-        tally.add(TAG_STEP, message)
+        request = self.request(blocks, concepts, model)
         try:
-            wire = parse_reply(
-                TAG_STEP,
-                message,
-                WireTagging,
-                TAG_MAX_TOKENS,
-                stopped=_unavailable,
-                invalid=_output,
-                outcome="no block was tagged",
-            )
-            tags = check_tagging(wire, blocks, concepts)
-        except BlockTaggingError as exc:  # the call was paid for: say what it cost
+            try:
+                tags = self._tags(request, blocks, concepts, tally)
+            except TaggingOutputError as first:
+                # One second attempt that names the broken rule; nothing is repaired here.
+                rejected = str(first).removeprefix(ERROR_PREFIX)
+                tally.calls[-1]["rejected"] = rejected
+                try:
+                    tags = self._tags(retry_request(request, rejected), blocks, concepts, tally)
+                except TaggingOutputError as second:
+                    again = str(second).removeprefix(ERROR_PREFIX)
+                    tally.calls[-1]["rejected"] = again
+                    raise _output(
+                        f"{again} (second attempt; the first reply was rejected too: {rejected})"
+                    ) from second
+                if stage is not None:
+                    stage.set_note(
+                        f"The first tagging reply was rejected ({rejected}); a second reply "
+                        "was asked for and passed every check."
+                    )
+        except BlockTaggingError as exc:  # the calls were paid for: say what they cost
+            if not tally.calls:
+                raise
             raise type(exc)(
-                f"{exc} (the call used {tally.input} input / {tally.output} output tokens)"
+                f"{exc} (the {len(tally.calls)} call(s) used {tally.input} input / "
+                f"{tally.output} output tokens)"
             ) from exc
         return Tagging(
             tagger=self.name,
@@ -707,6 +732,30 @@ class BlockTagger:
             input_tokens=tally.input,
             output_tokens=tally.output,
         )
+
+    def _tags(
+        self,
+        request: dict[str, Any],
+        blocks: Sequence[PageBlock],
+        concepts: Sequence[ConceptOption],
+        tally: _Tally,
+    ) -> list[BlockTag]:
+        """One tagging call and its checks."""
+        message = stream_message(
+            self._get_client(), request, stage_name=TAG_STEP, error=_unavailable,
+            purpose="block_tagging",
+        )
+        tally.add(TAG_STEP, message)
+        wire = parse_reply(
+            TAG_STEP,
+            message,
+            WireTagging,
+            TAG_MAX_TOKENS,
+            stopped=_unavailable,
+            invalid=_output,
+            outcome="no block was tagged",
+        )
+        return check_tagging(wire, blocks, concepts)
 
     # -- in a generation ----------------------------------------------------------------------
 
@@ -736,7 +785,8 @@ class BlockTagger:
             PageBlock(number, block_key(number), type_, content)
             for number, (type_, content) in enumerate(blocks, start=1)
         ]
-        return self.tag(page_blocks, concepts, stage=stage)
+        with cost_scope(settings, purpose="block_tagging"):  # the generation's, in practice
+            return self.tag(page_blocks, concepts, stage=stage)
 
     # -- on an existing page ------------------------------------------------------------------
 
@@ -783,7 +833,8 @@ class BlockTagger:
         `model_choices()`."""
         model = self.choose_model(model)
         snap = self._snapshot(settings, slug, retag)
-        tagging = self.tag(snap.blocks, snap.concepts, model=model)
+        with cost_scope(settings, purpose="block_tagging", artifact_id=snap.artifact_id):
+            tagging = self.tag(snap.blocks, snap.concepts, model=model)
         return self._write(settings, snap, tagging, retag)
 
     def _write(

@@ -1,0 +1,110 @@
+{
+  "kind": "bar",
+  "title": "Held-out score by task family and model",
+  "x_label": "Model",
+  "y_label": "Score (% of rubric points, or correct answers for interrogation)",
+  "series": [
+    {
+      "name": "Synthesis (n=9)",
+      "points": [
+        {
+          "x": "Opus 4.7",
+          "y": 66.7
+        },
+        {
+          "x": "GPT-5.5",
+          "y": 59.9
+        },
+        {
+          "x": "Gemini 3.1",
+          "y": 50.3
+        },
+        {
+          "x": "Sonnet 4.6",
+          "y": 53.2
+        },
+        {
+          "x": "Grok 4.20",
+          "y": 46.9
+        }
+      ]
+    },
+    {
+      "name": "Manipulation (n=75)",
+      "points": [
+        {
+          "x": "Opus 4.7",
+          "y": 49.4
+        },
+        {
+          "x": "GPT-5.5",
+          "y": 48.2
+        },
+        {
+          "x": "Gemini 3.1",
+          "y": 46.1
+        },
+        {
+          "x": "Sonnet 4.6",
+          "y": 43.0
+        },
+        {
+          "x": "Grok 4.20",
+          "y": 27.8
+        }
+      ]
+    },
+    {
+      "name": "Interrogation (n=36)",
+      "points": [
+        {
+          "x": "Opus 4.7",
+          "y": 44.4
+        },
+        {
+          "x": "GPT-5.5",
+          "y": 50.0
+        },
+        {
+          "x": "Gemini 3.1",
+          "y": 44.4
+        },
+        {
+          "x": "Sonnet 4.6",
+          "y": 40.3
+        },
+        {
+          "x": "Grok 4.20",
+          "y": 34.7
+        }
+      ]
+    },
+    {
+      "name": "Overall (n=120)",
+      "points": [
+        {
+          "x": "Opus 4.7",
+          "y": 49.2
+        },
+        {
+          "x": "GPT-5.5",
+          "y": 49.6
+        },
+        {
+          "x": "Gemini 3.1",
+          "y": 45.9
+        },
+        {
+          "x": "Sonnet 4.6",
+          "y": 42.9
+        },
+        {
+          "x": "Grok 4.20",
+          "y": 31.3
+        }
+      ]
+    }
+  ],
+  "caption": "Synthesis is the tallest bar for every model, and no model's overall bar passes 50. Grok trails most clearly on manipulation.",
+  "source": "Table 2 (held-out performance)"
+}

@@ -1,0 +1,12 @@
+{
+  "prompt": "Suppose an agent types the number 40 into a Profit cell. The correct formula would give exactly 40 too. The judge then runs an Output Validation check and a Perturbation check (raising Revenue). What happens?",
+  "options": [
+    "It fails both checks, since the judge reads the formula string and rejects constants.",
+    "It passes both checks, since the displayed value matches the reference exactly.",
+    "It passes Output Validation but fails Perturbation, since the cell cannot recompute."
+  ],
+  "private": {
+    "correct_index": 2,
+    "resolution": "The value check only compares the number, so a correct hardcode passes it. The perturbation check changes an input and recalculates, and a constant does not move. The widget below lets you run both checks on three versions of the cell."
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "kind": "bar",
+  "title": "Held-out score by task type",
+  "x_label": "Model",
+  "y_label": "Score (%)",
+  "series": [
+    {
+      "name": "Manipulation",
+      "points": [
+        {
+          "x": "Opus 4.7",
+          "y": 49.4
+        },
+        {
+          "x": "Sonnet 4.6",
+          "y": 43.0
+        },
+        {
+          "x": "GPT-5.5",
+          "y": 48.2
+        },
+        {
+          "x": "Gemini 3.1",
+          "y": 46.1
+        },
+        {
+          "x": "Grok 4.20",
+          "y": 27.8
+        }
+      ]
+    },
+    {
+      "name": "Synthesis",
+      "points": [
+        {
+          "x": "Opus 4.7",
+          "y": 66.7
+        },
+        {
+          "x": "Sonnet 4.6",
+          "y": 53.2
+        },
+        {
+          "x": "GPT-5.5",
+          "y": 59.9
+        },
+        {
+          "x": "Gemini 3.1",
+          "y": 50.3
+        },
+        {
+          "x": "Grok 4.20",
+          "y": 46.9
+        }
+      ]
+    },
+    {
+      "name": "Interrogation",
+      "points": [
+        {
+          "x": "Opus 4.7",
+          "y": 44.4
+        },
+        {
+          "x": "Sonnet 4.6",
+          "y": 40.3
+        },
+        {
+          "x": "GPT-5.5",
+          "y": 50.0
+        },
+        {
+          "x": "Gemini 3.1",
+          "y": 44.4
+        },
+        {
+          "x": "Grok 4.20",
+          "y": 34.7
+        }
+      ]
+    }
+  ],
+  "caption": "Synthesis bars are the tallest for every model, while manipulation and interrogation hover near or below 50%.",
+  "source": "Table 2"
+}

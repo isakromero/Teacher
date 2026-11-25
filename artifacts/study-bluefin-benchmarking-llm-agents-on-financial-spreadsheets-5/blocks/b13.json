@@ -1,0 +1,13 @@
+{
+  "prompt": "Five frontier models were run on the 120 held-out tasks. What do you expect for the best model's overall score?",
+  "options": [
+    "Just under 50%",
+    "Above 80%, with only a few failures",
+    "Below 20%",
+    "Between 60% and 80%"
+  ],
+  "private": {
+    "correct_index": 0,
+    "resolution": "The best, GPT-5.5, scored 49.6% and Opus 4.7 49.2%; none exceeded 50%. Next we look at how this splits by task type."
+  }
+}

@@ -4,19 +4,20 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from teacher import cli
-from teacher.config import ENV_HOME, Settings
+from teacher.config import Settings
 from teacher.db.engine import session_scope
 from teacher.managers import ArtifactManager, ChatManager, StudyHistoryManager
 
 
 @pytest.fixture
-def home(settings: Settings, monkeypatch: pytest.MonkeyPatch) -> Settings:
+def home(settings: Settings, settings_env: Any) -> Settings:
     """$TEACHER_HOME at the migrated test `settings`, with a page opened and a chat message."""
-    monkeypatch.setenv(ENV_HOME, str(settings.root))
+    settings_env(settings)
     with session_scope(settings) as session:
         page = ArtifactManager(session, settings).create(
             slug="page", kind="study_page", title="The Page", generator="test"

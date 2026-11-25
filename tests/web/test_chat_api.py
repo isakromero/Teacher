@@ -206,7 +206,8 @@ def test_thread_endpoints(client: TestClient, make_artifact: MakeArtifact, fake)
     created = client.post("/api/artifacts/study/chat/threads")
     assert created.status_code == 201
     first = created.json()
-    assert set(first) == {"id", "artifact", "created_at", "message_count", "preview"}
+    assert set(first) == {"id", "artifact", "created_at", "message_count", "preview", "cost"}
+    assert first["cost"]["calls"] == 0 and first["cost"]["total_usd"] == 0
     assert first["artifact"] == "study" and first["message_count"] == 0
     assert first["preview"] is None and first["created_at"].endswith("+00:00")
     second = new_thread(client)
@@ -222,11 +223,13 @@ def test_thread_endpoints(client: TestClient, make_artifact: MakeArtifact, fake)
     send_ok(client, first["id"], text="  " + "Why does attention scale? " * 6)
     detail = client.get(f"/api/artifacts/study/chat/threads/{first['id']}").json()
     assert detail["message_count"] == 2
+    assert detail["cost"]["calls"] == 1 and detail["cost"]["parts"][0]["key"] == "tutor"
     assert detail["preview"].startswith("Why does attention scale?") and len(detail["preview"]) <= 80
     user, reply = detail["messages"]
     assert set(user) == {
-        "id", "role", "kind", "text", "references", "parts", "answers", "created_at"
+        "id", "role", "kind", "text", "references", "parts", "answers", "created_at", "cost"
     }
+    assert user["cost"] is None
     assert user["parts"] == [] and user["answers"] == []
     assert user["role"] == "user" and user["kind"] == "message"
     assert user["text"] == ("Why does attention scale? " * 6).strip()
@@ -238,7 +241,9 @@ def test_thread_endpoints(client: TestClient, make_artifact: MakeArtifact, fake)
         ],
         "answers": [],
         "created_at": reply["created_at"],
+        "cost": reply["cost"],
     }
+    assert reply["cost"]["calls"] == 1 and reply["cost"]["total_usd"] > 0
     listed = client.get("/api/artifacts/study/chat/threads").json()
     assert listed[1]["message_count"] == 2
 

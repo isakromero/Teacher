@@ -28,9 +28,10 @@ dimensionality, metric or scalar type, an index file that is missing, fails its 
 cannot be read, or holds other keys than the manifest lists -- is a `VectorIndexFileError`
 naming the problem. The exact usearch version is required: a library upgrade means a rebuild.
 
-`cached(settings, model, dimensions)` keeps one opened index per (database, model,
-dimensions) in the process. Each `VectorIndex` has an `RLock` (`lock`); its callers hold it
-across reconcile + search, so concurrent threads never see a half-applied change.
+`cached(settings, model, dimensions)` keeps one opened index per (database (the provider's
+`cache_key`), model, dimensions) in the process. Each `VectorIndex` has an `RLock` (`lock`);
+its callers hold it across reconcile + search, so concurrent threads never see a half-applied
+change.
 """
 
 from __future__ import annotations
@@ -52,6 +53,7 @@ from usearch.index import Index, MetricKind, ScalarKind
 
 from teacher.config import Settings
 from teacher.db.models import utcnow
+from teacher.db.providers import create_db_provider
 
 LIBRARY = "usearch"
 LIBRARY_VERSION: str = usearch.__version__
@@ -417,7 +419,7 @@ def cached(settings: Settings, model: str, dimensions: int) -> VectorIndex:
     """The process's opened index for (database, model, dimensions), opening it on first use.
     Opening another (model, dimensions) for the same database drops the old one from memory.
     An index whose update failed half-way is dropped and opened again from disk."""
-    key = (str(settings.db_path), model, dimensions)
+    key = (create_db_provider(settings).cache_key, model, dimensions)
     with _cache_lock:
         index = _cache.get(key)
         if index is None or index.poisoned:
@@ -431,7 +433,7 @@ def cached(settings: Settings, model: str, dimensions: int) -> VectorIndex:
 
 def install(settings: Settings, index: VectorIndex) -> None:
     """Make `index` the cached index for its (database, model, dimensions) (after a rebuild)."""
-    key = (str(settings.db_path), index.model, index.dimensions)
+    key = (create_db_provider(settings).cache_key, index.model, index.dimensions)
     with _cache_lock:
         for other in [k for k in _cache if k[0] == key[0]]:
             del _cache[other]

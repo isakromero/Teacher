@@ -1,0 +1,350 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-opus-5-5",
+  "message_id": "msg_011ChNzBCDzZB2BQB6SRdPo5",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 13921,
+    "cache_creation_input_tokens": 81493,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 5929
+  },
+  "source": {
+    "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+    "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+    "media_type": "application/pdf"
+  },
+  "trigger": "generation",
+  "proposed": 45,
+  "dropped": [],
+  "merged": [],
+  "dropped_aliases": [],
+  "output": {
+    "terms": [
+      {
+        "term": "LLM",
+        "kind": "acronym",
+        "expansion": "large language model",
+        "definition": "A neural network trained on large amounts of text that can generate and interpret language. Here LLMs act as agents that call spreadsheet tools to read and edit workbooks.",
+        "aliases": []
+      },
+      {
+        "term": "frontier model",
+        "kind": "term",
+        "expansion": null,
+        "definition": "One of the most capable, recently released AI models from the leading labs, such as the GPT, Claude, Gemini and Grok models tested here.",
+        "aliases": [
+          "frontier models"
+        ]
+      },
+      {
+        "term": "debt schedule",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A section of a financial model that tracks each loan's balance, interest, repayments and borrowings period by period.",
+        "aliases": []
+      },
+      {
+        "term": "restatement",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A company's formal correction of financial statements it previously published, usually because they contained errors.",
+        "aliases": []
+      },
+      {
+        "term": "CSV",
+        "kind": "acronym",
+        "expansion": "comma-separated values",
+        "definition": "A plain-text file format for a single flat table, with no formulas, formatting or multiple sheets.",
+        "aliases": []
+      },
+      {
+        "term": "pitch decks",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Slide presentations that bankers prepare to pitch a deal or service to clients.",
+        "aliases": []
+      },
+      {
+        "term": "DCF",
+        "kind": "acronym",
+        "expansion": "discounted cash flow",
+        "definition": "A valuation method that projects a company's future cash flows and discounts them back to today's value using a required rate of return.",
+        "aliases": [
+          "DCFs"
+        ]
+      },
+      {
+        "term": "WACC",
+        "kind": "acronym",
+        "expansion": "weighted average cost of capital",
+        "definition": "The blended rate of return a company must pay its lenders and shareholders, commonly used as the discount rate in a DCF.",
+        "aliases": []
+      },
+      {
+        "term": "sources-and-uses",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A table in a deal model listing where the money for a transaction comes from (debt, equity, cash) and what it is spent on; the two sides must total the same.",
+        "aliases": []
+      },
+      {
+        "term": "private equity",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Firms that buy and manage companies with investor money, often funded partly by debt, and whose analysts build detailed financial models of those deals.",
+        "aliases": []
+      },
+      {
+        "term": "bp",
+        "kind": "acronym",
+        "expansion": "basis points",
+        "definition": "A unit equal to one hundredth of a percentage point, so 1,000 bp is 10 percentage points.",
+        "aliases": []
+      },
+      {
+        "term": "advance rate",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The percentage of the value of pledged collateral (such as inventory) that a lender is willing to lend against.",
+        "aliases": []
+      },
+      {
+        "term": "grace period",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A span of time at the start of a financing arrangement before repayments are due.",
+        "aliases": []
+      },
+      {
+        "term": "held out",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Kept private and used only for testing, so that models cannot have seen the tasks during training.",
+        "aliases": [
+          "held-out"
+        ]
+      },
+      {
+        "term": "perturbation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A deliberate change to an input value made to test how a model's dependent outputs respond. In this paper it is also the name of a rubric category.",
+        "aliases": []
+      },
+      {
+        "term": "SOFR",
+        "kind": "acronym",
+        "expansion": "Secured Overnight Financing Rate",
+        "definition": "A benchmark US interest rate to which many floating-rate loans are pegged, with a spread added on top.",
+        "aliases": []
+      },
+      {
+        "term": "IB/PE",
+        "kind": "acronym",
+        "expansion": "investment banking / private equity",
+        "definition": "Shorthand for two finance careers whose junior analysts spend much of their time building and modifying spreadsheet models.",
+        "aliases": []
+      },
+      {
+        "term": "seed workbook",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The starting spreadsheet given to a task author, which they modify or build on to create a benchmark task.",
+        "aliases": []
+      },
+      {
+        "term": "IP",
+        "kind": "acronym",
+        "expansion": "intellectual property",
+        "definition": "Legally protected creative or proprietary work; here, concerns that a submitted spreadsheet might belong to someone else.",
+        "aliases": []
+      },
+      {
+        "term": "hardcoded",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Typed in as a fixed number rather than calculated by a formula that refers to other cells.",
+        "aliases": [
+          "hardcode",
+          "hardcodes"
+        ]
+      },
+      {
+        "term": "tolerance",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The allowed margin of difference between a computed value and the reference value, such as ±2%, within which the value still counts as correct.",
+        "aliases": []
+      },
+      {
+        "term": "#REF!",
+        "kind": "symbol",
+        "expansion": null,
+        "definition": "A spreadsheet error value shown when a formula refers to a cell that no longer exists or is invalid.",
+        "aliases": []
+      },
+      {
+        "term": "harness",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The software around a model during evaluation: the tools it can call, the prompt it gets and the loop that runs it.",
+        "aliases": []
+      },
+      {
+        "term": "LibreOffice",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A free, open-source office suite whose spreadsheet engine can recalculate formulas; 'headless' means it runs without a visible interface.",
+        "aliases": []
+      },
+      {
+        "term": "iterative calculation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A spreadsheet setting that lets circular references (formulas that depend on their own results) be computed by repeating the calculation until the values settle.",
+        "aliases": []
+      },
+      {
+        "term": "openpyxl",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A Python library for reading and writing Excel workbook files.",
+        "aliases": []
+      },
+      {
+        "term": "sandbox",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A restricted environment in which code can run without access to files, the network or the wider system.",
+        "aliases": []
+      },
+      {
+        "term": "system prompt",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Standing instructions given to a language model before the task itself, setting its role and rules.",
+        "aliases": []
+      },
+      {
+        "term": "scaffolding",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Extra structure around a model, such as planning steps, specialised prompts or helper tools, designed to improve its performance.",
+        "aliases": []
+      },
+      {
+        "term": "Krippendorff's α",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A statistic measuring how much several raters agree beyond what chance would produce; 1 means perfect agreement and 0 means chance-level.",
+        "aliases": []
+      },
+      {
+        "term": "macro-F1",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A classification accuracy score that balances precision and recall, computed separately for each class and then averaged so each class counts equally.",
+        "aliases": []
+      },
+      {
+        "term": "reasoning effort",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A provider setting that controls how much internal step-by-step thinking a model does before answering, trading cost and time for quality.",
+        "aliases": []
+      },
+      {
+        "term": "SWE-bench Pro",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A benchmark of long-horizon software engineering tasks in which agents must fix real code repositories.",
+        "aliases": []
+      },
+      {
+        "term": "Fin-SheetBench",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A separate benchmark of question-answering tasks over financial spreadsheets built from U.S. Treasury Bulletin data.",
+        "aliases": []
+      },
+      {
+        "term": "QA",
+        "kind": "acronym",
+        "expansion": "question answering",
+        "definition": "A task format in which a system must answer questions, here about the contents of a spreadsheet.",
+        "aliases": []
+      },
+      {
+        "term": "balance-sheet",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Relating to a balance sheet, the financial statement listing a company's assets, liabilities and equity, where assets must equal liabilities plus equity.",
+        "aliases": []
+      },
+      {
+        "term": "output tokens",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The units of text a language model generates; providers charge per token, so more output means higher cost.",
+        "aliases": []
+      },
+      {
+        "term": "EBITDA",
+        "kind": "acronym",
+        "expansion": "earnings before interest, taxes, depreciation and amortization",
+        "definition": "A common measure of a company's operating profit before financing costs, taxes and non-cash charges.",
+        "aliases": []
+      },
+      {
+        "term": "revolver",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A revolving credit facility: a loan a company can draw on, repay and draw again up to a limit, often used to cover cash shortfalls.",
+        "aliases": []
+      },
+      {
+        "term": "Capex",
+        "kind": "acronym",
+        "expansion": "capital expenditure",
+        "definition": "Spending on long-lived physical assets such as equipment or buildings.",
+        "aliases": []
+      },
+      {
+        "term": "OpEx",
+        "kind": "acronym",
+        "expansion": "operating expenses",
+        "definition": "The day-to-day costs of running a business, such as rent, salaries and utilities.",
+        "aliases": []
+      },
+      {
+        "term": "KPI",
+        "kind": "acronym",
+        "expansion": "key performance indicator",
+        "definition": "A headline metric used to track a business's performance; a KPI Dashboard collects such metrics in one place.",
+        "aliases": []
+      },
+      {
+        "term": "Income Statement",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The financial statement showing a company's revenue, expenses and profit over a period.",
+        "aliases": []
+      },
+      {
+        "term": "error bars",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Marks or ranges showing the uncertainty around a reported number, for example from repeated runs or confidence intervals.",
+        "aliases": []
+      },
+      {
+        "term": "micro score",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An average computed by pooling all tasks together so each task counts equally, as opposed to a macro average that first averages within groups and then averages the groups.",
+        "aliases": []
+      }
+    ]
+  }
+}

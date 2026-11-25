@@ -35,7 +35,7 @@ def upgrade() -> None:
     sa.Column('files', sa.JSON(), nullable=False),
     sa.Column('solution_revealed_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.CheckConstraint('json_valid(files)', name=op.f('ck_lab_workspaces_files_json')),
+    sa.CheckConstraint('json_valid(files)', name=op.f('ck_lab_workspaces_files_json')).ddl_if(dialect='sqlite'),
     sa.ForeignKeyConstraint(['artifact_id'], ['artifacts.id'], name=op.f('fk_lab_workspaces_artifact_id_artifacts'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('artifact_id', name=op.f('pk_lab_workspaces'))
     )
@@ -52,7 +52,7 @@ def upgrade() -> None:
     sa.CheckConstraint("kind IN ('run', 'check')", name=op.f('ck_lab_runs_kind')),
     sa.CheckConstraint("kind != 'check' OR step_index IS NOT NULL", name=op.f('ck_lab_runs_check_step')),
     sa.CheckConstraint('step_index IS NULL OR step_index >= 0', name=op.f('ck_lab_runs_step_index')),
-    sa.CheckConstraint('json_valid(files)', name=op.f('ck_lab_runs_files_json')),
+    sa.CheckConstraint('json_valid(files)', name=op.f('ck_lab_runs_files_json')).ddl_if(dialect='sqlite'),
     sa.ForeignKeyConstraint(['artifact_id'], ['artifacts.id'], name=op.f('fk_lab_runs_artifact_id_artifacts'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_lab_runs'))
     )

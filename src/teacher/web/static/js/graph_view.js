@@ -5,11 +5,24 @@
 // but the lit concepts and hot relations dimmed). `setStanding(map)` marks each concept with
 // the reader's standing (a dot at the node's lower right; standing.css).
 //
+// Readable at any zoom: while the in-circle captions are smaller than `captionMinPx` on screen
+// they are hidden (the svg gets class "zoomed-out") and concepts get a name label under the
+// circle at a fixed screen size instead, as many as fit without overlapping, the selected
+// concept and its neighbours first, then the best connected (graph_model.js pickLabels). The
+// svg's `--k` custom property is the zoom, so CSS can size things in screen pixels.
+//
+// Touch: a tap selects the nearest concept within a finger's reach (TOUCH_RADIUS_PX), not only
+// one hit exactly; a swipe pans even when it starts on a concept, and a concept is dragged (and
+// pinned) only after a long press (LONG_PRESS_MS, the node shows "is-held" when it can be
+// dragged); two fingers pinch-zoom. `setInsets({bottom})` says how much of the canvas's bottom
+// is covered (the phone layout's inspector sheet): fitting and centring use the part above it,
+// and `reveal(id)` brings a concept hidden under it into view.
+//
 // Elements are created once per node and edge when the graph changes (`setGraph`); simulation
 // ticks only move them (transforms and path data), they never rebuild the SVG.
 //
 // `createGraphView({svg, canvas, buttons: {zoomIn, zoomOut, fit}, onSelect, onExpand,
-// onPinChange})`;
+// onPinChange, captionMinPx, overlays})` (`overlays`: elements over the canvas that labels avoid);
 // `onSelect(selection)` gets {kind: "node" | "edge", id} or null (a click), `onExpand(id)` a
 // node id (a double-click), `onPinChange(id)` a node that was pinned (dragged) or unpinned.
 
@@ -27,11 +40,19 @@ import {
   R,
   RELATION_LABELS,
   caption,
+  captionsReadable,
   centreView,
+  clampZoom,
   degrees,
   edgeGeometry,
   fitView,
+  labelBudget,
+  labelOrder,
+  labelText,
+  nearestNode,
   pairIndex,
+  pickLabels,
+  pressDrags,
   toGraph,
   visibleEdges,
   zoomView,
@@ -40,6 +61,9 @@ import { STATUSES, statusLabel } from "./standing_model.js";
 
 const DOUBLE_CLICK_MS = 400;
 const DRAG_THRESHOLD_PX = 3;
+const TOUCH_DRAG_THRESHOLD_PX = 8; // a finger wobbles more than a mouse: below this a touch is a tap
+const TOUCH_RADIUS_PX = 22; // a tap this close to a concept's centre (screen px) selects it
+const LONG_PRESS_MS = 350; // a finger held this long on a concept then drags it
 const WHEEL_ZOOM_RATE = 0.004;
 const BUTTON_ZOOM = 1.25;
 const NEW_NODE_SPREAD = 60;
@@ -73,7 +97,7 @@ export function edgeLabel(edge) {
   return edge.redundant ? `${label} (redundant)` : label;
 }
 
-export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPinChange }) {
+export function createGraphView({ svg, canvas, buttons, overlays = [], onSelect, onExpand, onPinChange, captionMinPx = 9 }) {
   const reduced = prefersReducedMotion();
   const simNodes = new Map(); // id -> simulation node {id, data, x, y, fx, fy, degree}
   const nodeEls = new Map(); // id -> {g, text, title}
@@ -87,10 +111,16 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
   let selected = null;
   let highlight = null;
   let standing = new Map(); // concept id -> the reader's standing status (setStanding)
+  let insets = { bottom: 0 }; // screen px of the canvas covered by the inspector sheet
+  let neighbours = new Set(); // ids of the selected concept's neighbours (label priority)
+  let blocked = []; // screen boxes of the overlays on the canvas (measureOverlays)
+  let labelled = new Map(); // id -> {side, dx} (pickLabels) of the concepts showing a name label
 
   const edgeLayer = s("g", { class: "graph-edges" });
   const nodeLayer = s("g", { class: "graph-nodes" });
-  const viewport = s("g", { class: "graph-viewport" }, edgeLayer, nodeLayer);
+  // Name labels above every circle, so a label is never hidden under a neighbouring concept.
+  const labelLayer = s("g", { class: "graph-labels", "aria-hidden": "true" });
+  const viewport = s("g", { class: "graph-viewport" }, edgeLayer, nodeLayer, labelLayer);
   svg.replaceChildren(markerDefs(), viewport);
 
   const sim = forceSimulation()
@@ -123,10 +153,11 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
   /** Keep the followed node in the middle, or the whole graph in view, unless touched. */
   function track() {
     if (follow !== null && simNodes.has(follow)) {
-      view = centreView(view, simNodes.get(follow));
+      const centred = centreView(view, simNodes.get(follow));
+      view = { ...centred, y: centred.y - insets.bottom / 2 };
     } else if (!touched) {
-      const fitted = fitView([...simNodes.values()], size);
-      if (fitted) view = fitted;
+      const fitted = fitView([...simNodes.values()], { w: size.w, h: size.h - insets.bottom });
+      if (fitted) view = { ...fitted, y: fitted.y - insets.bottom / 2 };
     }
     applyView();
   }
@@ -136,6 +167,59 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
       "transform",
       `translate(${size.w / 2 + view.x},${size.h / 2 + view.y}) scale(${view.k})`
     );
+    svg.style.setProperty("--k", String(round(view.k)));
+    updateLabels();
+  }
+
+  /** In-circle captions while readable, else name labels for the concepts that fit. */
+  function updateLabels() {
+    const far = !captionsReadable(view.k, captionMinPx);
+    svg.classList.toggle("zoomed-out", far);
+    let next = new Map();
+    if (far && size.w > 0) {
+      const lit = highlight ? highlight.lit : new Set();
+      const selectedId = selected?.kind === "node" ? selected.id : null;
+      const order = labelOrder(
+        [...simNodes.values()].map((n) => ({ id: n.id, name: n.data.name, degree: n.degree ?? 0 })),
+        { selectedId, neighbours, lit }
+      );
+      const h = size.h - insets.bottom;
+      next = pickLabels(
+        order.map((id) => {
+          const n = simNodes.get(id);
+          return { id, x: size.w / 2 + view.x + (n.x ?? 0) * view.k, y: size.h / 2 + view.y + (n.y ?? 0) * view.k, text: shownText(id, selectedId) };
+        }),
+        { width: size.w, height: h, radius: R * view.k, max: labelBudget(size.w, h), keep: selectedId, blocked }
+      );
+    }
+    for (const id of labelled.keys()) if (!next.has(id)) nodeEls.get(id)?.label.classList.remove("is-shown");
+    for (const [id, { side, dx }] of next) {
+      const el = nodeEls.get(id);
+      const n = simNodes.get(id);
+      el.label.setAttribute("transform", `translate(${round(n.x ?? 0)},${round(n.y ?? 0)})`);
+      el.label.setAttribute("x", round(dx / view.k));
+      el.label.setAttribute("y", side === "above" ? -R : R);
+      el.label.setAttribute("dy", side === "above" ? "-0.45em" : "1em");
+      const text = shownText(id, selected?.kind === "node" ? selected.id : null);
+      if (el.label.textContent !== text) el.label.textContent = text;
+      el.label.classList.add("is-shown");
+    }
+    labelled = next;
+  }
+
+  /** A name label's text: clipped (labelText), except the selected concept's, which is whole. */
+  function shownText(id, selectedId) {
+    return id === selectedId ? simNodes.get(id).data.name : nodeEls.get(id).labelText;
+  }
+
+  /** The selected concept's neighbours on the canvas. */
+  function neighboursOf(id) {
+    const out = new Set();
+    for (const l of links) {
+      if (l.edge.from_id === id) out.add(l.edge.to_id);
+      else if (l.edge.to_id === id) out.add(l.edge.from_id);
+    }
+    return out;
   }
 
   function render() {
@@ -159,10 +243,15 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
         `translate(${round(geo.lx)},${round(geo.ly)}) rotate(${round(geo.angle)})`
       );
     }
+    updateLabels();
   }
 
   function nodeElement(n) {
     const text = s("text", { class: "node-caption", "text-anchor": "middle" });
+    // The name label under the circle (in the label layer, moved with the node while shown):
+    // CSS sizes it in screen pixels (font-size from --k), so its offset is in em.
+    const label = s("text", { class: "node-label", "text-anchor": "middle", y: R, dy: "1em" });
+    labelLayer.append(label);
     const title = s("title");
     const g = s(
       "g",
@@ -176,7 +265,7 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
       title
     );
     nodeLayer.append(g);
-    return { g, text, title, name: null };
+    return { g, text, label, title, name: null, labelText: "" };
   }
 
   function updateNode(el, n) {
@@ -187,13 +276,15 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
           s("tspan", { x: 0, dy: i === 0 ? (lines.length === 1 ? 4 : -2) : 12 }, line)
         )
       );
+      el.labelText = labelText(n.name);
+      el.label.textContent = el.labelText;
       el.name = n.name;
     }
     const status = standing.get(n.id);
     el.title.textContent =
       `${n.name}\n${n.origin} concept, ${n.reviewed ? "reviewed" : "unreviewed"}\n` +
       (status ? `Your standing: ${statusLabel(status)}\n` : "") +
-      "Click to inspect, double-click to expand, drag to pin.";
+      "Click or tap to inspect, double-click or double-tap to expand, drag (on a touch screen: press, hold, then drag) to pin.";
   }
 
   function edgeElement(e) {
@@ -222,6 +313,8 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
       c.toggle("is-pinned", n.fx !== null && n.fx !== undefined);
       c.toggle("is-unreviewed", !n.data.reviewed);
       c.toggle("lit", Boolean(highlight && highlight.lit.has(id)));
+      el.label.classList.toggle("is-selected", selected?.kind === "node" && selected.id === id);
+      el.label.classList.toggle("lit", Boolean(highlight && highlight.lit.has(id)));
       for (const origin of ["paper", "model", "user"]) c.toggle(`origin-${origin}`, n.data.origin === origin);
       for (const status of STATUSES) c.toggle(`standing-${status}`, standing.get(id) === status);
     }
@@ -250,6 +343,7 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
     for (const [id, el] of nodeEls) {
       if (!ids.has(id)) {
         el.g.remove();
+        el.label.remove();
         nodeEls.delete(id);
         simNodes.delete(id);
       }
@@ -305,6 +399,7 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
     pairs = pairIndex(drawn);
     const degree = degrees(graph);
     for (const sn of simNodes.values()) sn.degree = degree.get(sn.id) ?? 0;
+    neighbours = selected?.kind === "node" ? neighboursOf(selected.id) : new Set();
 
     sim.nodes([...simNodes.values()]);
     sim.force("link").links(links);
@@ -345,22 +440,46 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
     track();
   }
 
-  /** Put node `id` in the middle (and keep it there while the layout settles). */
-  function centreOn(id) {
+  /** Put node `id` in the middle (and keep it there while the layout settles), zoomed in to at
+   * least `minZoom` if given. */
+  function centreOn(id, { minZoom = null } = {}) {
     if (!simNodes.has(id)) throw new Error(`concept #${id} is not on the canvas`);
+    if (minZoom !== null && view.k < minZoom) view = { ...view, k: clampZoom(minZoom) };
     touched = true;
     follow = id;
     track();
   }
 
+  /** Centre on concept `id` if it is not well inside the uncovered part of the canvas. */
+  function reveal(id) {
+    const n = simNodes.get(id);
+    if (!n) throw new Error(`concept #${id} is not on the canvas`);
+    const margin = Math.min(48, size.h / 6);
+    const x = size.w / 2 + view.x + n.x * view.k;
+    const y = size.h / 2 + view.y + n.y * view.k;
+    if (x < margin || x > size.w - margin || y < margin || y > size.h - insets.bottom - margin) centreOn(id);
+  }
+
+  /** How much of the canvas is covered at the bottom (screen px); refits if still following. */
+  function setInsets(next) {
+    const bottom = Math.max(0, Math.min(next.bottom, size.h * 0.8));
+    if (bottom === insets.bottom) return;
+    insets = { bottom };
+    measureOverlays(); // they sit above the sheet
+    track();
+  }
+
   function select(selection) {
     selected = selection;
+    neighbours = selected?.kind === "node" ? neighboursOf(selected.id) : new Set();
     applyClasses();
+    updateLabels();
   }
 
   function setHighlight(next) {
     highlight = next;
     applyClasses();
+    updateLabels();
   }
 
   function isPinned(id) {
@@ -383,6 +502,13 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
   const pointers = new Map(); // pointerId -> {x, y} (client coordinates)
   let gesture = null;
   let lastClick = { id: null, t: 0 };
+  let holdTimer = null; // a finger on a concept: marks it draggable after LONG_PRESS_MS
+
+  function endHold() {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+    for (const el of nodeEls.values()) el.g.classList.remove("is-held");
+  }
 
   function local(clientX, clientY) {
     const r = svg.getBoundingClientRect();
@@ -397,6 +523,18 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
     return { kind: "background" };
   }
 
+  /** What a press means: what it hit, or for a finger that missed every circle, the nearest
+   * concept within TOUCH_RADIUS_PX of it. */
+  function pressTarget(e) {
+    const hit = targetOf(e.target);
+    if (hit.kind === "node" || e.pointerType !== "touch") return hit;
+    const p = local(e.clientX, e.clientY);
+    const id = nearestNode([...simNodes.values()], toGraph(view, p.x, p.y), {
+      slop: Math.max(0, TOUCH_RADIUS_PX / view.k - R),
+    });
+    return id === null ? hit : { kind: "node", id };
+  }
+
   function pinchState() {
     const [a, b] = [...pointers.values()];
     return { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, mid: local((a.x + b.x) / 2, (a.y + b.y) / 2) };
@@ -407,12 +545,27 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
     svg.setPointerCapture(e.pointerId);
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pointers.size === 2) {
+      endHold();
       if (gesture?.target?.kind === "node" && !reduced) sim.alphaTarget(0);
       gesture = { kind: "pinch", ...pinchState() };
       return;
     }
     if (pointers.size > 2) return;
-    gesture = { kind: "press", target: targetOf(e.target), x: e.clientX, y: e.clientY, moved: false };
+    const target = pressTarget(e);
+    gesture = {
+      kind: "press",
+      target,
+      x: e.clientX,
+      y: e.clientY,
+      moved: false,
+      drag: false,
+      pointerType: e.pointerType,
+      t0: performance.now(),
+    };
+    endHold();
+    if (e.pointerType === "touch" && target.kind === "node") {
+      holdTimer = setTimeout(() => nodeEls.get(target.id)?.g.classList.add("is-held"), LONG_PRESS_MS);
+    }
   });
 
   svg.addEventListener("pointermove", (e) => {
@@ -431,9 +584,14 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
     }
     const dx = e.clientX - g.x;
     const dy = e.clientY - g.y;
-    if (!g.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+    const threshold = g.pointerType === "touch" ? TOUCH_DRAG_THRESHOLD_PX : DRAG_THRESHOLD_PX;
+    if (!g.moved && Math.hypot(dx, dy) < threshold) return;
+    if (!g.moved) {
+      g.drag = g.target.kind === "node" && pressDrags(g.pointerType, performance.now() - g.t0, LONG_PRESS_MS);
+      if (!g.drag) endHold();
+    }
     g.moved = true;
-    if (g.target.kind === "node") {
+    if (g.drag) {
       // Stop fitting to the layout, or the view would shift under the node being dragged.
       userMovedView();
       const n = simNodes.get(g.target.id);
@@ -463,6 +621,7 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
 
   function pointerEnd(e) {
     if (!pointers.delete(e.pointerId)) return;
+    endHold();
     const g = gesture;
     if (!g) return;
     if (g.kind === "pinch") {
@@ -512,10 +671,22 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
   });
   buttons.fit.addEventListener("click", fit);
 
-  new ResizeObserver(([entry]) => {
-    size = { w: entry.contentRect.width, h: entry.contentRect.height };
+  /** Where the overlays (zoom buttons, legend) sit over the svg, so labels avoid them. */
+  function measureOverlays() {
+    const r = svg.getBoundingClientRect();
+    blocked = overlays
+      .map((el) => el.getBoundingClientRect())
+      .filter((b) => b.width > 0 && b.height > 0)
+      .map((b) => ({ x0: b.left - r.left, x1: b.right - r.left, y0: b.top - r.top, y1: b.bottom - r.top }));
+  }
+
+  const resized = new ResizeObserver(() => {
+    size = { w: canvas.clientWidth, h: canvas.clientHeight };
+    measureOverlays();
     track();
-  }).observe(canvas);
+  });
+  resized.observe(canvas);
+  for (const el of overlays) resized.observe(el);
 
   /** The reader's standing per concept id (a Map of status, standing_model.js STATUSES): a
    * mark on the node (none while unstudied) and a line in its tooltip. */
@@ -526,6 +697,7 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
       updateNode(el, simNodes.get(id).data);
     }
     applyClasses();
+    updateLabels(); // updateNode put back the clipped text
   }
 
   return {
@@ -535,6 +707,9 @@ export function createGraphView({ svg, canvas, buttons, onSelect, onExpand, onPi
     setStanding,
     fit,
     centreOn,
+    hold: userMovedView, // stop following the layout, as if the reader had panned
+    reveal,
+    setInsets,
     isPinned,
     unpin,
     has: (id) => simNodes.has(id),

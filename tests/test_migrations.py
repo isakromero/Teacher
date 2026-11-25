@@ -63,7 +63,8 @@ TABLES_0010 = {
 TAG_TABLES = {"block_concepts"}
 REVIEW_TABLES = {"review_variants", "review_items", "review_attempts"}  # 0013
 CITATION_TABLES = {"source_reference_extractions", "source_references"}  # 0015
-TABLES = TABLES_0010 | TAG_TABLES | REVIEW_TABLES | CITATION_TABLES
+LEDGER_TABLES = {"api_calls"}  # 0016
+TABLES = TABLES_0010 | TAG_TABLES | REVIEW_TABLES | CITATION_TABLES | LEDGER_TABLES
 # The two FTS5 virtual tables (word and trigram index) and the shadow tables FTS5 keeps for them.
 FTS_TABLES = {
     "concept_search",
@@ -87,7 +88,11 @@ CHAT_BLOCK_TABLES = {"chat_blocks", "chat_block_responses"}
 LAB_TABLES = {"lab_workspaces", "lab_runs"}
 HISTORY_TABLES = {"study_sessions", "study_events", "attention_spans"}
 ACTIVITY_TABLES = ("block_responses", "chat_block_responses", "chat_messages", "lab_runs")
-HEAD = "0015"
+HEAD = "0016"
+
+# The chain's SQLite side: raw sqlite3, PRAGMAs, the file backup and FTS5. The Postgres side is
+# in test_migrations_postgres.py.
+pytestmark = pytest.mark.sqlite_only("checks the SQLite schema with raw sqlite3 and PRAGMAs")
 
 
 @contextmanager
@@ -1498,7 +1503,7 @@ def test_upgrade_0012_to_0013_adds_the_review_queue_and_keeps_data(tmp_path: Pat
     settings = _at_0011_with_answers(tmp_path)
     command.upgrade(alembic_config(settings), "0012")
     command.upgrade(alembic_config(settings), "0013")
-    assert _tables(settings) == (TABLES - CITATION_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         conn.execute("PRAGMA foreign_keys=ON")
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == (2,)
@@ -1561,7 +1566,7 @@ def test_downgrade_0013_to_0012_drops_only_the_review_queue(tmp_path: Path) -> N
     command.downgrade(alembic_config(settings), "0012")
     assert current_revision(settings) == "0012"
     assert _tables(settings) == (
-        (TABLES - REVIEW_TABLES - CITATION_TABLES) | FTS_TABLES | {"alembic_version"}
+        (TABLES - REVIEW_TABLES - CITATION_TABLES - LEDGER_TABLES) | FTS_TABLES | {"alembic_version"}
     )
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == (2,)
@@ -1669,7 +1674,7 @@ def test_downgrade_0015_to_0014_drops_only_the_citations(tmp_path: Path) -> None
         )
     command.downgrade(alembic_config(settings), "0014")
     assert current_revision(settings) == "0014"
-    assert _tables(settings) == (TABLES - CITATION_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         assert conn.execute(
             "SELECT count(*) FROM knowledge_sources WHERE id IN (101, 102)"
@@ -1692,3 +1697,96 @@ def test_0015_froze_the_live_checks() -> None:
         }
         frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
         assert live == frozen, table.name
+
+
+def _at_0015_with_data(tmp_path: Path) -> Settings:
+    """At 0015 with an artifact, a failed run, two sources and a chat thread with a reply."""
+    settings = _at_0014_with_sources(tmp_path)
+    command.upgrade(alembic_config(settings), "0015")
+    with _sqlite(settings) as conn:
+        (artifact,) = conn.execute("SELECT id FROM artifacts ORDER BY id LIMIT 1").fetchone()
+        conn.execute("INSERT INTO chat_threads (id, artifact_id) VALUES (301, ?)", (artifact,))
+        conn.execute(
+            "INSERT INTO chat_messages (id, thread_id, position, role, text, api_content, model, "
+            "input_tokens, output_tokens) VALUES (401, 301, 1, 'assistant', 'hi', '[]', "
+            "'claude-opus-5-5', 1000, 10)"
+        )
+    return settings
+
+
+def test_upgrade_0015_to_0016_adds_the_cost_ledger_and_keeps_data(tmp_path: Path) -> None:
+    settings = _at_0015_with_data(tmp_path)
+    with _sqlite(settings) as conn:
+        before = {t: conn.execute(f"SELECT count(*) FROM {t}").fetchone()[0]
+                  for t in ("artifacts", "generation_runs", "chat_messages", "knowledge_sources")}
+    backup = upgrade_to_head(settings)
+    assert backup is not None and current_revision(settings) == HEAD
+    assert LEDGER_TABLES <= _tables(settings)
+    with _sqlite(settings) as conn:
+        conn.execute("PRAGMA foreign_keys=ON")
+        for table, count in before.items():
+            assert conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0] == count
+        # Nothing is backfilled by the migration (that is `teacher costs backfill`).
+        assert conn.execute("SELECT count(*) FROM api_calls").fetchone() == (0,)
+        (artifact,) = conn.execute("SELECT id FROM artifacts ORDER BY id LIMIT 1").fetchone()
+        (run,) = conn.execute("SELECT id FROM generation_runs LIMIT 1").fetchone()
+        insert = (
+            "INSERT INTO api_calls (purpose, step, provider, model, input_tokens, "
+            "cache_write_tokens, cache_write_1h_tokens, cache_read_tokens, output_tokens, "
+            "cost_usd, priced_on, artifact_id, generation_run_id, chat_thread_id, "
+            "chat_message_id, knowledge_source_id, backfill_key) "
+            "VALUES (?, 's', ?, 'm', ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        ok = ["tutor", "anthropic", 1, 2, 1, 0.5, "2026-11-24", artifact, run, 301, 401, 101, "k"]
+        conn.execute(insert, ok)
+        assert conn.execute(
+            "SELECT created_at IS NOT NULL, is_estimate FROM api_calls"
+        ).fetchone() == (1, 0)
+        for change, constraint in [
+            ({0: "fun"}, "ck_api_calls_purpose"),
+            ({1: "google"}, "ck_api_calls_provider"),
+            ({2: -1}, "ck_api_calls_tokens"),
+            ({4: 3}, "ck_api_calls_cache_write_1h"),
+            ({5: -0.1}, "ck_api_calls_cost"),
+            ({5: None}, "ck_api_calls_priced"),
+            ({}, "UNIQUE"),
+        ]:
+            values = [change.get(i, v) for i, v in enumerate(ok)]
+            with pytest.raises(sqlite3.IntegrityError, match=constraint):
+                conn.execute(insert, values)
+        conn.execute(insert, [*ok[:5], None, None, *ok[7:12], None])  # no price: NULL cost
+        # Deleting what a row points at keeps the row (the money was spent) and clears the link.
+        conn.execute("DELETE FROM chat_threads WHERE id = 301")
+        conn.execute("DELETE FROM artifacts WHERE id = ?", (artifact,))
+        conn.execute("DELETE FROM knowledge_sources WHERE id = 101")
+        assert conn.execute(
+            "SELECT artifact_id, generation_run_id, chat_thread_id, chat_message_id, "
+            "knowledge_source_id FROM api_calls"
+        ).fetchall() == [(None,) * 5] * 2
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_downgrade_0016_to_0015_drops_only_the_ledger(tmp_path: Path) -> None:
+    settings = _at_0015_with_data(tmp_path)
+    upgrade_to_head(settings)
+    command.downgrade(alembic_config(settings), "0015")
+    assert current_revision(settings) == "0015"
+    assert _tables(settings) == (TABLES - LEDGER_TABLES) | FTS_TABLES | {"alembic_version"}
+    with _sqlite(settings) as conn:
+        assert conn.execute("SELECT input_tokens FROM chat_messages WHERE id = 401").fetchall() == [
+            (1000,)
+        ]
+    upgrade_to_head(settings)  # and up again
+    assert LEDGER_TABLES <= _tables(settings)
+
+
+def test_0016_froze_the_live_checks() -> None:
+    """The check texts 0016 froze must match the model's (until a later revision changes them)."""
+    from teacher.db.models import ApiCall
+
+    script = ScriptDirectory.from_config(alembic_config(Settings(root=Path("unused"))))
+    module = script.get_revision("0016").module
+    table = ApiCall.__table__
+    live = {c.name: str(c.sqltext) for c in table.constraints if isinstance(c, CheckConstraint)}
+    frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
+    assert live == frozen

@@ -1,5 +1,5 @@
 // The concept graph page's inspector panel: what is selected (a concept or a relation), or the
-// overview (counts, usage hint, legend) when nothing is; plus the roadmap section while the
+// overview (counts, every concept A to Z, usage hints, legend) when nothing is; plus the roadmap section while the
 // roadmap highlight is on. Every function returns DOM built with dom.js (no HTML strings); the
 // only HTML is a concept summary, rendered by markdown.js, which sanitises it.
 
@@ -461,9 +461,10 @@ export function roadmapPanel(roadmap, ctx) {
 
 // -- nothing selected ------------------------------------------------------------------------
 
-/** The overview of what is on the canvas: counts by origin and relation type, how to use the
- * graph, and the legend. `edges` are the drawn relations. */
-export function overviewPanel(nodes, edges) {
+/** The overview of what is on the canvas: counts by origin and relation type, every concept
+ * on it A to Z (folded; on a phone this list is the easy way to reach one), how to use the
+ * graph, and the legend. `edges` are the drawn relations; `ctx`: {onSelectConcept}. */
+export function overviewPanel(nodes, edges, ctx) {
   const origins = countBy(nodes, "origin", ORIGINS);
   const types = countBy(edges, "type", RELATION_TYPES);
   const unreviewedNodes = nodes.filter((n) => !n.reviewed).length;
@@ -488,6 +489,7 @@ export function overviewPanel(nodes, edges) {
       { class: "chip-row", "aria-label": "Relations by type" },
       [...types].map(([type, n]) => h("li", {}, typeChip(type), ` ${n}`))
     ),
+    conceptIndex(nodes, ctx.onSelectConcept),
     h(
       "p",
       { class: "muted small" },
@@ -495,7 +497,26 @@ export function overviewPanel(nodes, edges) {
         "related to it. Drag a concept to move it (it stays pinned where you drop it), drag the " +
         "background to pan, and zoom with ctrl/⌘ + scroll, a pinch, or the buttons."
     ),
+    h(
+      "p",
+      { class: "muted small" },
+      "On a touch screen: tap a concept or relation to inspect it and tap the background to let " +
+        "go; double-tap a concept to add the concepts related to it; swipe to pan and pinch to " +
+        "zoom; press and hold a concept, then drag, to move it. Names show for the concepts that " +
+        "fit; zoom in to see more."
+    ),
     legend()
+  );
+}
+
+/** Every concept on the canvas A to Z, as buttons that select it; folded away. */
+function conceptIndex(nodes, onSelectConcept) {
+  const sorted = [...nodes].sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { sensitivity: "base" }));
+  return h(
+    "details",
+    { class: "concept-index" },
+    h("summary", {}, `All ${plural(nodes.length, "concept")} on the canvas, A to Z`),
+    h("ul", { class: "concept-index-list" }, sorted.map((n) => h("li", {}, conceptButton(n, onSelectConcept))))
   );
 }
 

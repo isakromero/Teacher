@@ -47,3 +47,14 @@
   list-style: none;
   padding-left: 0;
 }
+
+/* Phones: an action's button on its own line, its note ("the arXiv PDF: <address>") under it
+   rather than wrapped around it. */
+@media (max-width: 40rem) {
+  .reference-actions:has(> .button) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+  }
+}

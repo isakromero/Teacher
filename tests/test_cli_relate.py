@@ -9,7 +9,7 @@ import pytest
 
 from teacher import cli
 from teacher.concept_relating import SLOTS, ConceptRelater
-from teacher.config import ENV_HOME, Settings
+from teacher.config import Settings
 from teacher.db.engine import session_scope
 from teacher.managers import ConceptEmbeddingManager, ConceptManager
 
@@ -28,9 +28,11 @@ def verdicts(fake: Any, *items: tuple[int, str, str]) -> Any:
 
 
 @pytest.fixture
-def home(settings: Settings, monkeypatch: pytest.MonkeyPatch, fake_embedder: type) -> Any:
+def home(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch, fake_embedder: type, settings_env: Any
+) -> Any:
     """$TEACHER_HOME at the test settings with attention, softmax, dot product (embedded)."""
-    monkeypatch.setenv(ENV_HOME, str(settings.root))
+    settings_env(settings)
     embedder = fake_embedder(TABLE)
     with session_scope(settings) as session:
         concepts = ConceptManager(session, settings)
@@ -169,9 +171,9 @@ def test_relate_with_the_real_defaults_needs_keys(
 
 
 def test_relate_with_the_offline_stub(
-    settings: Settings, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    settings: Settings, settings_env: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setenv(ENV_HOME, str(settings.root))
+    settings_env(settings)
     with session_scope(settings) as session:
         c = ConceptManager(session, settings)
         c.create("attention", "Attention weighs values by query key similarity.", "user")
@@ -182,9 +184,9 @@ def test_relate_with_the_offline_stub(
 
 
 def test_relate_all_on_an_empty_graph(
-    settings: Settings, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    settings: Settings, settings_env: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setenv(ENV_HOME, str(settings.root))
+    settings_env(settings)
     assert cli.main(["concepts", "relate", "--all", "--stub"]) == 0
     assert capsys.readouterr().out == "There are no concepts to relate.\n"
 

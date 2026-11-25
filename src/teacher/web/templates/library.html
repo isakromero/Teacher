@@ -10,7 +10,7 @@
       <h1>Library</h1>
       <p id="library-count" class="lead" aria-live="polite"></p>
     </div>
-    <a class="button primary" href="/add">
+    <a class="button primary page-header-add" href="/add">
       <svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg>
       Add a source
     </a>
@@ -21,6 +21,7 @@
     <div class="search-field search-field-compact">
       <svg class="icon search-icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
       <input id="library-filter" type="search" autocomplete="off" spellcheck="false"
+             autocapitalize="off" autocorrect="off" enterkeyhint="done"
              placeholder="Filter by title or author" aria-describedby="library-filter-status"
              aria-controls="source-list">
     </div>

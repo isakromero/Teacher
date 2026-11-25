@@ -16,6 +16,9 @@ Flow of `extract(path, media_type)`:
    1500..next year, something that is not an arXiv id or a DOI) means the detection cannot be
    trusted, so it raises rather than being dropped.
 
+The call is recorded in the cost ledger (`teacher.costs`, purpose "metadata") as soon as it
+returns, with no link: it runs before the source exists, and the file may never be added.
+
 Every way detection can fail other than a bad file (no credentials, API errors, refusal,
 truncation, invalid output) raises `MetadataUnavailableError` (HTTP 503). There is no fallback:
 the caller shows the error and lets the user type the fields by hand. A field the model could
@@ -39,6 +42,7 @@ from pypdf.errors import DependencyError, PyPdfError
 
 from teacher.claude_api import default_client, describe_api_error
 from teacher.config import DEFAULT_METADATA_MODEL
+from teacher.costs import record_reply, require_meter
 
 DEFAULT_TIMEOUT = 60.0
 MAX_PAGES = 3
@@ -349,15 +353,20 @@ class MetadataExtractor:
         return normalise(wire, model=getattr(message, "model", None) or self.model)
 
     def _call(self, pdf: bytes) -> Any:
+        """The call, recorded in the cost ledger (`teacher.costs`) before its reply is checked;
+        without a current meter nothing is sent."""
         client = self._get_client()
+        meter = require_meter(what="metadata call to Claude")
         try:
-            return client.messages.create(**self.request(pdf))
+            message = client.messages.create(**self.request(pdf))
         except anthropic.AnthropicError as exc:
             raise _unavailable(
                 describe_api_error(
                     exc, model=self.model, timeout=self.timeout, with_api_message=True
                 )
             ) from exc
+        record_reply(message, meter=meter, purpose="metadata", step="metadata")
+        return message
 
     @staticmethod
     def _parse(message: Any) -> WireMetadata:

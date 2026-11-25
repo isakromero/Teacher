@@ -1,0 +1,19 @@
+{
+  "question": "The authors single out SheetRM, a spreadsheet benchmark that explicitly aims at long-horizon tasks. Why do they still say it falls short of realistic finance work?",
+  "options": [
+    "It makes tasks longer by using very large workbooks, so the agent mainly struggles to read enough of each sheet",
+    "It makes tasks longer by concatenating well-defined instructions, so the agent never has to infer the plan itself",
+    "It makes tasks longer with multi-tab models, but it builds them from public coding repositories rather than finance work",
+    "It makes tasks longer through vague prompts, but it then grades every attempt with a single overall correctness score"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "The authors say SheetRM modulates difficulty by simply concatenating relatively well-defined manipulation instructions. Realistic finance requests are underspecified, so a capable agent must infer a viable plan and meet implicit domain expectations. The tempting wrong answer is the 'vague prompts' one, because the authors do criticise benchmarks that compress evaluation into a single score, but SheetRM's instructions are explicit rather than vague.",
+    "option_explanations": [
+      "The page does not describe SheetRM's difficulty as coming from workbook size or reading limits. Think about how its instructions are written.",
+      "Right. Chaining explicit, well-defined edits produces length without underspecification. Real finance requests leave the plan to the agent, along with implicit domain expectations.",
+      "The page says nothing about SheetRM drawing on code repositories. The criticism is about how its difficulty is produced.",
+      "This gets SheetRM's prompts backwards. The authors' complaint concerns how clearly its instructions are spelled out, not that they are vague."
+    ]
+  }
+}

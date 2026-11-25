@@ -14,6 +14,9 @@ Flow of `grade(content, response)`:
    The system prompt tells the model about the listed criteria, so its feedback can build on
    them; it still must not quote or paraphrase the model answer.
 
+Every call is recorded in the cost ledger (`teacher.costs`) as soon as it returns, so a reply
+that is then rejected still has its cost; without a cost meter in place no call is made.
+
 Every way the judge can fail to produce a verdict (no credentials, rejected credentials, rate
 limit, timeout, connection error, 5xx or any other API error status, refusal, truncation,
 unparsable or mismatched output) raises `GradingUnavailableError`. There is no fallback grader.
@@ -29,6 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from teacher.claude_api import NO_CREDENTIALS_REASON, default_client, describe_api_error
 from teacher.config import DEFAULT_JUDGE_MODEL  # re-exported; defined in teacher.config
+from teacher.costs import record_reply, require_meter
 from teacher.grading import (
     DEFAULT_MIN_WORDS,
     FAILED,
@@ -264,10 +268,14 @@ class LLMJudgeGrader:
         )
 
     def _call(self, user_prompt: str) -> Any:
-        """One Messages API call; every SDK failure becomes GradingUnavailableError."""
+        """One Messages API call; every SDK failure becomes GradingUnavailableError. The call
+        is recorded in the cost ledger (`teacher.costs`, step "judge", purpose "grading" unless
+        the current scope names the job, e.g. a page generation's question check) before its
+        verdict is checked; without a current meter nothing is sent."""
         client = self._get_client()
+        meter = require_meter(what="grading call to Claude")
         try:
-            return client.messages.create(
+            message = client.messages.create(
                 model=self.model,
                 max_tokens=MAX_TOKENS,
                 system=SYSTEM_PROMPT,
@@ -281,6 +289,8 @@ class LLMJudgeGrader:
             raise _unavailable(
                 describe_api_error(exc, model=self.model, timeout=self.timeout)
             ) from exc
+        record_reply(message, meter=meter, purpose="grading", step="judge")
+        return message
 
     def _verdict(self, message: Any, rubric_size: int) -> JudgeVerdict:
         """Check the stop reason, then parse and check the structured output."""

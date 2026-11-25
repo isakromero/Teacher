@@ -1,0 +1,9 @@
+{
+  "asset": "figures/figure-1-7c4cf045e6.png",
+  "label": "Figure 1",
+  "source_caption": "BlueFin is a challenging benchmark for characterizing LLM spreadsheet generation.",
+  "page": 2,
+  "width": 702,
+  "height": 524,
+  "caption": "Look at the three columns: what each family takes in, what the agent produces, and the sample criteria beneath. Notice the Perturbation criteria, which ask what happens when an input is changed."
+}

@@ -28,6 +28,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from teacher.config import Settings
+from teacher.costs import cost_scope
 from teacher.grading import Confidence, Grader, Verdict
 from teacher.labs import require_not_lab
 from teacher.managers import (
@@ -240,7 +241,7 @@ def create_response(
     the gate (passed, or the last one allowed) also logs a `gate_cleared` study event."""
     artifact = ArtifactManager(session, settings).get_by_slug(slug)
     require_not_lab(artifact, "blocks")
-    with _conflicts_as_409():
+    with _conflicts_as_409(), cost_scope(settings, purpose="grading", artifact_id=artifact.id):
         outcome = submit_response(
             session,
             settings,

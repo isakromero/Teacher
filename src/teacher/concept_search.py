@@ -13,7 +13,10 @@ word characters (letters, digits, marks): "k-NN" and "kNN" both compact to "knn"
 Query text never reaches FTS5 unquoted: every term or trigram becomes one double-quoted string
 (inner quotes doubled), so quotes, `*`, `-`, `^`, `:`, parentheses, `AND`/`OR`/`NOT`/`NEAR` are
 matched as text, never parsed as operators. Only this module adds operators (`*`, `OR`, `AND`,
-parentheses) around those strings.
+parentheses) around those strings. The expressions are built from `word_phrases`,
+`substring_clauses` and `trigrams`, which the Postgres backend (`teacher.db.search.postgres`)
+turns into SQL instead, with every string a bound parameter, so both databases search for
+exactly the same thing.
 """
 
 from __future__ import annotations
@@ -139,39 +142,57 @@ def parse_query(query: object) -> ParsedQuery:
 # -- the word index ------------------------------------------------------------------------
 
 
+def word_phrases(terms: Sequence[str], *, prefix: bool = False) -> list[tuple[str, bool]]:
+    """The phrases of the word index's query: every term, and whether its last token may match
+    as a prefix (with `prefix`, when the term's last word has at least MIN_PREFIX characters).
+    ValueError if `terms` is empty."""
+    if not terms:
+        raise ValueError("no terms to search the word index for")
+    phrases = []
+    for term in terms:
+        last = words(term)
+        phrases.append((term, prefix and bool(last) and len(last[-1]) >= MIN_PREFIX))
+    return phrases
+
+
 def word_expression(terms: Sequence[str], *, prefix: bool = False) -> str:
     """The FTS5 expression for the word index: every term one quoted phrase, ANDed. With
     `prefix`, a term whose last word has at least MIN_PREFIX characters also matches words that
-    word only starts with (`"term"*`). ValueError if `terms` is empty."""
-    if not terms:
-        raise ValueError("no terms to search the word index for")
-    parts = []
-    for term in terms:
-        last = words(term)
-        star = prefix and bool(last) and len(last[-1]) >= MIN_PREFIX
-        parts.append(quote(term) + ("*" if star else ""))
-    return " ".join(parts)
+    word only starts with (`"term"*`; see `word_phrases`). ValueError if `terms` is empty."""
+    return " ".join(
+        quote(term) + ("*" if star else "") for term, star in word_phrases(terms, prefix=prefix)
+    )
 
 
 # -- the trigram index ---------------------------------------------------------------------
 
 
-def substring_expression(terms: Sequence[str]) -> str | None:
-    """The FTS5 expression for the substring tier, or None if no term is long enough.
-
-    Every term of at least TRIGRAM characters must occur in the row's text or (as its compact
-    form, if that is long enough too) in its compact text. Shorter terms cannot be looked up in
-    a trigram index; `substring_matches` checks them on the rows this expression finds."""
+def substring_clauses(terms: Sequence[str]) -> list[list[str]]:
+    """What the substring tier looks up in the trigram index: one clause per term of at least
+    TRIGRAM characters (the term, and its compact form if that differs and is long enough too),
+    every clause required, any string of a clause enough; a string matches a row whose text or
+    compact text contains it. Empty if no term is long enough. Shorter terms cannot be looked
+    up in a trigram index; `substring_matches` checks them on the rows found."""
     clauses = []
     for term in terms:
         if len(term) < TRIGRAM:
             continue
-        variants = [quote(term)]
+        variants = [term]
         squeezed = compact(term)
         if squeezed != term and len(squeezed) >= TRIGRAM:
-            variants.append(quote(squeezed))
-        clauses.append(variants[0] if len(variants) == 1 else f"({' OR '.join(variants)})")
-    return " AND ".join(clauses) if clauses else None
+            variants.append(squeezed)
+        clauses.append(variants)
+    return clauses
+
+
+def substring_expression(terms: Sequence[str]) -> str | None:
+    """The FTS5 expression for the substring tier (`substring_clauses`), or None if no term is
+    long enough."""
+    parts = []
+    for variants in substring_clauses(terms):
+        quoted = [quote(v) for v in variants]
+        parts.append(quoted[0] if len(quoted) == 1 else f"({' OR '.join(quoted)})")
+    return " AND ".join(parts) if parts else None
 
 
 def substring_matches(terms: Sequence[str], text: str, compact_text: str) -> bool:
@@ -190,12 +211,16 @@ def substring_score(terms: Sequence[str], compact_text: str) -> float:
     return round(min(1.0, covered / max(1, len(compact_text))), SCORE_DIGITS)
 
 
+def trigrams(query_words: Sequence[str]) -> list[str]:
+    """The distinct trigrams of the query words, sorted: a row containing any of them is a
+    fuzzy candidate. Empty when no word has TRIGRAM characters."""
+    return sorted({w[i : i + TRIGRAM] for w in query_words for i in range(len(w) - TRIGRAM + 1)})
+
+
 def trigram_expression(query_words: Sequence[str]) -> str | None:
     """The FTS5 expression fetching fuzzy candidates: any trigram of any query word (OR), or
     None when no word has TRIGRAM characters."""
-    grams = sorted(
-        {w[i : i + TRIGRAM] for w in query_words for i in range(len(w) - TRIGRAM + 1)}
-    )
+    grams = trigrams(query_words)
     return " OR ".join(quote(g) for g in grams) if grams else None
 
 
@@ -318,10 +343,13 @@ __all__ = [
     "osa_distance",
     "parse_query",
     "quote",
+    "substring_clauses",
     "substring_expression",
     "substring_matches",
     "substring_score",
     "trigram_expression",
+    "trigrams",
     "word_expression",
+    "word_phrases",
     "words",
 ]

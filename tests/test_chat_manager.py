@@ -6,13 +6,19 @@ from datetime import timedelta
 
 import pytest
 from sqlalchemy import func, select, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DataError, IntegrityError
 from sqlalchemy.orm import Session
 
 from teacher.config import Settings
 from teacher.db.models import Artifact, ChatMessage, ChatThread
 from teacher.managers import ArtifactManager, ChatManager, NotFoundError
 from teacher.managers.chat import PREVIEW_CHARS, make_preview
+from tests.conftest import (
+    CHECK_VIOLATION,
+    POSTGRES_BAD_JSON,
+    UNIQUE_VIOLATION,
+    raw_json,
+)
 
 CONTENT = [{"type": "text", "text": "hello"}]
 
@@ -156,20 +162,28 @@ def test_add_message_validation(
     assert session.scalar(select(func.count()).select_from(ChatMessage)) == 0
 
 
-def test_database_checks(chat: ChatManager, artifact: Artifact, session: Session) -> None:
+def test_database_checks(
+    chat: ChatManager, artifact: Artifact, session: Session, test_db: str
+) -> None:
     thread = chat.create_thread(artifact)
     session.flush()
-    for sql in (
-        "INSERT INTO chat_messages (thread_id, position, role, text, api_content) "
-        "VALUES (:t, 1, 'tool', 'x', '[]')",
-        "INSERT INTO chat_messages (thread_id, position, role, kind, text, api_content) "
-        "VALUES (:t, 1, 'user', 'quiz', 'x', '[]')",
-        "INSERT INTO chat_messages (thread_id, position, role, text, api_content) "
-        "VALUES (:t, 1, 'user', 'x', 'not json')",
-        'INSERT INTO chat_messages (thread_id, position, role, text, api_content, "references") '
-        "VALUES (:t, 1, 'user', 'x', '[]', 'nope')",
-    ):
-        with pytest.raises(IntegrityError, match="CHECK constraint failed"):
+    # Text that is not JSON: SQLite's json_valid CHECKs reject it, Postgres' json type does.
+    bad_json = (
+        (DataError, POSTGRES_BAD_JSON)
+        if test_db == "postgres"
+        else (IntegrityError, CHECK_VIOLATION)
+    )
+    for sql, (error, message) in (
+        ("INSERT INTO chat_messages (thread_id, position, role, text, api_content) "
+         "VALUES (:t, 1, 'tool', 'x', '[]')", (IntegrityError, CHECK_VIOLATION)),
+        ("INSERT INTO chat_messages (thread_id, position, role, kind, text, api_content) "
+         "VALUES (:t, 1, 'user', 'quiz', 'x', '[]')", (IntegrityError, CHECK_VIOLATION)),
+        ("INSERT INTO chat_messages (thread_id, position, role, text, api_content) "
+         "VALUES (:t, 1, 'user', 'x', 'not json')", bad_json),
+        ('INSERT INTO chat_messages (thread_id, position, role, text, api_content, "references") '
+         "VALUES (:t, 1, 'user', 'x', '[]', 'nope')", bad_json),
+    ):  # fmt: skip
+        with pytest.raises(error, match=message):
             with session.begin_nested():
                 session.execute(text(sql), {"t": thread.id})
     session.execute(
@@ -180,8 +194,9 @@ def test_database_checks(chat: ChatManager, artifact: Artifact, session: Session
     row = session.execute(
         text('SELECT kind, "references", context_blocks, created_at FROM chat_messages')
     ).one()
-    assert row[:3] == ("message", "[]", "[]") and row[3] is not None
-    with pytest.raises(IntegrityError, match="UNIQUE"):
+    assert (row[0], raw_json(row[1]), raw_json(row[2])) == ("message", [], [])
+    assert row[3] is not None
+    with pytest.raises(IntegrityError, match=UNIQUE_VIOLATION):
         with session.begin_nested():
             session.execute(
                 text("INSERT INTO chat_messages (thread_id, position, role, text, api_content) "

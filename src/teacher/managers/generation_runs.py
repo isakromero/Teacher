@@ -56,7 +56,7 @@ class GenerationRunManager:
         (non-blank text, or None) is something the owner should see with the stage."""
         rel_output = None
         if output_file is not None:
-            rel_output = to_relative(Path(output_file), self.settings.root)
+            rel_output = to_relative(Path(output_file), self.settings.data_root)
         if note is not None:
             _validate_text(note, "note")
         self._finish(run, "succeeded", input_tokens, output_tokens)

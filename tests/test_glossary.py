@@ -39,6 +39,10 @@ from teacher.glossary import (
     visible_entries,
 )
 
+# The components here make their API calls directly: an in-memory cost meter records them
+# (without a meter a component refuses to make a call; see `teacher.costs`).
+pytestmark = pytest.mark.usefixtures("cost_meter")
+
 PDF_BYTES = b"%PDF-1.4\n% a tiny stand-in for a paper\n%%EOF\n"
 
 

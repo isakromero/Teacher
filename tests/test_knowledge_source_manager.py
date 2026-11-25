@@ -21,6 +21,7 @@ from teacher.db.models import (
 from teacher.files import sha256_bytes
 from teacher.managers.errors import DuplicateError, Issue, ManagerError, NotFoundError
 from teacher.managers.knowledge_sources import KnowledgeSourceManager, SourceInUseError
+from tests.conftest import raw_json
 
 PDF_BYTES = b"%PDF-1.7\nattention is all you need\n"
 
@@ -92,7 +93,7 @@ def test_add_copies_file_and_inserts_row(
         ("doi", "10.48550/arXiv.1706.03762"),
     }
     path = ksm.primary_path(source)
-    assert path == settings.root / "knowledge_sources" / "attention" / "source.pdf"
+    assert path == settings.data_root / "knowledge_sources" / "attention" / "source.pdf"
     assert path.read_bytes() == PDF_BYTES
     assert src.exists()  # copied, not moved
 
@@ -122,7 +123,7 @@ def test_add_defaults_and_media_type_fallback(
     row = session.execute(
         text("SELECT creators, metadata FROM knowledge_sources WHERE id = :id"), {"id": source.id}
     ).one()
-    assert tuple(row) == ("[]", "{}")
+    assert (raw_json(row[0]), raw_json(row[1])) == ([], {})
 
 
 def test_add_explicit_media_type_wins(ksm: KnowledgeSourceManager, inputs: Path) -> None:

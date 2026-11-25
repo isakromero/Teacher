@@ -132,7 +132,7 @@ def test_a_row_written_outside_the_managers_has_no_verdict(
     session.execute(
         text(
             "INSERT INTO block_responses (block_id, attempt, response, passed, grader) "
-            "VALUES (:b, 1, '{}', 0, 'raw')"
+            "VALUES (:b, 1, '{}', false, 'raw')"
         ),
         {"b": b.id},
     )

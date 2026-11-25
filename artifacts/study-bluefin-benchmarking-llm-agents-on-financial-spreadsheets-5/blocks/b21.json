@@ -1,0 +1,4 @@
+{
+  "markdown": "## Cost and behavior\n\nA model is on the **Pareto frontier** if no other model is both cheaper and better. Here the frontier runs Grok 4.20, Gemini 3.1 Pro, GPT-5.5. Opus 4.7 is dominated: GPT-5.5 scores similarly at $8.85 versus $49.21 per task. Gemini ($5.78) and GPT-5.5 land within 6.8 points of Opus's macro score.\n\nIn one routine balance-sheet task, Gemini scored 100% at $3.00 and Opus 95% at $83.05 (27.7x). Gemini used narrow reads, compact formula writes and recalculation checks; Opus used broad reads and large writes. The authors suggest saving expensive models for ambiguous or novel tasks.\n\nOther profiles: GPT-5.5 used `execute_python` as its first action on 64% of manipulation tasks, needing fewer turns but doing worse on Output Validation; Sonnet returned an unchanged workbook on about 8% of manipulation tasks.",
+  "role": "explanation"
+}

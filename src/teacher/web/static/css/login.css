@@ -1,0 +1,33 @@
+/* The sign-in page (templates/login.html, teacher.web.auth): one card with a password field,
+   on top of app.css. The field is styled like the other text fields; its text is 16px or more
+   so phones do not zoom in when it is focused. */
+
+.page-login {
+  max-width: calc(26rem + 2 * var(--gutter));
+}
+.login-card h1 {
+  margin-top: 0;
+}
+.login-form input[type="password"] {
+  font: inherit;
+  font-size: max(1rem, 16px);
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+  width: 100%;
+  min-height: 2.75rem;
+}
+.login-form input[type="password"]:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+.login-form input[aria-invalid="true"] {
+  border-color: var(--err);
+}
+.login-form .button {
+  width: 100%;
+  min-height: 2.75rem;
+  font-size: 1rem;
+}

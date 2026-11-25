@@ -108,7 +108,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('started_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('last_activity_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
-    sa.Column('backfilled', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('backfilled', sa.Boolean(), server_default=sa.false(), nullable=False),
     sa.CheckConstraint('last_activity_at >= started_at', name=op.f('ck_study_sessions_activity_order')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_study_sessions'))
     )
@@ -154,7 +154,7 @@ def upgrade() -> None:
     sa.Column('source_id', sa.Integer(), nullable=True),
     sa.Column('payload', sa.JSON(), server_default='{}', nullable=False),
     sa.CheckConstraint(EVENT_KINDS_CHECK, name=op.f('ck_study_events_kind')),
-    sa.CheckConstraint('json_valid(payload)', name=op.f('ck_study_events_payload_json')),
+    sa.CheckConstraint('json_valid(payload)', name=op.f('ck_study_events_payload_json')).ddl_if(dialect='sqlite'),
     sa.ForeignKeyConstraint(['artifact_id'], ['artifacts.id'], name=op.f('fk_study_events_artifact_id_artifacts'), ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['block_id'], ['artifact_blocks.id'], name=op.f('fk_study_events_block_id_artifact_blocks'), ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['concept_id'], ['concepts.id'], name=op.f('fk_study_events_concept_id_concepts'), ondelete='SET NULL'),

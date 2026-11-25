@@ -5,13 +5,15 @@ concept (not across concepts: acronyms collide between fields) and never equal t
 own name. Any content edit (name, summary, an alias added or removed) clears `reviewed_at`;
 `mark_reviewed` is the only way to set it.
 
-The two FTS5 indexes (see `teacher.db.fts`) - the word index `concept_search` (one row per
+The two search indexes (see `teacher.db.fts`) - the word index `concept_search` (one row per
 concept) and the trigram index `concept_trigram` (one row per name or alias) - are rewritten for
 a concept by every write here, inside the same savepoint as the change, so they cannot drift
 from the rows written through this manager; `check()` reports any drift and
 `rebuild_search_index()` repairs it. `search_hits` (and `search`, its concepts only) combines
 them with the exact lookup; the matching rules are in `search_hits` and
-`teacher.concept_search`.
+`teacher.concept_search`. The SQL is the database's concept-search backend's
+(`teacher.db.search`: FTS5 on SQLite, plain tables with pg_trgm on Postgres), which the
+database provider names; both give the same hits in the same order with the same scores.
 """
 
 from __future__ import annotations
@@ -20,7 +22,7 @@ import builtins
 from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 
-from sqlalchemy import Row, select, text
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -28,7 +30,6 @@ from teacher.concept_search import (
     EXACT,
     FIELD_ALIAS,
     FIELD_NAME,
-    FIELD_SUMMARY,
     FUZZY,
     KINDS,
     PREFIX,
@@ -39,10 +40,10 @@ from teacher.concept_search import (
     fold,
     fuzzy_score,
     parse_query,
-    substring_expression,
+    substring_clauses,
     substring_matches,
     substring_score,
-    trigram_expression,
+    trigrams,
     word_expression,
 )
 from teacher.concepts import (
@@ -54,10 +55,11 @@ from teacher.concepts import (
 )
 from teacher.config import Settings
 from teacher.db.fts import (
+    ALIAS_SEPARATOR,
     CONCEPT_SEARCH_TABLE,
     CONCEPT_TRIGRAM_TABLE,
+    SEARCH_WEIGHTS,
     TRIGRAM_SLOTS,
-    fts_errors,
 )
 from teacher.db.models import (
     BlockConcept,
@@ -68,6 +70,8 @@ from teacher.db.models import (
     SourceConcept,
     utcnow,
 )
+from teacher.db.providers import create_db_provider
+from teacher.db.search import ConceptSearchBackend, TrigramRow
 from teacher.files import slugify, validate_slug
 from teacher.managers.artifacts import _is_unique_violation, _require_persistent, _validate_text
 from teacher.managers.block_concepts import stronger_block_role
@@ -89,11 +93,8 @@ from teacher.managers.errors import (
 )
 
 DEFAULT_SEARCH_LIMIT = 20
-# bm25 column weights for (name, aliases, summary): a match in the name counts most.
-SEARCH_WEIGHTS = (10.0, 5.0, 1.0)
-ALIAS_SEPARATOR = "\n"
-# highlight() markers for the word index; only used to see which column matched, never shown.
-_MARK_OPEN, _MARK_CLOSE = "[", "]"
+# SEARCH_WEIGHTS (bm25 column weights for name, aliases, summary) and ALIAS_SEPARATOR live in
+# teacher.db.fts, with the indexes; they are re-exported here.
 
 
 # -- search results -------------------------------------------------------------------------
@@ -402,8 +403,8 @@ class ConceptManager:
         TypeError for a non-string query; ValueError for an empty query, one of only
         punctuation (a letter, digit or symbol such as "ε" or "∇" is enough), a bad limit or
         bad `kinds`; IntegrityCheckError if an index points at a concept that no longer
-        exists; ConceptSearchUnavailableError if SQLite or the database lacks what the
-        indexes need.
+        exists; ConceptSearchUnavailableError if the database (or SQLite build) lacks what
+        the indexes need.
         """
         parsed = parse_query(query)
         _positive(limit)
@@ -473,7 +474,7 @@ class ConceptManager:
     ) -> builtins.list[_Found]:
         if not parsed.word_terms:
             return []
-        return self._word_index(word_expression(parsed.word_terms), WORD, limit)
+        return self._word_index(parsed.word_terms, False, WORD, limit)
 
     def _prefix_hits(
         self, parsed: ParsedQuery, limit: int, kinds: frozenset[str]
@@ -485,51 +486,34 @@ class ConceptManager:
             return []  # no term long enough to be a prefix: the word tier found all of it
         # Whole-word hits come back too; search_hits already has them from the word tier
         # (which found them all, or filled the limit), so only prefix-only hits are new.
-        return self._word_index(expression, PREFIX, limit)
+        return self._word_index(parsed.word_terms, True, PREFIX, limit)
 
-    def _word_index(self, expression: str, kind: str, limit: int) -> builtins.list[_Found]:
-        """Hits from the word index for `expression`, best first. `limit` rows are enough: at
-        most `limit` hits are kept, and earlier tiers can only have found fewer than that."""
-        weights = ", ".join(str(w) for w in SEARCH_WEIGHTS)
-        mark = f"'{_MARK_OPEN}', '{_MARK_CLOSE}'"
-        with fts_errors():
-            rows = self.session.execute(
-                text(
-                    f"SELECT rowid, bm25(concept_search, {weights}) AS rank, name, aliases, "
-                    f"highlight(concept_search, 0, {mark}), "
-                    f"highlight(concept_search, 1, {mark}) "
-                    "FROM concept_search WHERE concept_search MATCH :q "
-                    "ORDER BY rank, rowid LIMIT :limit"
-                ),
-                {"q": expression, "limit": limit},
-            ).all()
-        hits = []
-        for rowid, rank, name, aliases, marked_name, marked_aliases in rows:
-            field, matched = FIELD_SUMMARY, None
-            if marked_name != name:
-                field, matched = FIELD_NAME, name
-            else:
-                pairs = zip(
-                    aliases.split(ALIAS_SEPARATOR),
-                    marked_aliases.split(ALIAS_SEPARATOR),
-                    strict=True,
-                )
-                alias = next((a for a, marked in pairs if marked != a), None)
-                if alias is not None:
-                    field, matched = FIELD_ALIAS, alias
-            hits.append(_Found(rowid, kind, -rank, field, matched, CONCEPT_SEARCH_TABLE))
-        return hits
+    def _word_index(
+        self, terms: tuple[str, ...], prefix: bool, kind: str, limit: int
+    ) -> builtins.list[_Found]:
+        """Hits from the word index for `terms` (as `word_expression(terms, prefix=prefix)`),
+        best first. `limit` rows are enough: at most `limit` hits are kept, and earlier tiers
+        can only have found fewer than that."""
+        backend = self._search
+        with backend.errors():
+            matches = backend.word_matches(self.session, terms, prefix=prefix, limit=limit)
+        return [
+            _Found(m.concept_id, kind, -m.rank, m.field, m.matched, CONCEPT_SEARCH_TABLE)
+            for m in matches
+        ]
 
-    def _trigram_rows(self, expression: str) -> builtins.list[Row]:
-        """Every trigram-index row matching `expression` (scored in Python, so not limited)."""
-        with fts_errors():
-            return self.session.execute(
-                text(
-                    "SELECT rowid, text, compact, label FROM concept_trigram "
-                    "WHERE concept_trigram MATCH :q"
-                ),
-                {"q": expression},
-            ).all()
+    @property
+    def _search(self) -> ConceptSearchBackend:
+        """The database's concept-search backend (its provider names it); an error if the
+        session is bound to another kind of database than `settings` names."""
+        backend = create_db_provider(self.settings).concept_search
+        dialect = self.session.get_bind().dialect.name
+        if dialect != backend.dialect:
+            raise RuntimeError(
+                f"the session is on a {dialect} database, but the settings name a "
+                f"{backend.dialect} one ({self.settings.db}); use a session of those settings"
+            )
+        return backend
 
     @staticmethod
     def _trigram_hit(rowid: int, kind: str, score: float, label: str) -> _Found:
@@ -540,11 +524,14 @@ class ConceptManager:
     def _substring_hits(
         self, parsed: ParsedQuery, limit: int, kinds: frozenset[str]
     ) -> builtins.list[_Found]:
-        expression = substring_expression(parsed.terms)
-        if expression is None:
+        clauses = substring_clauses(parsed.terms)
+        if not clauses:
             return []
+        backend = self._search
+        with backend.errors():
+            rows = backend.substring_rows(self.session, clauses)
         scored = []
-        for rowid, row_text, row_compact, label in self._trigram_rows(expression):
+        for rowid, row_text, row_compact, label in rows:
             if substring_matches(parsed.terms, row_text, row_compact):
                 score = substring_score(parsed.terms, row_compact)
                 hit = self._trigram_hit(rowid, SUBSTRING, score, label)
@@ -554,11 +541,14 @@ class ConceptManager:
     def _fuzzy_hits(
         self, parsed: ParsedQuery, limit: int, kinds: frozenset[str]
     ) -> builtins.list[_Found]:
-        expression = trigram_expression(parsed.words)
-        if expression is None:
+        grams = trigrams(parsed.words)
+        if not grams:
             return []
+        backend = self._search
+        with backend.errors():
+            rows = backend.fuzzy_rows(self.session, grams)
         scored = []
-        for rowid, row_text, _row_compact, label in self._trigram_rows(expression):
+        for rowid, row_text, _row_compact, label in rows:
             closeness = fuzzy_score(parsed.words, row_text)
             if closeness is not None:
                 hit = self._trigram_hit(rowid, FUZZY, closeness.score, label)
@@ -894,27 +884,26 @@ class ConceptManager:
         Trigram index (`concept_trigram`): 'missing_trigram_rows', 'stale_trigram_rows' (rows
         differ from the concept's name and aliases) and 'orphan_trigram_rows' (rows for a
         concept id that does not exist; the Issue's slug is '#<concept id>').
+        On Postgres a word-index row whose words (`concept_search_tokens`) do not match its
+        text is stale too, and words of a concept id with neither a row nor a concept orphan.
         """
         concepts = self.list()
         expected = {
             concept.id: (concept.slug, self._search_values(concept)) for concept in concepts
         }
-        with fts_errors():
-            actual = {
-                rowid: (name, aliases, summary)
-                for rowid, name, aliases, summary in self.session.execute(
-                    text("SELECT rowid, name, aliases, summary FROM concept_search")
-                )
-            }
+        backend = self._search
+        with backend.errors():
+            word_index = backend.word_rows(self.session)
+        actual = word_index.rows
         issues: list[Issue] = []
         for concept_id, (slug, values) in expected.items():
             if concept_id not in actual:
                 issues.append(Issue("missing_search_row", slug, "no concept_search row"))
-            elif actual[concept_id] != values:
+            elif actual[concept_id] != values or concept_id in word_index.inconsistent:
                 issues.append(
                     Issue("stale_search_row", slug, "concept_search row differs from the concept")
                 )
-        for rowid in sorted(set(actual) - set(expected)):
+        for rowid in sorted((set(actual) | word_index.inconsistent) - set(expected)):
             issues.append(
                 Issue(
                     "orphan_search_row", f"#{rowid}", f"concept_search row {rowid} has no concept"
@@ -924,14 +913,11 @@ class ConceptManager:
         expected_trigrams = {
             concept.id: (concept.slug, self._trigram_values(concept)) for concept in concepts
         }
-        actual_trigrams: dict[int, list[tuple[int, str, str, str]]] = {}
-        with fts_errors():
-            for rowid, row_text, row_compact, label in self.session.execute(
-                text("SELECT rowid, text, compact, label FROM concept_trigram ORDER BY rowid")
-            ):
-                actual_trigrams.setdefault(rowid // TRIGRAM_SLOTS, []).append(
-                    (rowid, row_text, row_compact, label)
-                )
+        actual_trigrams: dict[int, list[TrigramRow]] = {}
+        with backend.errors():
+            trigram_rows = backend.trigram_rows(self.session)
+        for row in trigram_rows:
+            actual_trigrams.setdefault(row[0] // TRIGRAM_SLOTS, []).append(row)
         for concept_id, (slug, rows) in expected_trigrams.items():
             if concept_id not in actual_trigrams:
                 issues.append(Issue("missing_trigram_rows", slug, "no concept_trigram rows"))
@@ -956,9 +942,9 @@ class ConceptManager:
     def rebuild_search_index(self) -> int:
         """Rewrite both search indexes from the concepts; returns the number of concepts."""
         concepts = self.list()
-        with self.session.begin_nested(), fts_errors():
-            self.session.execute(text("DELETE FROM concept_search"))
-            self.session.execute(text("DELETE FROM concept_trigram"))
+        backend = self._search
+        with self.session.begin_nested(), backend.errors():
+            backend.clear(self.session)
             for concept in concepts:
                 self._insert_search_row(concept)
         return len(concepts)
@@ -990,21 +976,22 @@ class ConceptManager:
         concept.updated_at = utcnow()
 
     def _aliases(self, concept: Concept) -> builtins.list[str]:
-        """The concept's aliases as stored, in alias order (read from the database, so the
-        order is the same whether or not the relationship was reloaded)."""
-        return list(
-            self.session.scalars(
-                select(ConceptAlias.alias)
-                .where(ConceptAlias.concept_id == concept.id)
-                .order_by(ConceptAlias.alias_norm, ConceptAlias.alias)
+        """The concept's aliases as stored, in alias order: by normalised alias, then alias,
+        compared by code point (read from the database, so the order is the same whether or
+        not the relationship was reloaded; sorted here, so it is the same on SQLite and on
+        Postgres, whose ORDER BY would follow the database's collation)."""
+        rows = self.session.execute(
+            select(ConceptAlias.alias_norm, ConceptAlias.alias).where(
+                ConceptAlias.concept_id == concept.id
             )
         )
+        return [alias for _, alias in sorted(tuple(row) for row in rows)]
 
     def _search_values(self, concept: Concept) -> tuple[str, str, str]:
         """The concept's concept_search row: (name, aliases newline-separated, summary)."""
         return concept.name, ALIAS_SEPARATOR.join(self._aliases(concept)), concept.summary
 
-    def _trigram_values(self, concept: Concept) -> builtins.list[tuple[int, str, str, str]]:
+    def _trigram_values(self, concept: Concept) -> builtins.list[TrigramRow]:
         """The concept's concept_trigram rows: (rowid, folded text, compact text, label) for
         the name (slot 0) and each alias (slots 1.., in alias order)."""
         labels = [concept.name, *self._aliases(concept)]
@@ -1020,44 +1007,25 @@ class ConceptManager:
         return rows
 
     def _insert_search_row(self, concept: Concept) -> None:
-        name, aliases, summary = self._search_values(concept)
-        self.session.execute(
-            text(
-                "INSERT INTO concept_search (rowid, name, aliases, summary) "
-                "VALUES (:id, :name, :aliases, :summary)"
-            ),
-            {"id": concept.id, "name": name, "aliases": aliases, "summary": summary},
-        )
-        self.session.execute(
-            text(
-                "INSERT INTO concept_trigram (rowid, text, compact, label) "
-                "VALUES (:rowid, :text, :compact, :label)"
-            ),
-            [
-                {"rowid": rowid, "text": row_text, "compact": row_compact, "label": label}
-                for rowid, row_text, row_compact, label in self._trigram_values(concept)
-            ],
+        self._search.insert(
+            self.session, concept.id, self._search_values(concept), self._trigram_values(concept)
         )
 
     def _delete_search_row(self, concept_id: int) -> None:
         """Delete the concept's rows from both indexes."""
-        with fts_errors():
-            self.session.execute(
-                text("DELETE FROM concept_search WHERE rowid = :id"), {"id": concept_id}
-            )
-            self.session.execute(
-                text("DELETE FROM concept_trigram WHERE rowid >= :low AND rowid < :high"),
-                {"low": concept_id * TRIGRAM_SLOTS, "high": (concept_id + 1) * TRIGRAM_SLOTS},
-            )
+        backend = self._search
+        with backend.errors():
+            backend.delete(self.session, concept_id)
 
     def _sync_search(self, concept: Concept) -> None:
         """Rewrite the concept's rows in both indexes (call after flushing the change)."""
         self._delete_search_row(concept.id)
-        with fts_errors():
+        with self._search.errors():
             self._insert_search_row(concept)
 
 
 __all__ = [
+    "ALIAS_SEPARATOR",
     "DEFAULT_SEARCH_LIMIT",
     "SEARCH_WEIGHTS",
     "ConceptManager",

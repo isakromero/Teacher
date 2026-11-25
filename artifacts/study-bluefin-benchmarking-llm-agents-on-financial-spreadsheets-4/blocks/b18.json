@@ -1,0 +1,19 @@
+{
+  "question": "Suppose a hypothetical agent, given a BLUEFIN manipulation task, writes only a title row and a few labels and then calls done. What would its Pitfalls result most likely look like?",
+  "options": [
+    "A low Pitfalls pass rate, because in a penalty section a higher pass rate means more errors found.",
+    "A high Pitfalls pass rate, which would lift its total score close to that of a complete build.",
+    "A high Pitfalls pass rate, because with so little content almost no error-penalty check can fire.",
+    "A low Pitfalls pass rate, because an unfinished build counts as a defect under the penalty checks."
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "A penalty check can only fire on something that exists, so an agent that builds almost nothing passes nearly all of them. That is why the authors read Grok's high Pitfalls rate as a sign of thin output rather than care. The tempting misreading is that a clean Pitfalls record rescues the score, but Pitfalls only remove points; the points themselves come from the other five categories.",
+    "option_explanations": [
+      "This flips the meaning of the scale. In the Pitfalls section a higher pass rate means fewer detected errors, not more.",
+      "Pitfalls only subtract points; avoiding them cannot earn the positive points that Formula Correctness, Integration, Output Validation and Perturbation award, so a thin build still scores poorly overall.",
+      "Right. Penalty checks look for defects such as #REF! errors or truncated text, and a nearly empty build gives them almost nothing to fire on. This is how the authors explain Grok's high Pitfalls rate.",
+      "Pitfall criteria look for specific defects such as error values or truncated text, not for missing work. Missing work costs points in the other categories instead."
+    ]
+  }
+}

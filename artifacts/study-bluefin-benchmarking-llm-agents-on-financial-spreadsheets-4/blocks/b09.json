@@ -1,0 +1,21 @@
+{
+  "prompt": "Imagine an agent adds a forecast tab that needs the revenue growth rate. Instead of linking to the growth rate on the Assumptions tab, it re-types the same value into a local cell. Today every number on the tab is correct. Which rubric category would flag this, and why does it matter even though the numbers are right?",
+  "min_words": 30,
+  "private": {
+    "model_answer": "Model Integration would flag it, because the value is not linked to its authoritative source on the Assumptions tab. It matters because if someone later changes the growth rate there, the local copy stays stale. The forecast silently diverges, and a perturbation test on that input would fail.",
+    "rubric": [
+      {
+        "criterion": "Identifies Model Integration (linking to the authoritative source rather than hardcoding or recomputing locally) as the category that flags it.",
+        "required": true
+      },
+      {
+        "criterion": "Explains that the problem appears when the source input changes: the local copy does not update, so results become wrong or inconsistent.",
+        "required": true
+      },
+      {
+        "criterion": "Notes that a related Perturbation check on that input would also fail.",
+        "required": false
+      }
+    ]
+  }
+}

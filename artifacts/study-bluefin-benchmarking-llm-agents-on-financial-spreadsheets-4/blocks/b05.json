@@ -1,0 +1,9 @@
+{
+  "asset": "figures/figure-1-7c4cf045e6.png",
+  "label": "Figure 1",
+  "source_caption": "BlueFin is a challenging benchmark for characterizing LLM spreadsheet generation.",
+  "page": 2,
+  "width": 702,
+  "height": 524,
+  "caption": "Compare the bottom panels. Synthesis and manipulation are graded by rubric items of different kinds: is the formula right, is the value within ±2%, does the output recompute after an input change. Interrogation is graded by matching an answer. The perturbation items (\"If SOFR 2.5% → 3.5%, does…\") are the ones the results will show models fail most."
+}

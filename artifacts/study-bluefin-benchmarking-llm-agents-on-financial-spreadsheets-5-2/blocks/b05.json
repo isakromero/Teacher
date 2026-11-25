@@ -1,0 +1,9 @@
+{
+  "asset": "figures/figure-1-7c4cf045e6.png",
+  "label": "Figure 1",
+  "source_caption": "BlueFin is a challenging benchmark for characterizing LLM spreadsheet generation.",
+  "page": 2,
+  "width": 702,
+  "height": 524,
+  "caption": "Read each column from top to bottom: input, agent, output, grading. Note the three kinds of sample criteria under synthesis and manipulation: a formula check, a value-within-±2% check, and a perturbation check (\"if SOFR moves from 2.5% to 3.5%, does interest expense hit the right number?\"). Interrogation, by contrast, is auto-graded against a single answer."
+}

@@ -24,6 +24,8 @@ references extracted yet, which the app shows as "never run").
 
 The check texts are frozen here as written; while 0015 is the head they match
 `teacher.db.models`. Downgrade drops both tables (the extracted references are lost).
+The json_valid() CHECK (`SQLITE_ONLY`) is not created on PostgreSQL, where the json type
+refuses invalid JSON.
 """
 from typing import Sequence, Union
 
@@ -62,11 +64,16 @@ CHECKS = {
 }
 
 
+# Checks that exist only on SQLite (on PostgreSQL the json type refuses invalid JSON).
+SQLITE_ONLY = {'authors_json'}
+
+
 def _checks(table: str) -> list[sa.CheckConstraint]:
-    return [
-        sa.CheckConstraint(sqltext, name=op.f(f'ck_{table}_{name}'))
-        for name, sqltext in CHECKS[table]
-    ]
+    checks = []
+    for name, sqltext in CHECKS[table]:
+        check = sa.CheckConstraint(sqltext, name=op.f(f'ck_{table}_{name}'))
+        checks.append(check.ddl_if(dialect='sqlite') if name in SQLITE_ONLY else check)
+    return checks
 
 
 def upgrade() -> None:

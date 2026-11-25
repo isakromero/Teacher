@@ -1,0 +1,19 @@
+{
+  "question": "What do the authors say about the tasks in many existing spreadsheet benchmarks, compared with realistic professional finance work?",
+  "options": [
+    "They are simple, well-specified tasks that map cleanly to automatic checks, unlike open-ended end-to-end workflows",
+    "They are complex multi-tab builds, but their scoring uses only a single digestible number per model",
+    "They are underspecified requests like real prompts, but they rely on human graders for every output",
+    "They use realistic finance workbooks, but the sheets are too large for models to read in one call"
+  ],
+  "private": {
+    "correct_index": 0,
+    "explanation": "Existing benchmarks lean toward tasks with a clean automatic check. BLUEFIN targets complex, underspecified workflows where that is not possible, which is why it needs rubrics and an agentic judge.",
+    "option_explanations": [
+      "Correct: formula generation, atomic edits and fixed-sheet QA map cleanly onto programmatic checks, so complex, underspecified workflows were left out.",
+      "The authors do mention compressing evaluation into a single score as a weakness of some work, but the tasks themselves are described as shallow, not as complex builds.",
+      "Prior benchmarks are described as having well-specified instructions, not underspecified ones; the contrast is the opposite.",
+      "The document does not say that workbook size was the limitation of prior benchmarks; it says they use flat tables or simple tasks."
+    ]
+  }
+}

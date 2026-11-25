@@ -1,0 +1,1207 @@
+{
+  "extractor": "claude-concepts-v1",
+  "trigger": "generation",
+  "model": "claude-sonnet-5-5",
+  "embedding_model": "text-embedding-3-small",
+  "source": {
+    "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+    "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets"
+  },
+  "calls": [
+    {
+      "step": "concepts",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChQ15yPJt2ogfTs4ukMPR",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 1035,
+        "cache_creation_input_tokens": 81506,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 2900
+      }
+    },
+    {
+      "step": "concept judge",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChQ17sZ8U8z5tMU267nzn",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 5507,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 489
+      }
+    }
+  ],
+  "stale_embedded": 0,
+  "removed_links": 19,
+  "candidates": [
+    {
+      "number": 1,
+      "name": "rubric-based evaluation",
+      "aliases": [
+        "rubric grading",
+        "criteria-based grading"
+      ],
+      "summary": "Evaluating complex outputs by checking them against a set of fine-grained, usually binary, criteria with assigned point weights, and aggregating the weighted points met. It suits tasks that are hard to verify with a single programmatic test.",
+      "role": "uses",
+      "evidence": "3,225 granular rubric criteria"
+    },
+    {
+      "number": 2,
+      "name": "LLM-as-a-judge",
+      "aliases": [
+        "LM judge",
+        "LLM judge",
+        "agentic LLM judge"
+      ],
+      "summary": "Using a language model to grade other models' outputs against a rubric or reference, sometimes with tools to inspect the artifact. Its reliability is usually checked by comparing its judgments with human labels.",
+      "role": "uses",
+      "evidence": "can be reliably evaluated by an LM judge agent"
+    },
+    {
+      "number": 3,
+      "name": "benchmark",
+      "aliases": [
+        "evaluation benchmark"
+      ],
+      "summary": "A standardized set of tasks and scoring procedures used to measure and compare the capabilities of models or systems on a defined skill area.",
+      "role": "assumes",
+      "evidence": null
+    },
+    {
+      "number": 4,
+      "name": "LLM agent",
+      "aliases": [
+        "agentic LLM",
+        "tool-using language model agent"
+      ],
+      "summary": "A language model that works toward a goal by repeatedly choosing and calling tools, observing the results, and deciding what to do next until it signals completion.",
+      "role": "uses",
+      "evidence": "tasks large language model (LLM) agents"
+    },
+    {
+      "number": 5,
+      "name": "agent harness",
+      "aliases": [
+        "evaluation harness",
+        "agentic harness",
+        "scaffold"
+      ],
+      "summary": "The software layer around a model that supplies its tools, prompts, observation handling and termination logic, so that model behavior can be run and compared in a controlled environment.",
+      "role": "uses",
+      "evidence": "an agentic harness of 20 tools organized into six categories"
+    },
+    {
+      "number": 6,
+      "name": "inter-annotator agreement",
+      "aliases": [
+        "inter-rater reliability",
+        "IRR"
+      ],
+      "summary": "The degree to which independent human raters assign the same labels to the same items. It is used to establish a reliability ceiling and to validate automated judges.",
+      "role": "uses",
+      "evidence": "inter-annotator alignment study over 384 binary criteria"
+    },
+    {
+      "number": 7,
+      "name": "Krippendorff's alpha",
+      "aliases": [
+        "Krippendorff's α"
+      ],
+      "summary": "A chance-corrected reliability coefficient for agreement among raters that works with different data types and missing ratings. A value of 1 means perfect agreement and 0 means chance-level agreement.",
+      "role": "uses",
+      "evidence": "Krippendorff's Alpha of 0.826"
+    },
+    {
+      "number": 8,
+      "name": "macro-averaged F1 score",
+      "aliases": [
+        "macro F1",
+        "macro-F1"
+      ],
+      "summary": "The F1 score, the harmonic mean of precision and recall, computed separately for each class and then averaged with equal weight per class. It treats rare and common classes equally.",
+      "role": "uses",
+      "evidence": "macro F1 score of 0.839"
+    },
+    {
+      "number": 9,
+      "name": "perturbation testing",
+      "aliases": [
+        "input perturbation test",
+        "sensitivity check"
+      ],
+      "summary": "Changing a driving input of a model and checking that dependent outputs recompute to the correct new values. It detects hardcoded values and broken formula links that look correct under the original inputs.",
+      "role": "uses",
+      "evidence": "A perturbation criterion specifies an input mutation"
+    },
+    {
+      "number": 10,
+      "name": "spreadsheet formula dependency",
+      "aliases": [
+        "cell dependency graph",
+        "formula linking"
+      ],
+      "summary": "Spreadsheet cells reference other cells so that changes propagate through chains of calculations. Linking to a single authoritative source cell, rather than hardcoding or recomputing values locally, keeps a model dynamic and auditable.",
+      "role": "uses",
+      "evidence": "dense, graph-structured dependencies"
+    },
+    {
+      "number": 11,
+      "name": "hardcoded value",
+      "aliases": [
+        "hardcoding"
+      ],
+      "summary": "A constant typed directly into a cell or formula where a formula or reference should supply the value. It breaks the model's dynamic behavior when inputs change.",
+      "role": "uses",
+      "evidence": "Do not hardcode computed values when a formula can produce the result."
+    },
+    {
+      "number": 12,
+      "name": "discounted cash flow valuation",
+      "aliases": [
+        "DCF",
+        "DCF model"
+      ],
+      "summary": "A valuation method that projects a company's future free cash flows and discounts them to present value using a discount rate, adding a discounted terminal value to estimate enterprise value.",
+      "role": "uses",
+      "evidence": "value the company using a DCF"
+    },
+    {
+      "number": 13,
+      "name": "weighted average cost of capital",
+      "aliases": [
+        "WACC"
+      ],
+      "summary": "The blended required return of a firm's debt and equity financing, weighted by their proportions in the capital structure. It is commonly used as the discount rate in DCF valuation.",
+      "role": "uses",
+      "evidence": "change WACC from 8.5% to 10%"
+    },
+    {
+      "number": 14,
+      "name": "leveraged buyout model",
+      "aliases": [
+        "LBO model",
+        "LBO"
+      ],
+      "summary": "A financial model of acquiring a company largely with debt, including sources and uses of funds, debt schedules and returns to equity investors. It often involves circular references such as interest depending on cash sweep.",
+      "role": "uses",
+      "evidence": "debt schedules and LBO-style circular references converge correctly"
+    },
+    {
+      "number": 15,
+      "name": "circular reference",
+      "aliases": [
+        "iterative calculation"
+      ],
+      "summary": "A spreadsheet situation where a cell's formula depends, directly or indirectly, on its own result. It requires iterative calculation to converge to a stable value.",
+      "role": "uses",
+      "evidence": "iterative-calc enabled"
+    },
+    {
+      "number": 16,
+      "name": "debt schedule",
+      "aliases": [
+        "debt waterfall",
+        "revolver and term loan schedule"
+      ],
+      "summary": "A model section that tracks beginning balances, repayments, cash sweeps, interest and ending balances for each debt tranche over time, often including a revolver that covers cash shortfalls.",
+      "role": "uses",
+      "evidence": "Build a debt schedule section at the bottom of the uploaded worksheet"
+    },
+    {
+      "number": 17,
+      "name": "three-statement financial model",
+      "aliases": [
+        "operating model",
+        "financial statement model"
+      ],
+      "summary": "An integrated model projecting the income statement, balance sheet and cash flow statement from assumptions, with the balance sheet required to balance in every period.",
+      "role": "assumes",
+      "evidence": "A Check line equal to Total Assets minus Total Equity and Liabilities"
+    },
+    {
+      "number": 18,
+      "name": "financial modeling best practices",
+      "aliases": [
+        "FAST standard",
+        "modeling conventions"
+      ],
+      "summary": "Conventions for building clear, auditable spreadsheet models, such as separating inputs from calculations, avoiding hardcodes, and using consistent formatting like blue font for hardcoded assumptions.",
+      "role": "uses",
+      "evidence": "standard financial modeling conventions [20]"
+    },
+    {
+      "number": 19,
+      "name": "Pareto frontier",
+      "aliases": [
+        "cost-performance frontier",
+        "Pareto optimality"
+      ],
+      "summary": "The set of options for which no other option is both cheaper and better. Options off the frontier are dominated by at least one frontier option.",
+      "role": "uses",
+      "evidence": "The Pareto frontier traces Grok 4.20 → Gemini 3.1 Pro → GPT-5.5"
+    },
+    {
+      "number": 20,
+      "name": "programmatic verifiability",
+      "aliases": [
+        "automatic verification"
+      ],
+      "summary": "The property of a task whose outputs can be checked by executable tests or exact-match comparison. Tasks with subjective or multi-dimensional quality criteria are hard to verify this way.",
+      "role": "uses",
+      "evidence": "difficult to verify programmatically"
+    },
+    {
+      "number": 21,
+      "name": "sandboxed code execution",
+      "aliases": [
+        "restricted Python sandbox",
+        "import allow-list"
+      ],
+      "summary": "Running model-written code in a restricted environment with limited built-ins, allow-listed imports, no file or network access and a timeout, to limit risk while allowing bulk operations.",
+      "role": "uses",
+      "evidence": "restricted built-ins and a tight import whitelist (no file I/O, no network)"
+    },
+    {
+      "number": 22,
+      "name": "minimal-elicitation prompting",
+      "aliases": [
+        "minimal system prompt"
+      ],
+      "summary": "Giving a model a very short prompt with no workflow prescriptions or tool preferences, so that evaluation reflects the model's own capability rather than how well it follows detailed instructions.",
+      "role": "uses",
+      "evidence": "minimal-elicitation prompt (61 words"
+    },
+    {
+      "number": 23,
+      "name": "benchmark data leakage",
+      "aliases": [
+        "test set contamination",
+        "held-out set"
+      ],
+      "summary": "The risk that benchmark items appear in training data, inflating scores. Keeping a private held-out set while releasing a public one mitigates it.",
+      "role": "uses",
+      "evidence": "We retain a private set primarily out of potential leakage concerns"
+    },
+    {
+      "number": 24,
+      "name": "reasoning effort setting",
+      "aliases": [
+        "reasoning_effort",
+        "extended thinking"
+      ],
+      "summary": "A model API parameter controlling how much internal reasoning computation the model spends before responding. Scales are not comparable across providers.",
+      "role": "uses",
+      "evidence": "All models are set to high reasoning via their respective provider APIs"
+    }
+  ],
+  "resolutions": [
+    {
+      "candidate": 1,
+      "name": "rubric-based evaluation",
+      "verdict": "exact",
+      "concept": {
+        "id": 28,
+        "slug": "rubric-based-evaluation",
+        "name": "rubric-based evaluation"
+      },
+      "matched_text": "rubric-based evaluation",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 2,
+      "name": "LLM-as-a-judge",
+      "verdict": "exact",
+      "concept": {
+        "id": 18,
+        "slug": "llm-as-a-judge",
+        "name": "LLM-as-a-judge"
+      },
+      "matched_text": "LLM-as-a-judge",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 3,
+      "name": "benchmark",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": "A generic benchmark is a broader concept than contamination, agent benchmarks, or verifiability, none of which is the same idea.",
+      "shortlist": [
+        {
+          "id": 21,
+          "slug": "benchmark-data-contamination",
+          "name": "benchmark data contamination",
+          "found_by": [
+            "search word 'benchmark'",
+            "embedding 0.506",
+            "search word 'evaluation benchmark'"
+          ]
+        },
+        {
+          "id": 100,
+          "slug": "benchmark-for-llm-agents",
+          "name": "Benchmark for LLM agents",
+          "found_by": [
+            "embedding 0.688",
+            "search word 'benchmark'"
+          ]
+        },
+        {
+          "id": 98,
+          "slug": "benchmark-data-leakage",
+          "name": "benchmark data leakage",
+          "found_by": [
+            "search word 'benchmark'",
+            "search word 'evaluation benchmark'"
+          ]
+        },
+        {
+          "id": 104,
+          "slug": "benchmark-data-leakage-and-held-out-sets",
+          "name": "Benchmark data leakage and held-out sets",
+          "found_by": [
+            "search word 'benchmark'"
+          ]
+        },
+        {
+          "id": 47,
+          "slug": "programmatic-verifiability",
+          "name": "programmatic verifiability",
+          "found_by": [
+            "search prefix 'benchmark'",
+            "search prefix 'evaluation benchmark'"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 4,
+      "name": "LLM agent",
+      "verdict": "exact",
+      "concept": {
+        "id": 33,
+        "slug": "llm-agent",
+        "name": "LLM agent"
+      },
+      "matched_text": "LLM agent",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 5,
+      "name": "agent harness",
+      "verdict": "exact",
+      "concept": {
+        "id": 32,
+        "slug": "agentic-evaluation-harness",
+        "name": "agentic evaluation harness"
+      },
+      "matched_text": "agent harness",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 6,
+      "name": "inter-annotator agreement",
+      "verdict": "judged",
+      "concept": {
+        "id": 29,
+        "slug": "inter-annotator-agreement",
+        "name": "inter-annotator agreement"
+      },
+      "matched_text": null,
+      "reason": "Same name, aliases and definition of agreement among independent raters.",
+      "shortlist": [
+        {
+          "id": 29,
+          "slug": "inter-annotator-agreement",
+          "name": "inter-annotator agreement",
+          "found_by": [
+            "exact name",
+            "exact alias 'inter-rater reliability'",
+            "exact alias 'IRR'",
+            "slug",
+            "search exact 'inter-annotator agreement'",
+            "embedding 0.990",
+            "search exact 'inter-rater reliability'",
+            "search exact 'IRR'"
+          ]
+        },
+        {
+          "id": 30,
+          "slug": "krippendorff-s-alpha",
+          "name": "Krippendorff's alpha",
+          "found_by": [
+            "exact name",
+            "search exact 'inter-annotator agreement'",
+            "embedding 0.633"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 7,
+      "name": "Krippendorff's alpha",
+      "verdict": "exact",
+      "concept": {
+        "id": 30,
+        "slug": "krippendorff-s-alpha",
+        "name": "Krippendorff's alpha"
+      },
+      "matched_text": "Krippendorff's alpha",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 8,
+      "name": "macro-averaged F1 score",
+      "verdict": "exact",
+      "concept": {
+        "id": 31,
+        "slug": "macro-averaged-f1-score",
+        "name": "macro-averaged F1 score"
+      },
+      "matched_text": "macro-averaged F1 score",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 9,
+      "name": "perturbation testing",
+      "verdict": "exact",
+      "concept": {
+        "id": 34,
+        "slug": "perturbation-testing",
+        "name": "perturbation testing"
+      },
+      "matched_text": "perturbation testing",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 10,
+      "name": "spreadsheet formula dependency",
+      "verdict": "exact",
+      "concept": {
+        "id": 94,
+        "slug": "spreadsheet-formula-dependency",
+        "name": "spreadsheet formula dependency"
+      },
+      "matched_text": "spreadsheet formula dependency",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 11,
+      "name": "hardcoded value",
+      "verdict": "judged",
+      "concept": {
+        "id": 95,
+        "slug": "hardcoding",
+        "name": "hardcoding"
+      },
+      "matched_text": null,
+      "reason": "Both define hardcoding as typing a constant where a formula should supply the value.",
+      "shortlist": [
+        {
+          "id": 95,
+          "slug": "hardcoding",
+          "name": "hardcoding",
+          "found_by": [
+            "exact alias 'hardcoding'",
+            "search word 'hardcoded value'",
+            "embedding 0.850",
+            "search exact 'hardcoding'"
+          ]
+        },
+        {
+          "id": 101,
+          "slug": "hardcoding-versus-formula-driven-modeling",
+          "name": "Hardcoding versus formula-driven modeling",
+          "found_by": [
+            "search prefix 'hardcoded value'",
+            "embedding 0.817",
+            "search word 'hardcoding'"
+          ]
+        },
+        {
+          "id": 35,
+          "slug": "hardcoding-versus-formula-driven-spreadsheet-modeling",
+          "name": "hardcoding versus formula-driven spreadsheet modeling",
+          "found_by": [
+            "search prefix 'hardcoded value'",
+            "embedding 0.742",
+            "search word 'hardcoding'"
+          ]
+        },
+        {
+          "id": 34,
+          "slug": "perturbation-testing",
+          "name": "perturbation testing",
+          "found_by": [
+            "search prefix 'hardcoded value'"
+          ]
+        },
+        {
+          "id": 94,
+          "slug": "spreadsheet-formula-dependency",
+          "name": "spreadsheet formula dependency",
+          "found_by": [
+            "search prefix 'hardcoded value'",
+            "search word 'hardcoding'"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 12,
+      "name": "discounted cash flow valuation",
+      "verdict": "exact",
+      "concept": {
+        "id": 37,
+        "slug": "discounted-cash-flow-valuation",
+        "name": "discounted cash flow valuation"
+      },
+      "matched_text": "discounted cash flow valuation",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 13,
+      "name": "weighted average cost of capital",
+      "verdict": "exact",
+      "concept": {
+        "id": 38,
+        "slug": "weighted-average-cost-of-capital",
+        "name": "weighted average cost of capital"
+      },
+      "matched_text": "weighted average cost of capital",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 14,
+      "name": "leveraged buyout model",
+      "verdict": "judged",
+      "concept": {
+        "id": 96,
+        "slug": "leveraged-buyout-model",
+        "name": "leveraged buyout model"
+      },
+      "matched_text": null,
+      "reason": "Identical concept: the leveraged buyout (LBO) model of a debt-financed acquisition.",
+      "shortlist": [
+        {
+          "id": 96,
+          "slug": "leveraged-buyout-model",
+          "name": "leveraged buyout model",
+          "found_by": [
+            "exact name",
+            "exact alias 'LBO model'",
+            "slug",
+            "search exact 'leveraged buyout model'",
+            "embedding 0.975",
+            "search exact 'LBO model'",
+            "search word 'LBO'"
+          ]
+        },
+        {
+          "id": 102,
+          "slug": "leveraged-buyout-and-debt-schedule-modeling",
+          "name": "Leveraged buyout and debt schedule modeling",
+          "found_by": [
+            "exact alias 'LBO model'",
+            "search word 'leveraged buyout model'",
+            "embedding 0.848",
+            "search exact 'LBO model'",
+            "search word 'LBO'"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 15,
+      "name": "circular reference",
+      "verdict": "exact",
+      "concept": {
+        "id": 40,
+        "slug": "circular-reference-in-spreadsheets",
+        "name": "circular reference in spreadsheets"
+      },
+      "matched_text": "circular reference",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 16,
+      "name": "debt schedule",
+      "verdict": "judged",
+      "concept": {
+        "id": 39,
+        "slug": "debt-schedule",
+        "name": "debt schedule"
+      },
+      "matched_text": null,
+      "reason": "Same debt schedule model section, with the same name and overlapping aliases.",
+      "shortlist": [
+        {
+          "id": 39,
+          "slug": "debt-schedule",
+          "name": "debt schedule",
+          "found_by": [
+            "exact name",
+            "exact alias 'revolver and term loan schedule'",
+            "slug",
+            "search exact 'debt schedule'",
+            "embedding 0.934",
+            "search exact 'revolver and term loan schedule'"
+          ]
+        },
+        {
+          "id": 102,
+          "slug": "leveraged-buyout-and-debt-schedule-modeling",
+          "name": "Leveraged buyout and debt schedule modeling",
+          "found_by": [
+            "exact name",
+            "search exact 'debt schedule'",
+            "embedding 0.617"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 17,
+      "name": "three-statement financial model",
+      "verdict": "new",
+      "concept": null,
+      "matched_text": null,
+      "reason": "A three-statement model is a specific type of financial model, not the same as general financial modeling or its conventions.",
+      "shortlist": [
+        {
+          "id": 36,
+          "slug": "financial-modeling",
+          "name": "financial modeling",
+          "found_by": [
+            "search prefix 'financial statement model'",
+            "embedding 0.599"
+          ]
+        },
+        {
+          "id": 103,
+          "slug": "financial-modeling-conventions",
+          "name": "Financial modeling conventions",
+          "found_by": [
+            "embedding 0.519"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 18,
+      "name": "financial modeling best practices",
+      "verdict": "judged",
+      "concept": {
+        "id": 103,
+        "slug": "financial-modeling-conventions",
+        "name": "Financial modeling conventions"
+      },
+      "matched_text": null,
+      "reason": "Both describe accepted conventions or best practices for financial models, and both carry the FAST standard alias.",
+      "shortlist": [
+        {
+          "id": 103,
+          "slug": "financial-modeling-conventions",
+          "name": "Financial modeling conventions",
+          "found_by": [
+            "exact alias 'FAST standard'",
+            "search word 'financial modeling best practices'",
+            "embedding 0.940",
+            "search exact 'FAST standard'",
+            "search word 'modeling conventions'"
+          ]
+        },
+        {
+          "id": 36,
+          "slug": "financial-modeling",
+          "name": "financial modeling",
+          "found_by": [
+            "embedding 0.763",
+            "search word 'modeling conventions'"
+          ]
+        },
+        {
+          "id": 35,
+          "slug": "hardcoding-versus-formula-driven-spreadsheet-modeling",
+          "name": "hardcoding versus formula-driven spreadsheet modeling",
+          "found_by": [
+            "embedding 0.557"
+          ]
+        },
+        {
+          "id": 101,
+          "slug": "hardcoding-versus-formula-driven-modeling",
+          "name": "Hardcoding versus formula-driven modeling",
+          "found_by": [
+            "embedding 0.537"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 19,
+      "name": "Pareto frontier",
+      "verdict": "exact",
+      "concept": {
+        "id": 43,
+        "slug": "pareto-frontier-of-cost-and-performance",
+        "name": "Pareto frontier of cost and performance"
+      },
+      "matched_text": "Pareto frontier",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 20,
+      "name": "programmatic verifiability",
+      "verdict": "exact",
+      "concept": {
+        "id": 47,
+        "slug": "programmatic-verifiability",
+        "name": "programmatic verifiability"
+      },
+      "matched_text": "programmatic verifiability",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 21,
+      "name": "sandboxed code execution",
+      "verdict": "exact",
+      "concept": {
+        "id": 44,
+        "slug": "sandboxed-code-execution",
+        "name": "sandboxed code execution"
+      },
+      "matched_text": "sandboxed code execution",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 22,
+      "name": "minimal-elicitation prompting",
+      "verdict": "exact",
+      "concept": {
+        "id": 42,
+        "slug": "minimal-elicitation-prompting",
+        "name": "minimal-elicitation prompting"
+      },
+      "matched_text": "minimal-elicitation prompting",
+      "reason": null,
+      "shortlist": []
+    },
+    {
+      "candidate": 23,
+      "name": "benchmark data leakage",
+      "verdict": "judged",
+      "concept": {
+        "id": 98,
+        "slug": "benchmark-data-leakage",
+        "name": "benchmark data leakage"
+      },
+      "matched_text": null,
+      "reason": "Same name and the same definition: leakage inflates scores, mitigated by a private held-out set.",
+      "shortlist": [
+        {
+          "id": 98,
+          "slug": "benchmark-data-leakage",
+          "name": "benchmark data leakage",
+          "found_by": [
+            "exact name",
+            "exact alias 'test set contamination'",
+            "exact alias 'held-out set'",
+            "slug",
+            "search exact 'benchmark data leakage'",
+            "embedding 0.923",
+            "search exact 'test set contamination'",
+            "search exact 'held-out set'"
+          ]
+        },
+        {
+          "id": 21,
+          "slug": "benchmark-data-contamination",
+          "name": "benchmark data contamination",
+          "found_by": [
+            "exact alias 'test set contamination'",
+            "search word 'benchmark data leakage'",
+            "embedding 0.846",
+            "search exact 'test set contamination'"
+          ]
+        },
+        {
+          "id": 104,
+          "slug": "benchmark-data-leakage-and-held-out-sets",
+          "name": "Benchmark data leakage and held-out sets",
+          "found_by": [
+            "exact alias 'test set contamination'",
+            "exact alias 'held-out set'",
+            "embedding 0.910",
+            "search word 'benchmark data leakage'",
+            "search exact 'test set contamination'",
+            "search exact 'held-out set'"
+          ]
+        },
+        {
+          "id": 41,
+          "slug": "held-out-test-set",
+          "name": "held-out test set",
+          "found_by": [
+            "embedding 0.598",
+            "search word 'held-out set'"
+          ]
+        }
+      ]
+    },
+    {
+      "candidate": 24,
+      "name": "reasoning effort setting",
+      "verdict": "exact",
+      "concept": {
+        "id": 99,
+        "slug": "reasoning-effort-setting",
+        "name": "reasoning effort setting"
+      },
+      "matched_text": "reasoning effort setting",
+      "reason": null,
+      "shortlist": []
+    }
+  ],
+  "output": {
+    "links": [
+      {
+        "slug": "rubric-based-evaluation",
+        "name": "rubric-based evaluation",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "rubric-based evaluation"
+        ],
+        "judge_reason": null,
+        "evidence": "3,225 granular rubric criteria",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "llm-as-a-judge",
+        "name": "LLM-as-a-judge",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "LLM-as-a-judge"
+        ],
+        "judge_reason": null,
+        "evidence": "can be reliably evaluated by an LM judge agent",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "benchmark",
+        "name": "benchmark",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "benchmark"
+        ],
+        "judge_reason": null,
+        "evidence": null,
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "llm-agent",
+        "name": "LLM agent",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "LLM agent"
+        ],
+        "judge_reason": null,
+        "evidence": "tasks large language model (LLM) agents",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "agentic-evaluation-harness",
+        "name": "agentic evaluation harness",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "agent harness"
+        ],
+        "judge_reason": null,
+        "evidence": "an agentic harness of 20 tools organized into six categories",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "inter-annotator-agreement",
+        "name": "inter-annotator agreement",
+        "role": "uses",
+        "resolution": "judged",
+        "candidates": [
+          "inter-annotator agreement"
+        ],
+        "judge_reason": "Same name, aliases and definition of agreement among independent raters.",
+        "evidence": "inter-annotator alignment study over 384 binary criteria",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "krippendorff-s-alpha",
+        "name": "Krippendorff's alpha",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "Krippendorff's alpha"
+        ],
+        "judge_reason": null,
+        "evidence": "Krippendorff's Alpha of 0.826",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "macro-averaged-f1-score",
+        "name": "macro-averaged F1 score",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "macro-averaged F1 score"
+        ],
+        "judge_reason": null,
+        "evidence": "macro F1 score of 0.839",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "perturbation-testing",
+        "name": "perturbation testing",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "perturbation testing"
+        ],
+        "judge_reason": null,
+        "evidence": "A perturbation criterion specifies an input mutation",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "spreadsheet-formula-dependency",
+        "name": "spreadsheet formula dependency",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "spreadsheet formula dependency"
+        ],
+        "judge_reason": null,
+        "evidence": "dense, graph-structured dependencies",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "hardcoding",
+        "name": "hardcoding",
+        "role": "uses",
+        "resolution": "judged",
+        "candidates": [
+          "hardcoded value"
+        ],
+        "judge_reason": "Both define hardcoding as typing a constant where a formula should supply the value.",
+        "evidence": "Do not hardcode computed values when a formula can produce the result.",
+        "aliases_added": [
+          "hardcoded value"
+        ],
+        "slug_note": null
+      },
+      {
+        "slug": "discounted-cash-flow-valuation",
+        "name": "discounted cash flow valuation",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "discounted cash flow valuation"
+        ],
+        "judge_reason": null,
+        "evidence": "value the company using a DCF",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "weighted-average-cost-of-capital",
+        "name": "weighted average cost of capital",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "weighted average cost of capital"
+        ],
+        "judge_reason": null,
+        "evidence": "change WACC from 8.5% to 10%",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "leveraged-buyout-model",
+        "name": "leveraged buyout model",
+        "role": "uses",
+        "resolution": "judged",
+        "candidates": [
+          "leveraged buyout model"
+        ],
+        "judge_reason": "Identical concept: the leveraged buyout (LBO) model of a debt-financed acquisition.",
+        "evidence": "debt schedules and LBO-style circular references converge correctly",
+        "aliases_added": [
+          "LBO"
+        ],
+        "slug_note": null
+      },
+      {
+        "slug": "circular-reference-in-spreadsheets",
+        "name": "circular reference in spreadsheets",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "circular reference"
+        ],
+        "judge_reason": null,
+        "evidence": "iterative-calc enabled",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "debt-schedule",
+        "name": "debt schedule",
+        "role": "uses",
+        "resolution": "judged",
+        "candidates": [
+          "debt schedule"
+        ],
+        "judge_reason": "Same debt schedule model section, with the same name and overlapping aliases.",
+        "evidence": "Build a debt schedule section at the bottom of the uploaded worksheet",
+        "aliases_added": [
+          "debt waterfall"
+        ],
+        "slug_note": null
+      },
+      {
+        "slug": "three-statement-financial-model",
+        "name": "three-statement financial model",
+        "role": "assumes",
+        "resolution": "created",
+        "candidates": [
+          "three-statement financial model"
+        ],
+        "judge_reason": null,
+        "evidence": "A Check line equal to Total Assets minus Total Equity and Liabilities",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "financial-modeling-conventions",
+        "name": "Financial modeling conventions",
+        "role": "uses",
+        "resolution": "judged",
+        "candidates": [
+          "financial modeling best practices"
+        ],
+        "judge_reason": "Both describe accepted conventions or best practices for financial models, and both carry the FAST standard alias.",
+        "evidence": "standard financial modeling conventions [20]",
+        "aliases_added": [
+          "financial modeling best practices",
+          "modeling conventions"
+        ],
+        "slug_note": null
+      },
+      {
+        "slug": "pareto-frontier-of-cost-and-performance",
+        "name": "Pareto frontier of cost and performance",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "Pareto frontier"
+        ],
+        "judge_reason": null,
+        "evidence": "The Pareto frontier traces Grok 4.20 → Gemini 3.1 Pro → GPT-5.5",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "programmatic-verifiability",
+        "name": "programmatic verifiability",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "programmatic verifiability"
+        ],
+        "judge_reason": null,
+        "evidence": "difficult to verify programmatically",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "sandboxed-code-execution",
+        "name": "sandboxed code execution",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "sandboxed code execution"
+        ],
+        "judge_reason": null,
+        "evidence": "restricted built-ins and a tight import whitelist (no file I/O, no network)",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "minimal-elicitation-prompting",
+        "name": "minimal-elicitation prompting",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "minimal-elicitation prompting"
+        ],
+        "judge_reason": null,
+        "evidence": "minimal-elicitation prompt (61 words",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "benchmark-data-leakage",
+        "name": "benchmark data leakage",
+        "role": "uses",
+        "resolution": "judged",
+        "candidates": [
+          "benchmark data leakage"
+        ],
+        "judge_reason": "Same name and the same definition: leakage inflates scores, mitigated by a private held-out set.",
+        "evidence": "We retain a private set primarily out of potential leakage concerns",
+        "aliases_added": [],
+        "slug_note": null
+      },
+      {
+        "slug": "reasoning-effort-setting",
+        "name": "reasoning effort setting",
+        "role": "uses",
+        "resolution": "exact",
+        "candidates": [
+          "reasoning effort setting"
+        ],
+        "judge_reason": null,
+        "evidence": "All models are set to high reasoning via their respective provider APIs",
+        "aliases_added": [],
+        "slug_note": null
+      }
+    ]
+  }
+}

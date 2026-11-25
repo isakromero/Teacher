@@ -272,9 +272,12 @@ def test_extraction_failures_write_nothing(
     seed(("attention",))
     before = snapshot(settings)
     stage = StageHandle()
+    # A rejected reply is asked for once more; an unavailable model is not.
+    replies = [make_reply(fake_anthropic)] * (2 if error is ConceptOutputError else 1)
+    fake = fake_anthropic(*replies)
     with pytest.raises(error) as caught:
-        run(settings, extractor_for(fake_anthropic(make_reply(fake_anthropic)), embedder),
-            stage=stage)
+        run(settings, extractor_for(fake, embedder), stage=stage)
+    assert len(fake.calls) == len(replies)
     message = str(caught.value)
     assert message.startswith(ERROR_PREFIX)
     for fragment in fragments:
@@ -288,10 +291,51 @@ def test_tokens_of_a_rejected_reply_are_recorded(
 ) -> None:
     make_source()
     stage = StageHandle()
-    fake = fake_anthropic(fake_anthropic.concepts_reply([], input_tokens=70, output_tokens=8))
+    reply = fake_anthropic.concepts_reply([], input_tokens=70, output_tokens=8)
+    fake = fake_anthropic(reply, reply)
     with pytest.raises(ConceptOutputError):
         run(settings, extractor_for(fake, embedder), stage=stage)
-    assert (stage.input_tokens, stage.output_tokens) == (70, 8)
+    assert (stage.input_tokens, stage.output_tokens) == (140, 16)
+
+
+def test_a_rejected_reply_is_asked_for_once_more(
+    settings: Settings, make_source, embedder, fake_anthropic
+) -> None:
+    make_source()
+    stage = StageHandle()
+    bad = fake_anthropic.concepts_reply([cand("Krippendorff's alpha", ["Krippendorff's Alpha"])])
+    good = fake_anthropic.concepts_reply([cand("Krippendorff's alpha", ["alpha reliability"])])
+    fake = fake_anthropic(bad, good)
+    result = run(settings, extractor_for(fake, embedder), stage=stage)
+
+    reason = "the alias \"Krippendorff's Alpha\" repeats its own name"
+    first, second = fake.calls
+    assert second["messages"][0]["content"][:-1] == first["messages"][0]["content"]
+    again = second["messages"][0]["content"][-1]["text"]
+    assert reason in again and "Reply again with the complete list" in again
+    assert [c.aliases for c in result.candidates] == [("alpha reliability",)]
+    assert reason in result.calls[0]["rejected"] and "rejected" not in result.calls[1]
+    assert reason in stage.note and "second reply" in stage.note
+
+
+def test_a_second_rejection_fails_and_names_both(
+    settings: Settings, make_source, embedder, fake_anthropic
+) -> None:
+    make_source()
+    before = snapshot(settings)
+    fake = fake_anthropic(
+        fake_anthropic.concepts_reply([cand("softmax", ["SoftMax"])]),
+        fake_anthropic.concepts_reply([cand("softmax", ["soft max", "Soft Max"])]),
+    )
+    stage = StageHandle()
+    with pytest.raises(ConceptOutputError) as caught:
+        run(settings, extractor_for(fake, embedder), stage=stage)
+    message = str(caught.value)
+    assert message.startswith(ERROR_PREFIX) and message.count(ERROR_PREFIX) == 1
+    assert "repeats its alias 'soft max' (second attempt" in message
+    assert "the alias 'SoftMax' repeats its own name" in message
+    assert len(fake.calls) == 2 and stage.note is None
+    assert snapshot(settings) == before
 
 
 def test_no_source_and_unusable_sources(

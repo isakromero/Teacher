@@ -1,0 +1,12 @@
+{
+  "prompt": "Early rubric drafts had a 'structural completeness' section: does the workbook contain the expected tabs, sections and line items? What do you expect the authors did with it in the final rubric?",
+  "options": [
+    "Dropped it, because it rewarded copying one template and penalised valid alternative builds.",
+    "Kept it as the most heavily weighted section, since structure is easy for a judge to verify.",
+    "Moved it into Presentation, since tab names and layout are mostly a formatting concern."
+  ],
+  "private": {
+    "correct_index": 0,
+    "resolution": "They dropped it. Preliminary experiments showed that explicit structure and input-accuracy sections over-rewarded models for reproducing a particular template and over-penalised valid alternative builds. Structure is now captured indirectly, through the categories explained next."
+  }
+}

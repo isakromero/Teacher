@@ -1,0 +1,19 @@
+{
+  "question": "The authors name two obstacles that explain why few benchmarks exist for professional finance spreadsheet tasks, compared with coding. Which pair do they name?",
+  "options": [
+    "Workbooks are too large to fit in a model's context window, and Excel formulas behave differently in open-source engines.",
+    "There is no public corpus of spreadsheet formulas, and workbook file formats are too proprietary to parse reliably.",
+    "Few finance experts are willing to author tasks, and frontier models often refuse to process sensitive financial data.",
+    "Workbooks hold confidential client and corporate data, and usability and convention criteria resist automatic tests."
+  ],
+  "private": {
+    "correct_index": 3,
+    "explanation": "The two obstacles the paper names are procurement (confidential workbooks) and verification (usability and convention criteria that tests cannot capture). The other pairs sound like plausible engineering hurdles, but none is what the authors give as the reason the evaluation landscape is sparse, and the harness they built handles file parsing and recalculation without trouble.",
+    "option_explanations": [
+      "The paper does not name context size or engine differences as obstacles. Its harness handles large results by truncation and recalculates through LibreOffice as a design choice; the obstacles it names concern where workbooks come from and how success is judged.",
+      "The paper does not blame a missing formula corpus or unparseable files; its harness reads workbooks through openpyxl. The obstacles it names concern access to realistic workbooks and judging success.",
+      "The paper does not cite a shortage of willing experts or model refusals. It recruited and paid experts well; its stated obstacles concern the workbooks themselves and how success is judged.",
+      "Right. The paper names procurement (sensitive data makes realistic workbooks hard to obtain) and verification (usability and convention requirements that cannot be checked programmatically)."
+    ]
+  }
+}

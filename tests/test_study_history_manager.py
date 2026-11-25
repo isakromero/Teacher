@@ -530,7 +530,7 @@ def test_rows_without_a_session_are_listed_apart(
 ) -> None:
     session.execute(text(
         "INSERT INTO block_responses (block_id, attempt, response, passed, grader) "
-        f"VALUES ({block(page, 'b02').id}, 1, '{{}}', 1, 'raw')"
+        f"VALUES ({block(page, 'b02').id}, 1, '{{}}', true, 'raw')"
     ))
     assert [e["grader"] for e in history.timeline(None)] == ["raw"]
     (unassigned,) = history.export()["unassigned"]

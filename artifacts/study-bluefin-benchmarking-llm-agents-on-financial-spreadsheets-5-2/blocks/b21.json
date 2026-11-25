@@ -1,0 +1,21 @@
+{
+  "prompt": "Using the balance-sheet case study, explain why the authors say an average-score leaderboard can understate the real differences between models.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "Gemini scored 100% for $3.00 and Opus 95% for $83.05, a 27.7x difference. A leaderboard of average scores shows them as about equal, hiding that one delivers the same quality far more cheaply. On routine, well-specified wiring tasks, cost per correct output can differ enormously even when quality does not.",
+    "rubric": [
+      {
+        "criterion": "States that the two models reached similar high scores (about 100% vs 95%) at very different costs ($3.00 vs $83.05, or 27.7x)",
+        "required": true
+      },
+      {
+        "criterion": "Explains that an average-score ranking ignores cost, i.e. cost per correct output, so models that look equal can differ greatly",
+        "required": true
+      },
+      {
+        "criterion": "Mentions why Opus cost more (broad reads, large writes, many more output tokens) or that expensive models suit ambiguous or novel tasks",
+        "required": false
+      }
+    ]
+  }
+}

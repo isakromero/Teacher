@@ -1,0 +1,29 @@
+# What the image may contain, and nothing else (Dockerfile). Everything is excluded first, then
+# only the build's inputs are let back in: no secrets and none of the owner's data can reach the
+# image, even ones not listed here.
+*
+
+!pyproject.toml
+!uv.lock
+!alembic.ini
+!docker-entrypoint.sh
+!src/
+!migrations/
+
+# Never, even inside the folders let in above (last match wins):
+**/__pycache__
+**/*.py[cod]
+**/.DS_Store
+**/.env
+**/.env.*
+**/teacher.db*
+**/knowledge_sources
+**/artifacts
+**/derived
+**/backups
+**/supabase
+**/.venv
+**/tests
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache

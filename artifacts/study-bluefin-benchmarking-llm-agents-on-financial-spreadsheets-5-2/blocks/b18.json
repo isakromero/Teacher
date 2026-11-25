@@ -1,0 +1,19 @@
+{
+  "question": "Imagine an agent adding a debt schedule hits a circular-reference error. To silence it, the agent replaces the interest-expense formulas with the numbers they currently display, and those numbers happen to be correct. How would the BLUEFIN judge most likely score the affected checks?",
+  "options": [
+    "It passes Output Validation at the base case but fails Perturbation once an input like SOFR is changed",
+    "It passes both Output Validation and Perturbation, since the judge reads values but never edits the inputs itself",
+    "It fails Output Validation at the base case but passes Perturbation, since the judge checks only that outputs move",
+    "It fails both Output Validation and Perturbation, since the judge rejects any value not produced by a formula"
+  ],
+  "private": {
+    "correct_index": 0,
+    "explanation": "This is the paper's static-versus-dynamic distinction. Output Validation checks today's number; Perturbation checks whether the model still works after a change, and hardcoding intermediate values is one of the named causes of perturbation failure. The tempting wrong answer is that Output Validation would catch the constants, but that check only looks at values. Hardcodes are caught by Perturbation and by penalty or integration checks.",
+    "option_explanations": [
+      "Right. The delivered numbers match the reference, so value checks pass. When the judge changes SOFR and recalculates, the pasted constants do not move, so the dependent outputs miss their new expected values.",
+      "The judge does edit inputs. For perturbation criteria it changes the input, recalculates, reads the output and then restores the input.",
+      "Output Validation compares the delivered value with the reference within a tolerance, and here the value is correct. Perturbation also needs the output to reach the correct new value, not merely to move.",
+      "Output Validation does not ask how a value was produced; it only compares the value with the reference within a tolerance. Other categories examine how values are produced."
+    ]
+  }
+}

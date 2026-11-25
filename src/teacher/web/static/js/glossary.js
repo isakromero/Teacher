@@ -17,6 +17,13 @@
 // MutationObserver re-marks a block whenever its content is re-rendered (gates repaint on
 // submit) and marks blocks as they are added.
 //
+// The tutor's replies (chat.js, `#tutor-messages`) are marked the same way, with the same terms
+// and the same popover: each finished reply counts as one block (its text parts and the
+// exercises in it), so a term's long form is marked once per reply. A reply is marked when it is
+// complete, not while it streams (its text is redrawn with every chunk). The reader's own
+// messages are not marked. Only the page's glossary terms are marked: a term the tutor uses that
+// is not in the page's glossary has no definition to show.
+//
 // Study history (activity.js): opening the panel logs `glossary_opened`, and showing a term's
 // popover `glossary_term_viewed` (at most once per term every TERM_LOG_MS, so moving the pointer
 // back and forth over a term is one look-up).
@@ -33,6 +40,7 @@ const MARGIN_PX = 8;
 const GAP_PX = 6;
 const MAX_WIDTH_PX = 352;
 const TERM_LOG_MS = 30_000;
+const PRESS_FOCUS_MS = 1000; // focus this soon after a press came from that press
 
 const SKIP_TAGS = new Set([
   "A", "CODE", "PRE", "KBD", "SAMP", "SCRIPT", "STYLE", "TEMPLATE", "BUTTON", "INPUT",
@@ -40,6 +48,8 @@ const SKIP_TAGS = new Set([
 ]);
 const SKIP_CLASSES = ["katex", "katex-display", "math", "math-error", TERM_CLASS];
 const OBSERVE = { childList: true, subtree: true };
+const REPLY_SELECTOR = ".tutor-msg-assistant";
+const STREAMING_CLASS = "is-streaming";
 
 /** Whether `el` (inside `root`) or an ancestor up to `root` is never marked. */
 function skipped(el, root) {
@@ -120,9 +130,9 @@ function markBlock(block, compiled) {
   }
 }
 
-function unmarkAll(blocksRoot) {
+function unmarkAll(root) {
   const parents = new Set();
-  for (const el of blocksRoot.querySelectorAll(`.${TERM_CLASS}`)) {
+  for (const el of root.querySelectorAll(`.${TERM_CLASS}`)) {
     parents.add(el.parentNode);
     el.replaceWith(document.createTextNode(el.textContent));
   }
@@ -131,14 +141,19 @@ function unmarkAll(blocksRoot) {
 
 // -- the popover -----------------------------------------------------------------------------
 
-function createPopover(blocksRoot, lookup, onShow) {
+/** `roots`: the elements whose marked terms show the popover. */
+function createPopover(roots, lookup, onShow) {
   const pop = h("div", { id: "glossary-popover", class: "gloss-popover", role: "tooltip", hidden: true });
   document.body.append(pop);
   let anchor = null;
   let showTimer = 0;
   let hideTimer = 0;
   let lastPointer = "mouse";
-  let pointerDown = false; // focus that comes from a press is handled by the click instead
+  // Focus that comes from a press is handled by the click instead. A touch focuses the term
+  // only after the pointer is up (with the compatibility mousedown), hence the time as well.
+  let pointerDown = false;
+  let pressedAt = -Infinity;
+  const fromPress = () => pointerDown || performance.now() - pressedAt < PRESS_FOCUS_MS;
 
   const clearTimers = () => {
     clearTimeout(showTimer);
@@ -225,41 +240,45 @@ function createPopover(blocksRoot, lookup, onShow) {
     hideTimer = setTimeout(hide, HIDE_DELAY_MS);
   }
 
-  blocksRoot.addEventListener("pointerover", (event) => {
-    const term = termOf(event.target);
-    if (!term || event.pointerType === "touch") return;
-    if (anchor === term) {
-      clearTimeout(hideTimer);
-      return;
-    }
-    scheduleShow(term);
-  });
-  blocksRoot.addEventListener("pointerout", (event) => {
-    const term = termOf(event.target);
-    if (!term || event.pointerType === "touch") return;
-    if (event.relatedTarget instanceof Node && term.contains(event.relatedTarget)) return;
-    if (anchor === term) scheduleHide();
-    else clearTimeout(showTimer);
-  });
+  for (const root of roots) {
+    root.addEventListener("pointerover", (event) => {
+      const term = termOf(event.target);
+      if (!term || event.pointerType === "touch") return;
+      if (anchor === term) {
+        clearTimeout(hideTimer);
+        return;
+      }
+      scheduleShow(term);
+    });
+    root.addEventListener("pointerout", (event) => {
+      const term = termOf(event.target);
+      if (!term || event.pointerType === "touch") return;
+      if (event.relatedTarget instanceof Node && term.contains(event.relatedTarget)) return;
+      if (anchor === term) scheduleHide();
+      else clearTimeout(showTimer);
+    });
+  }
   pop.addEventListener("pointerenter", () => clearTimeout(hideTimer));
   pop.addEventListener("pointerleave", (event) => {
     if (event.pointerType !== "touch") scheduleHide();
   });
 
-  blocksRoot.addEventListener("focusin", (event) => {
-    const term = termOf(event.target);
-    if (term && anchor !== term && !pointerDown) show(term); // keyboard focus
-  });
-  blocksRoot.addEventListener("focusout", (event) => {
-    const term = termOf(event.target);
-    if (term && anchor === term && !pop.contains(event.relatedTarget)) hide();
-  });
-  blocksRoot.addEventListener("click", (event) => {
-    const term = termOf(event.target);
-    if (!term) return;
-    if (isOpen() && anchor === term && lastPointer === "touch") hide();
-    else show(term);
-  });
+  for (const root of roots) {
+    root.addEventListener("focusin", (event) => {
+      const term = termOf(event.target);
+      if (term && anchor !== term && !fromPress()) show(term); // keyboard focus
+    });
+    root.addEventListener("focusout", (event) => {
+      const term = termOf(event.target);
+      if (term && anchor === term && !pop.contains(event.relatedTarget)) hide();
+    });
+    root.addEventListener("click", (event) => {
+      const term = termOf(event.target);
+      if (!term) return;
+      if (isOpen() && anchor === term && lastPointer === "touch") hide();
+      else show(term);
+    });
+  }
 
   const release = () => {
     pointerDown = false;
@@ -271,6 +290,7 @@ function createPopover(blocksRoot, lookup, onShow) {
     (event) => {
       lastPointer = event.pointerType || "mouse";
       pointerDown = true;
+      pressedAt = performance.now();
       if (!isOpen()) return;
       const target = event.target;
       if (target instanceof Node && (pop.contains(target) || anchor.contains(target))) return;
@@ -308,6 +328,7 @@ function checkGlossary(data) {
 export function mountGlossary(artifact) {
   const url = `/api/artifacts/${seg(artifact.slug)}/glossary`;
   const blocksRoot = byId("blocks");
+  const tutorRoot = byId("tutor-messages");
   const panel = byId("glossary");
   const count = byId("glossary-count");
   const list = byId("glossary-list");
@@ -326,7 +347,7 @@ export function mountGlossary(artifact) {
 
   const logged = new Map(); // term -> when its look-up was last logged
   const popover = createPopover(
-    blocksRoot,
+    [blocksRoot, tutorRoot],
     (key) => byKey.get(key),
     (entry) => {
       const now = Date.now();
@@ -357,14 +378,43 @@ export function mountGlossary(artifact) {
     if (blocks.size) quietly(() => blocks.forEach((block) => markBlock(block, compiled)));
   });
 
-  /** Change the blocks without the observer seeing our own changes. */
+  // The tutor's replies: one added to the conversation, or one whose content was redrawn (an
+  // exercise in it repaints on submit).
+  const tutorObserver = new MutationObserver((records) => {
+    const found = new Set();
+    for (const record of records) {
+      const target = record.target.nodeType === Node.ELEMENT_NODE ? record.target : record.target.parentElement;
+      const reply = target && target.closest(REPLY_SELECTOR);
+      if (reply) {
+        found.add(reply);
+        continue;
+      }
+      for (const node of record.addedNodes) {
+        if (node.nodeType !== Node.ELEMENT_NODE) continue;
+        if (node.matches(REPLY_SELECTOR)) found.add(node);
+        else node.querySelectorAll(REPLY_SELECTOR).forEach((el) => found.add(el));
+      }
+    }
+    const done = [...found].filter((el) => tutorRoot.contains(el) && !el.classList.contains(STREAMING_CLASS));
+    if (done.length) quietly(() => done.forEach((reply) => markBlock(reply, compiled)));
+  });
+
+  /** Change the blocks and replies without the observers seeing our own changes. */
   function quietly(change) {
     observer.disconnect();
+    tutorObserver.disconnect();
     try {
       change();
     } finally {
       observer.observe(blocksRoot, OBSERVE);
+      tutorObserver.observe(tutorRoot, OBSERVE);
     }
+  }
+
+  function replies() {
+    return [...tutorRoot.querySelectorAll(REPLY_SELECTOR)].filter(
+      (el) => !el.classList.contains(STREAMING_CLASS)
+    );
   }
 
   function blocks() {
@@ -404,6 +454,8 @@ export function mountGlossary(artifact) {
       quietly(() => {
         unmarkAll(blocksRoot);
         blocks().forEach((block) => markBlock(block, compiled));
+        unmarkAll(tutorRoot);
+        replies().forEach((reply) => markBlock(reply, compiled));
       });
     }
     renderPanel(data.generated);
@@ -457,6 +509,7 @@ export function mountGlossary(artifact) {
   });
 
   observer.observe(blocksRoot, OBSERVE);
+  tutorObserver.observe(tutorRoot, OBSERVE);
   refresh();
   return { refresh };
 }

@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from teacher.concepts import SOURCE_ROLES, validate_link_resolution, validate_source_role
 from teacher.config import Settings
-from teacher.db.models import Concept, KnowledgeSource, SourceConcept
+from teacher.db.models import Concept, KnowledgeSource, SourceConcept, by_code_point
 from teacher.managers.artifacts import _is_unique_violation, _require_persistent, _validate_text
 from teacher.managers.errors import DuplicateError
 
@@ -119,7 +119,7 @@ class SourceConceptManager:
                 select(SourceConcept)
                 .join(Concept, Concept.id == SourceConcept.concept_id)
                 .where(SourceConcept.source_id == source.id)
-                .order_by(Concept.name_norm, Concept.slug)
+                .order_by(by_code_point(Concept.name_norm), Concept.slug)
             )
         )
         return sorted(rows, key=_role_order)
@@ -132,7 +132,7 @@ class SourceConceptManager:
                 select(SourceConcept)
                 .join(KnowledgeSource, KnowledgeSource.id == SourceConcept.source_id)
                 .where(SourceConcept.concept_id == concept.id)
-                .order_by(KnowledgeSource.title, KnowledgeSource.slug)
+                .order_by(by_code_point(KnowledgeSource.title), KnowledgeSource.slug)
             )
         )
         return sorted(rows, key=_role_order)

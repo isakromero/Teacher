@@ -20,6 +20,9 @@ Create Date: 2026-11-22 18:00:00.000000
 The CHECKs need a table rebuild on SQLite, which batch mode performs (indexes and foreign keys
 are kept). The check texts are frozen here as written; while 0012 is the head they match
 `teacher.db.models`. Downgrade drops the columns and their checks; the answers are kept.
+
+On PostgreSQL `POSTGRES_CHECKS` replaces the SQLite-only texts: no json_valid() CHECK (the json
+type refuses invalid JSON) and json_typeof() for SQLite's json_type().
 """
 from typing import Sequence, Union
 
@@ -46,6 +49,19 @@ CHECKS = (
     ('missing_array', MISSING_ARRAY_CHECK),
     ('missing_partial', MISSING_PARTIAL_CHECK),
 )
+# The PostgreSQL text of each check whose SQLite text does not run there (None: no such check).
+POSTGRES_CHECKS = {
+    'missing_json': None,
+    'missing_array': "json_typeof(missing) = 'array'",
+}
+
+
+def _dialect_checks() -> list[tuple[str, str]]:
+    """CHECKS as this database spells them."""
+    if op.get_context().dialect.name == 'sqlite':
+        return list(CHECKS)
+    checks = [(check, POSTGRES_CHECKS.get(check, sqltext)) for check, sqltext in CHECKS]
+    return [(check, sqltext) for check, sqltext in checks if sqltext is not None]
 
 
 def upgrade() -> None:
@@ -62,7 +78,7 @@ def upgrade() -> None:
             f"UPDATE {name} SET verdict = CASE WHEN passed THEN 'passed' ELSE 'failed' END"
         )
         with op.batch_alter_table(name, schema=None) as batch_op:
-            for check, sqltext in CHECKS:
+            for check, sqltext in _dialect_checks():
                 batch_op.create_check_constraint(op.f(f'ck_{name}_{check}'), sqltext)
             if name == 'block_responses':
                 batch_op.create_check_constraint(
@@ -76,7 +92,7 @@ def downgrade() -> None:
         with op.batch_alter_table(name, schema=None) as batch_op:
             if name == 'block_responses':
                 batch_op.drop_constraint(op.f('ck_block_responses_confidence'), type_='check')
-            for check, _sqltext in reversed(CHECKS):
+            for check, _sqltext in reversed(_dialect_checks()):
                 batch_op.drop_constraint(op.f(f'ck_{name}_{check}'), type_='check')
         with op.batch_alter_table(name, schema=None) as batch_op:
             if name == 'block_responses':

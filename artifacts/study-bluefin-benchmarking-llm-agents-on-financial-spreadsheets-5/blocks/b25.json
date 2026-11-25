@@ -1,0 +1,4 @@
+{
+  "markdown": "## A critical look\n\nBLUEFIN's strengths are real: expert-built tasks and a judge validated against humans. Some caveats follow from the document itself. The judge (GPT-5.4) and one of the tested models (GPT-5.5) come from the same vendor family, and the paper does not say how far that could bias scores; it may be worth checking. Rubric drafts came from an AI model, which could shape what counts as correct. With 9 synthesis tasks in the held-out set, per-model differences there are likely statistically fragile, and as far as I can tell the paper reports no confidence intervals.\n\nAlso, a minimal 61-word agent prompt isolates raw capability but may understate what a practitioner-style setup would achieve; the authors acknowledge this. Finally, the held-out set cannot be inspected by outside readers, so those results rest on trust, as far as I know.",
+  "role": "critique"
+}

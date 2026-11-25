@@ -51,7 +51,18 @@
                 title="Fit to view"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg></button>
       </div>
     </div>
-    <aside id="graph-inspector" class="inspector" aria-label="Inspector" tabindex="-1"></aside>
+    {# On phones the inspector is a bottom sheet over the canvas, opened and closed with the
+       toggle (graph.js); on wider screens the wrapper is display: contents, the toggle is not
+       shown and the inspector is the side panel. #}
+    <div id="graph-sheet" class="graph-sheet">
+      <button id="graph-sheet-toggle" class="graph-sheet-toggle" type="button"
+              aria-expanded="false" aria-controls="graph-inspector">
+        <span class="graph-sheet-grip" aria-hidden="true"></span>
+        <span id="graph-sheet-label" class="graph-sheet-label">Overview and all concepts</span>
+        <svg class="icon graph-sheet-chevron" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 15l6-6 6 6"/></svg>
+      </button>
+      <aside id="graph-inspector" class="inspector" aria-label="Inspector" tabindex="-1"></aside>
+    </div>
   </div>
 </div>
 {% endblock %}

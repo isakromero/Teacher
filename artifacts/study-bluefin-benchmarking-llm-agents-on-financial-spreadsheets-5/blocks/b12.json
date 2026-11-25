@@ -1,0 +1,19 @@
+{
+  "question": "Why does the judge need a recalculation tool rather than only reading the workbook as submitted?",
+  "options": [
+    "It must recompute the formula text so that Output Validation can compare it with the reference formulas",
+    "It must change an input and see whether a dependent output updates, which needs formulas recomputed",
+    "It must refresh number formats so that Presentation criteria can be read from the cell properties",
+    "It must delete and rebuild each sheet so that Pitfall penalties for error values can be detected"
+  ],
+  "private": {
+    "correct_index": 1,
+    "explanation": "Without recalculation, a changed input would not propagate, so the judge could not distinguish live formulas from hardcoded values.",
+    "option_explanations": [
+      "Output Validation checks computed values within a tolerance, not formula text.",
+      "Correct: the judge modifies an input, recalculates, and reads the output to test dynamic behavior.",
+      "Formatting is inspected directly from cell properties.",
+      "Pitfalls are checked by scanning for errors and hardcodes, not rebuilding sheets."
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "question": "The authors removed a separate 'structural completeness' category from their rubric. What was the problem it caused?",
+  "options": [
+    "It rewarded copying one particular template and penalised valid alternative ways to build the model",
+    "It counted labels, fonts and column widths a second time, so formatting weighed twice in the score",
+    "It produced judge verdicts on tab and section existence that disagreed too often with the experts",
+    "It rewarded adding the required tab names even when empty and so inflated scores for hollow shells"
+  ],
+  "private": {
+    "correct_index": 0,
+    "explanation": "Preliminary experiments showed that explicit structural-completeness and input-accuracy sections over-rewarded models for copying a template and over-penalised valid alternatives. So structure is assessed indirectly through behaviour. The 'judge verdicts disagreed' option is tempting, but the judge does check structure, for example whether a DCF tab exists. The problem was the incentive such a section creates, not whether it could be detected.",
+    "option_explanations": [
+      "Right. Explicit structure checks favoured matching the reference layout. Structure is now captured through formula, integration, output and perturbation checks, which any valid build can pass.",
+      "Presentation covers formatting conventions, but the paper does not say the structure section double-counted formatting. Look at what kind of build it favoured.",
+      "The paper reports no judge-reliability problem with detecting tabs; the judge routinely checks whether tabs exist. The problem lay in what the section rewarded.",
+      "The paper does not describe empty tabs gaming the structure checks. Its concern was how such checks treated builds that differ from the reference but are still valid."
+    ]
+  }
+}

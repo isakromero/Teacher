@@ -1,0 +1,19 @@
+{
+  "question": "The authors validated their GPT-5.4 judge against expert consensus on 384 binary criteria (Krippendorff's α = 0.826). What does this validation establish?",
+  "options": [
+    "Given a task, the rubric criteria the judge would write overlap with the experts' own criteria closely",
+    "Given a workbook, the judge's overall task score lands within about two points of the experts' score",
+    "Given a criterion, GPT-5.4's verdicts were clearly more accurate than the other two candidate judges'",
+    "Given a criterion, the judge's yes/no verdicts match expert decisions about as well as experts agree"
+  ],
+  "private": {
+    "correct_index": 3,
+    "explanation": "Judge validation measures agreement between the judge and the experts on whether each criterion is met. The tempting misreading is that GPT-5.4 was far better than the alternatives; in fact all three candidates agreed with experts at comparable levels, and GPT-5.4 was chosen for a somewhat higher macro-F1. The validation also does not show that the rubric captures everything that matters.",
+    "option_explanations": [
+      "The validation takes the rubric criteria as given and asks only whether the judge applies them as experts would. Writing criteria was not tested.",
+      "The validation was done at the level of individual binary criteria, not whole-task scores. No task-level score comparison is reported.",
+      "All three candidate judges aligned with experts at comparable levels near the human ceiling. GPT-5.4's edge in macro-F1 was modest, not a clear gap.",
+      "Right. The study compares the judge's binary verdicts on criteria with expert labels and finds agreement near the human inter-rater ceiling."
+    ]
+  }
+}

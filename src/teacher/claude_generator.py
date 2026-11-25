@@ -92,6 +92,12 @@ refusal fallback: a refusal fails the generation.
 (`POST /api/artifacts/{slug}/glossary`); its errors are `teacher.glossary.GlossaryError`s, which
 the generator turns into `GenerationError`s.
 
+Costs: every model call (`stream_message`, shared with the page checks, the glossary, the lab
+generator, concept extraction, block tagging, concept relating and reference extraction) is
+recorded in the cost ledger (`teacher.costs`) as soon as the reply arrives, before it is
+checked, so a reply that is then rejected still has its cost; `run_generation` and each stage
+set what the calls are linked to (the artifact and the stage's run).
+
 Fail loudly: missing credentials, API errors, refusals, truncation, malformed or schema-invalid
 output, unsupported or oversized sources and page-rule violations all raise `GenerationError`
 with a key-free message, which `run_generation` records on the failed run.
@@ -124,6 +130,7 @@ from pydantic import (
     model_validator,
 )
 
+from teacher.files import sync_file
 from teacher.blocks import PROSE_ROLES, block_label, validate_block_content
 from teacher.claude_api import (
     MAX_REQUEST_BYTES,
@@ -132,6 +139,7 @@ from teacher.claude_api import (
     source_document_block,
 )
 from teacher.config import DEFAULT_GENERATION_MODEL, DEFAULT_JUDGE_MODEL
+from teacher.costs import Meter, record_reply, require_meter
 from teacher.generation import (
     BLOCK_CONCEPTS_STAGE,
     CONCEPTS_STAGE,
@@ -1527,16 +1535,26 @@ def stream_message(
     *,
     stage_name: str,
     error: Callable[[str], Exception],
+    purpose: str,
+    meter: Meter | None = None,
 ) -> Any:
-    """One streamed Messages API call; SDK errors -> `error(reason)`."""
+    """One streamed Messages API call; SDK errors -> `error(reason)`.
+
+    The call is recorded in the cost ledger (`teacher.costs`) as soon as the reply arrives,
+    before anyone checks it, with step `stage_name` and `purpose` (unless the current scope
+    names the job): through `meter`, else the current meter. Without one, nothing is sent
+    (`UnmeteredCallError`)."""
+    meter = require_meter(meter, what=f"{stage_name} call to Claude")
     try:
         with client.messages.stream(**request) as stream:
-            return stream.get_final_message()
+            message = stream.get_final_message()
     except anthropic.AnthropicError as exc:
         reason = describe_api_error(
             exc, model=request["model"], timeout=request["timeout"], with_api_message=True
         )
         raise error(f"the {stage_name} call to Claude failed: {reason}") from exc
+    record_reply(message, meter=meter, purpose=purpose, step=stage_name)
+    return message
 
 
 def parse_reply(
@@ -1608,6 +1626,7 @@ def stage_record(
 def write_record(path: Path, record: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    sync_file(path)  # the run row names it as its output file (teacher.files)
 
 
 # -- the glossary step ----------------------------------------------------------------------
@@ -1766,6 +1785,7 @@ class GlossaryBuilder:
             request,
             stage_name=GLOSSARY_STAGE,
             error=_glossary_unavailable,
+            purpose="glossary",
         )
 
     @staticmethod
@@ -2129,6 +2149,7 @@ class ClaudeGenerator:
             self.request(document, instructions, format, max_tokens, model),
             stage_name=stage_name,
             error=GenerationError,
+            purpose="generation",
         )
         stage.set_tokens(*token_counts(message))
         return message

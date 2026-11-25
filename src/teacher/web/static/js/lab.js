@@ -5,13 +5,18 @@
 //
 // - the brief and the steps (instructions, a hint behind a disclosure, and for a step with a
 //   check a Check button whose result is shown under the step);
-// - the code editor (lab_editor.js), autosaved with PUT /api/labs/{slug}/workspace a second
+// - on a narrow screen (where app.css shows the "Instructions" / "Code" switch), one of the two
+//   halves at a time, each keeping its scroll position; the choice is remembered per lab;
+// - the code editor (lab_editor.js), with Indent and Outdent buttons for touch keyboards, autosaved with PUT /api/labs/{slug}/workspace a second
 //   after the last edit, before every run, check and tutor message, before the download, and
 //   when the page is hidden or closed (a keepalive request, for small workspaces); the save
 //   state is shown next to the editor and a failed save is shown with its reason and a retry;
-// - Run (also Ctrl/Cmd+Enter in the editor) and Check, which run the code in the browser
+// - Run (also Ctrl/Cmd+Enter in the editor) and Check (under each step with a check, and next to
+//   Run for the step chosen in "Working on"), which run the code in the browser
 //   (lab_sandbox.js: Pyodide in a sandboxed iframe and a worker, one run at a time) and report
-//   every run and check to POST /api/labs/{slug}/runs, whose answer updates the steps;
+//   every run and check to POST /api/labs/{slug}/runs, whose answer updates the steps; a
+//   check's verdict and report are shown under its step and in the Output panel, which a narrow
+//   screen scrolls into view when a run starts from the Code half;
 // - Reset to starter code and Show solution (each confirmed in the page first; the solution is
 //   shown read-only under the editor and never replaces the reader's files), and Download as a
 //   folder (GET /api/labs/{slug}/export);
@@ -22,7 +27,7 @@
 
 import { logEvent } from "./activity.js";
 import { ApiError, api, describeError, seg } from "./api.js";
-import { byId, h, plural, setChildren, setError, showPageError } from "./dom.js";
+import { byId, h, plural, prefersReducedMotion, setChildren, setError, showPageError } from "./dom.js";
 import { mountChat } from "./chat.js";
 import { pollGeneration, renderMeta, renderNotices, showFailure } from "./generation_view.js";
 import { createEditor } from "./lab_editor.js";
@@ -49,6 +54,7 @@ const artifactBase = `/api/artifacts/${seg(slug)}`;
 const labBase = `/api/labs/${seg(slug)}`;
 const pageUrl = (target) => `/labs/${seg(target)}`;
 const stepKey = `teacher.lab.step.${slug}`;
+const viewKey = `teacher.lab.view.${slug}`;
 const panels = {
   generating: byId("state-generating"),
   failed: byId("state-failed"),
@@ -113,6 +119,38 @@ function renderHeader(artifact) {
   renderNotices(byId("artifact-notices"), artifact, { noun: NOUN, pageUrl });
 }
 
+// -- the narrow layout: one half at a time ---------------------------------------------------
+
+/** The "Instructions" / "Code" switch. app.css shows it (and hides the other half) only in a
+ * narrow container; there each half keeps its own scroll position. Returns `isNarrow()`. */
+function mountViews() {
+  const ready = panels.ready;
+  const bar = byId("lab-views");
+  const buttons = [...bar.querySelectorAll("[data-view]")];
+  const names = buttons.map((b) => b.dataset.view);
+  const scrolls = {}; // view -> window.scrollY when it was left
+  const isNarrow = () => getComputedStyle(bar).display !== "none";
+
+  function show(view, { restore = false } = {}) {
+    if (!names.includes(view)) throw new Error(`Unknown lab view ${JSON.stringify(view)}.`);
+    const previous = ready.dataset.view;
+    if (previous && previous !== view && isNarrow()) scrolls[previous] = window.scrollY;
+    ready.dataset.view = view;
+    for (const b of buttons) b.setAttribute("aria-pressed", String(b.dataset.view === view));
+    storage.set(viewKey, view);
+    if (!restore || !isNarrow()) return;
+    // Back where this half was left; the first time, its top (just under the switch).
+    const top = bar.parentElement.querySelector(".lab-grid").getBoundingClientRect().top + window.scrollY - bar.offsetHeight;
+    const target = view in scrolls ? scrolls[view] : Math.min(window.scrollY, top);
+    window.scrollTo({ top: target, behavior: "auto" });
+  }
+
+  for (const b of buttons) b.addEventListener("click", () => show(b.dataset.view, { restore: true }));
+  const stored = storage.get(viewKey);
+  show(names.includes(stored) ? stored : names[0]);
+  return { isNarrow };
+}
+
 // -- the ready lab ---------------------------------------------------------------------------
 
 function mountLab(artifact, lab) {
@@ -125,6 +163,7 @@ function mountLab(artifact, lab) {
   let editor = null;
 
   const runButton = byId("lab-run");
+  const checkButton = byId("lab-check"); // checks the step chosen in "Working on"
   const runStatus = byId("lab-run-status");
   const output = byId("lab-output");
   const stepSelect = byId("lab-current-step");
@@ -263,12 +302,27 @@ function mountLab(artifact, lab) {
     setChildren(stepSelect, steps.map((s) => h("option", { value: String(s.index) }, `Step ${s.index + 1}: ${s.title}`)));
     const stored = Number(storage.get(stepKey));
     stepSelect.value = Number.isInteger(stored) && stored >= 0 && stored < steps.length ? String(stored) : "0";
-    stepSelect.addEventListener("change", () => storage.set(stepKey, stepSelect.value));
+    stepSelect.addEventListener("change", () => {
+      storage.set(stepKey, stepSelect.value);
+      paintCheckButton();
+    });
+    paintCheckButton();
+  }
+
+  /** The Check button next to Run checks the chosen step; it is hidden for a step without a check. */
+  function paintCheckButton() {
+    const step = steps[Number(stepSelect.value)];
+    checkButton.hidden = !step.check;
+    // (app.css drops "step" from the visible label on the narrowest screens)
+    // (one span: .button is a flex box, which would space out loose text nodes)
+    setChildren(checkButton, h("span", {}, "Check ", h("span", { class: "lab-check-word" }, "step "), String(step.index + 1)));
+    checkButton.setAttribute("aria-label", `Check step ${step.index + 1}`);
   }
 
   function setCurrentStep(index) {
     stepSelect.value = String(index);
     storage.set(stepKey, stepSelect.value);
+    paintCheckButton();
   }
 
   // -- running -----------------------------------------------------------------------------
@@ -276,6 +330,7 @@ function mountLab(artifact, lab) {
   function paintButtons() {
     const off = busy || Boolean(unavailable);
     runButton.disabled = off;
+    checkButton.disabled = off;
     for (const el of stepEls) if (el.checkButton) el.checkButton.disabled = off;
   }
 
@@ -381,6 +436,8 @@ function mountLab(artifact, lab) {
       run.stdout ? stream("Printed output", run.stdout, "lab-stdout") : h("p", { class: "muted" }, "The program printed nothing."),
       run.stderr ? stream("Error output (stderr)", run.stderr, "lab-stderr") : null,
       run.error ? stream(run.timedOut ? "Stopped" : "Error", run.error, "lab-error-text") : null,
+      // (also shown under the step; repeated here for the narrow layout, where the steps are hidden)
+      check && run.ok && !check.passed && check.error ? stream("What the check reported", check.error, "lab-error-text") : null,
       figures.length
         ? h(
             "div",
@@ -428,10 +485,11 @@ function mountLab(artifact, lab) {
   }
 
   /** Run the entry file (`kind` "run") or the check of step `index` (`kind` "check"). */
-  async function execute(kind, index = null) {
+  async function execute(kind, index = null, { fromWorkspace = false } = {}) {
     if (busy || unavailable || !sandbox) return;
     busy = true;
     paintButtons();
+    if (fromWorkspace) revealOutput();
     if (kind === "check") setCurrentStep(index);
     const what = kind === "check" ? `Checking step ${index + 1}` : `Running ${lab.entry}`;
     const heading = kind === "check" ? `Check of step ${index + 1}` : `Run of ${lab.entry}`;
@@ -476,6 +534,16 @@ function mountLab(artifact, lab) {
       busy = false;
       paintButtons();
     }
+  }
+
+  /** In the one-column layout the Output panel is below the editor and the sticky Run bar:
+   * bring its top into view, so that the run's progress and result are seen. */
+  function revealOutput() {
+    if (!views.isNarrow()) return;
+    const panel = byId("lab-output-heading").parentElement;
+    const top = panel.getBoundingClientRect().top;
+    if (top >= 0 && top < window.innerHeight * 0.5) return;
+    panel.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
   }
 
   // -- tools: reset, solution, download ----------------------------------------------------
@@ -586,6 +654,7 @@ function mountLab(artifact, lab) {
 
   // -- mount -------------------------------------------------------------------------------
 
+  const views = mountViews();
   setChildren(byId("lab-brief"), renderMarkdown(lab.brief));
   renderSteps();
   mountStepChoice();
@@ -596,13 +665,21 @@ function mountLab(artifact, lab) {
     entry: lab.entry,
     describedBy: "lab-editor-keys",
     onChange: () => saver.changed(),
-    onRun: () => execute("run"),
+    onRun: () => execute("run", null, { fromWorkspace: true }),
     onCursor: ({ path, line, column }) => {
       byId("lab-cursor").textContent = `${path}, line ${line}, column ${column}.`;
     },
   });
   paintSave("saved", null);
-  runButton.addEventListener("click", () => execute("run"));
+  runButton.addEventListener("click", () => execute("run", null, { fromWorkspace: true }));
+  checkButton.addEventListener("click", () => execute("check", Number(stepSelect.value), { fromWorkspace: true }));
+  // Touch keyboards have no Tab key. Pressing a button would take the focus (and the on-screen
+  // keyboard) away from the file, so the press does not move the focus.
+  for (const [id, outdent] of [["lab-indent", false], ["lab-outdent", true]]) {
+    const button = byId(id);
+    button.addEventListener("pointerdown", (event) => event.preventDefault());
+    button.addEventListener("click", () => editor.indent({ outdent }));
+  }
   paintButtons();
 
   // Save when the page is hidden or closed (a keepalive request survives the page).

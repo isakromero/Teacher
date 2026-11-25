@@ -15,6 +15,7 @@ from typing import Any
 import anthropic
 import pytest
 from pydantic import ValidationError
+from sqlalchemy import select
 from fastapi.testclient import TestClient
 
 from teacher.blocks import validate_block_content
@@ -43,6 +44,7 @@ from teacher.claude_generator import (
 )
 from teacher.config import Settings
 from teacher.db.engine import session_scope
+from teacher.db.models import ApiCall, GenerationRun
 from teacher.page_revision import REVIEW_FORMAT, REVIEW_MAX_TOKENS
 from teacher.generation import run_generation
 from teacher.glossary import GlossaryEntry
@@ -589,17 +591,17 @@ def test_pdf_happy_path(settings: Settings, make_source, make_artifact, replies)
         f"artifacts/{slug}/generation/block_concepts.json",
         f"artifacts/{slug}/generation/glossary.json",
     ]
-    figures = json.loads((settings.root / rows[2]["file"]).read_text(encoding="utf-8"))
+    figures = json.loads((settings.data_root / rows[2]["file"]).read_text(encoding="utf-8"))
     assert figures["outcome"] == "none_detected" and figures["figures"] == []
-    concepts = json.loads((settings.root / rows[8]["file"]).read_text(encoding="utf-8"))
+    concepts = json.loads((settings.data_root / rows[8]["file"]).read_text(encoding="utf-8"))
     assert concepts == {"fake": True, "trigger": "generation"}
-    tags = json.loads((settings.root / rows[9]["file"]).read_text(encoding="utf-8"))
+    tags = json.loads((settings.data_root / rows[9]["file"]).read_text(encoding="utf-8"))
     assert tags == {"fake": True, "trigger": "generation"}
     # A clean draft: nothing found, so no revise stage, and the page written is the page stored.
     assert not (settings.artifacts_dir / slug / "generation" / "revise_1.json").exists()
     rows = [rows[1], rows[4], rows[7], rows[10]]  # the page stages, as below
 
-    analyse = json.loads((settings.root / rows[0]["file"]).read_text(encoding="utf-8"))
+    analyse = json.loads((settings.data_root / rows[0]["file"]).read_text(encoding="utf-8"))
     assert analyse["usage"] == {
         "input_tokens": 50,
         "cache_creation_input_tokens": 3000,
@@ -609,10 +611,10 @@ def test_pdf_happy_path(settings: Settings, make_source, make_artifact, replies)
     assert analyse["output"] == OUTLINE
     assert analyse["model"] == "claude-sonnet-5-5" and analyse["stop_reason"] == "end_turn"
     assert analyse["source"]["slug"] == "paper" and analyse["ignored_sources"] == []
-    write = json.loads((settings.root / rows[1]["file"]).read_text(encoding="utf-8"))
+    write = json.loads((settings.data_root / rows[1]["file"]).read_text(encoding="utf-8"))
     assert write["usage"]["cache_read_input_tokens"] == 3000
     assert write["output"] == PAGE and write["depth"] == "standard"
-    glossary = json.loads((settings.root / rows[3]["file"]).read_text(encoding="utf-8"))
+    glossary = json.loads((settings.data_root / rows[3]["file"]).read_text(encoding="utf-8"))
     assert glossary["output"] == GLOSSARY and glossary["trigger"] == "generation"
     assert glossary["proposed"] == 2 and glossary["dropped"] == [] and glossary["merged"] == []
     assert glossary["usage"]["cache_read_input_tokens"] == 3000
@@ -1142,6 +1144,65 @@ def test_refusal_records_tokens(
                          "cyber")
     assert (last["input"], last["output"]) == (10, 2)
     assert segments_of(settings) == []
+
+
+def ledger(settings: Settings) -> list[tuple]:
+    """The cost ledger's rows: (purpose, step, model, run stage, run status, input, cache
+    write, cache read, output, cost), in order."""
+    with session_scope(settings) as session:
+        return [tuple(row) for row in session.execute(
+            select(ApiCall.purpose, ApiCall.step, ApiCall.model, GenerationRun.stage,
+                   GenerationRun.status, ApiCall.input_tokens, ApiCall.cache_write_tokens,
+                   ApiCall.cache_read_tokens, ApiCall.output_tokens, ApiCall.cost_usd)
+            .outerjoin(GenerationRun, GenerationRun.id == ApiCall.generation_run_id)
+            .order_by(ApiCall.id)
+        )]  # fmt: skip
+
+
+def test_every_call_of_a_generation_is_in_the_cost_ledger(
+    settings: Settings, make_source, make_artifact, replies
+) -> None:
+    make_source()
+    slug = make_artifact()
+    fake = replies()
+    assert generate(settings, slug, fake) == "ready"
+    rows = ledger(settings)
+    assert len(rows) == len(fake.calls)  # one row per call made
+    assert {row[0] for row in rows} == {"generation"}
+    assert [(row[1], row[3]) for row in rows] == [
+        ("analyse", "analyse"), ("write", "write"), ("review", "review"),
+        *[(step, "question_check") for step in (
+            "open-book check", "open-book check", "judge", "open-book check", "judge",
+            "closed-book check",
+        )],
+        ("glossary", "glossary"),
+    ]  # fmt: skip
+    analyse = rows[0]
+    assert analyse[5:9] == (50, 3000, 0, 400)
+    # These fake replies do not say which TTL their cache writes had (`usage.cache_creation`),
+    # so the writes are priced at the dearer 1-hour rate, an upper bound.
+    assert analyse[9] == pytest.approx((50 * 2 + 3000 * 4 + 400 * 10) / 1_000_000)
+    assert rows[3][2] == "claude-sonnet-5-5" and rows[5][2] == "claude-haiku-5-5"
+    with session_scope(settings) as session:
+        artifact = ArtifactManager(session, settings).get_by_slug(slug)
+        assert set(session.scalars(select(ApiCall.artifact_id))) == {artifact.id}
+
+
+def test_a_failed_generation_keeps_its_ledger_rows(
+    settings: Settings, make_source, make_artifact, fake_anthropic
+) -> None:
+    """A reply that is rejected (here a refusal of the write step) still cost money: its row
+    stays although the generation fails."""
+    make_source()
+    slug = make_artifact()
+    outline = fake_anthropic.reply(text=json.dumps(OUTLINE), model="claude-sonnet-5-5",
+                                   input_tokens=50, output_tokens=400)
+    refusal = fake_anthropic.reply(text="", stop_reason="refusal", model="claude-sonnet-5-5",
+                                   input_tokens=10, output_tokens=2)
+    assert generate(settings, slug, fake_anthropic(outline, refusal)) == "failed"
+    assert [(row[1], row[3], row[4], row[5], row[8]) for row in ledger(settings)] == [
+        ("analyse", "analyse", "succeeded", 50, 400), ("write", "write", "failed", 10, 2),
+    ]
 
 
 def bad_replies(fake_anthropic) -> dict[str, tuple[Any, Any, str, tuple[str, ...]]]:
@@ -2168,7 +2229,7 @@ def test_block_concepts_stage_tags_the_verified_page(
         "block_concepts", "succeeded", "claude-test-concepts", 77, 8
     )
     assert stage["file"] == f"artifacts/{slug}/generation/block_concepts.json"
-    record = json.loads((settings.root / stage["file"]).read_text(encoding="utf-8"))
+    record = json.loads((settings.data_root / stage["file"]).read_text(encoding="utf-8"))
     assert record["trigger"] == "generation" and record["output"]["counts"]["tags"] == 1
     with session_scope(settings) as session:
         artifact = ArtifactManager(session, settings).get_by_slug(slug)

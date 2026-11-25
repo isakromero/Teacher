@@ -1,0 +1,643 @@
+{
+  "builder": "claude-review-bank-v1",
+  "model": "claude-opus-5-5",
+  "reply": {
+    "multiple_choice": [
+      {
+        "question_number": 1,
+        "question": "Coding has plenty of benchmarks, but professional finance spreadsheet work has very few. Which two obstacles do the authors give for this gap?",
+        "options": [
+          "Finance experts are scarce and costly to recruit, and models often refuse to handle financial records.",
+          "Realistic workbooks contain confidential data, and usability and convention criteria cannot be tested automatically.",
+          "Workbooks exceed model context windows, and open-source engines evaluate Excel formulas differently.",
+          "No public corpus of formulas exists, and spreadsheet file formats are too proprietary to parse reliably."
+        ],
+        "correct_index": 1,
+        "explanation": "The authors name procurement (realistic workbooks hold confidential client and corporate data, so they are hard to obtain) and verification (usability and convention criteria resist programmatic tests). The other pairs sound like plausible engineering hurdles but are not the reasons given.",
+        "option_explanations": [
+          "The paper does not cite a shortage of willing experts or model refusals; it recruited and paid experts. The obstacles it names concern access to realistic workbooks and how success is judged.",
+          "Right. These are the procurement obstacle (sensitive data) and the verification obstacle (criteria that automatic tests cannot capture).",
+          "Context size and engine differences are not named as obstacles. The harness truncates large results and recalculates through LibreOffice by design.",
+          "A missing formula corpus and unparseable files are not named; the harness reads workbooks with openpyxl without trouble."
+        ]
+      },
+      {
+        "question_number": 1,
+        "question": "A startup wants to create a benchmark of real investment-banking spreadsheet tasks, modelled on coding benchmarks. Based on the obstacles the authors describe, which two problems should it expect?",
+        "options": [
+          "Getting realistic workbooks, which hold sensitive client data, and checking usability and convention requirements automatically.",
+          "Fitting large workbooks into a model's context, and reconciling how different spreadsheet engines evaluate formulas.",
+          "Persuading finance experts to write tasks, and stopping frontier models from refusing to touch financial data.",
+          "Assembling a public corpus of formulas, and parsing proprietary workbook file formats reliably."
+        ],
+        "correct_index": 0,
+        "explanation": "The two obstacles are procurement, because realistic finance workbooks contain confidential data, and verification, because many success criteria concern usability and convention rather than anything a test script can check.",
+        "option_explanations": [
+          "Right. These match the procurement and verification obstacles: confidential data limits access, and convention and usability criteria resist automatic tests.",
+          "Context size and engine differences are not given as obstacles; the authors' harness handles large outputs by truncation and recalculates via LibreOffice.",
+          "Expert willingness and model refusals are not named. The stated obstacles concern the workbooks themselves and how success is judged.",
+          "A formula corpus and file parsing are not named as obstacles; workbooks are read through openpyxl in the harness."
+        ]
+      },
+      {
+        "question_number": 3,
+        "question": "In BLUEFIN, the model being evaluated receives a very short system prompt with no finance conventions, while the judge model receives a long, opinionated prompt full of them. What is the reason for this difference?",
+        "options": [
+          "The judge reviews only the final outputs without tools, so conventions must be written into its prompt directly.",
+          "The agent picks up conventions from its tool descriptions, so repeating them in its prompt would be wasted text.",
+          "The agent's prompt was cut back after longer versions let models copy a reference template the judge needs.",
+          "The agent is left uncoached to measure raw capability, while the judge needs conventions to grade like an expert."
+        ],
+        "correct_index": 3,
+        "explanation": "The prompts serve different roles. The agent's minimal prompt isolates what the model can do unaided, in the style of HELM and GAIA. The judge's rich prompt makes its yes/no verdicts approximate an expert's, which was checked against expert labels.",
+        "option_explanations": [
+          "The judge does not just read outputs; it inspects workbooks through the same tool environment as the agent.",
+          "The paper does not say conventions are conveyed through tool descriptions, and the judge uses the same tools as the agent.",
+          "No such episode with agent prompts is described. Template copying was the reason a rubric section was dropped, not the reason for the short agent prompt.",
+          "Right. A minimal agent prompt measures unaided capability rather than instruction-following, and a rich judge prompt supplies the expectations an expert grader would apply."
+        ]
+      },
+      {
+        "question_number": 3,
+        "question": "A reviewer suggests giving the agent under test the same detailed finance-convention prompt the judge receives, \"to be fair\". What would this change most undermine in BLUEFIN's design?",
+        "options": [
+          "The 30,000-character limit, since a longer prompt would crowd out tool results the agent needs to read.",
+          "Measuring what the model can do unaided, since the score would partly reflect following coached instructions.",
+          "The judge's tool access, since the judge would then need a separate tool set to stay independent of the agent.",
+          "The ban on template copying, since convention-rich prompts were what let agents copy reference workbooks."
+        ],
+        "correct_index": 1,
+        "explanation": "The agent's prompt is deliberately minimal so the benchmark measures raw capability, following HELM and GAIA. The judge's prompt is rich for a different reason: so its verdicts approximate an expert rater's. Coaching the agent would blur capability with instruction-following.",
+        "option_explanations": [
+          "The character cap applies to tool results, not the system prompt, and it is not the reason for the asymmetry.",
+          "Right. Coaching the agent with conventions would mean the benchmark measures how well it follows instructions rather than what it can do unaided.",
+          "Both agent and judge already work through the same tool environment; tool access is not what the prompt asymmetry protects.",
+          "Template copying relates to why a rubric section was dropped, not to the content of the agent's prompt."
+        ]
+      },
+      {
+        "question_number": 4,
+        "question": "On a manipulation task, an agent adds a header row and two labels, then stops. Its Pitfalls pass rate comes out at nearly 100%. What is the best reading of that result?",
+        "options": [
+          "The agent worked carefully, and the clean record will offset most of what it lost in other categories.",
+          "Almost no defect check had anything to fire on, so the high rate reflects how little it built.",
+          "The scale is inverted for penalties, so nearly 100% actually means it triggered almost every defect.",
+          "The judge must have erred, because an unfinished build should itself count as a Pitfalls defect."
+        ],
+        "correct_index": 1,
+        "explanation": "Penalty checks can only fire on content that exists. A near-empty build gives them almost nothing to catch, so it passes nearly all of them. The authors read Grok's high Pitfalls rate this way: as a sign of thin output, not care. Pitfalls only subtract points; they do not earn any.",
+        "option_explanations": [
+          "Pitfalls only remove points; avoiding them cannot replace the positive points awarded by the other categories, so a thin build still scores poorly.",
+          "Right. Defect checks such as #REF! errors or truncated text need something to inspect; with little content they rarely fire, which is how the authors explain Grok's high Pitfalls rate.",
+          "In the Pitfalls section a higher pass rate means fewer detected errors, not more.",
+          "Pitfall criteria look for specific defects such as error values or truncated text, not missing work; missing work costs points in the other categories."
+        ]
+      },
+      {
+        "question_number": 4,
+        "question": "Grok shows a high Pitfalls pass rate in BLUEFIN. How do the authors interpret this?",
+        "options": [
+          "As evidence of careful checking, since it avoided errors like #REF! and truncated text more than other models.",
+          "As a scoring artefact, since higher Pitfalls pass rates actually indicate that more errors were detected.",
+          "As a sign of thin output, since a model that builds little gives the penalty checks little to catch.",
+          "As a strength that nearly closes its gap with models that produced complete, fully linked builds."
+        ],
+        "correct_index": 2,
+        "explanation": "Pitfalls are penalty checks that fire on defects present in the workbook. A model producing thin output leaves little for them to fire on, so a high pass rate there signals sparse work rather than care. And since Pitfalls only deduct, a clean record cannot lift the total toward that of a complete build.",
+        "option_explanations": [
+          "The authors do not credit care; avoiding defects is easy when little is built, so the high rate says more about output volume.",
+          "In the Pitfalls section a higher pass rate means fewer detected errors, not more.",
+          "Right. Penalty checks need content to inspect; with sparse output almost none fire, which is the authors' explanation.",
+          "Pitfalls only subtract points; the positive points come from the other five categories, so avoiding penalties cannot close the gap."
+        ]
+      },
+      {
+        "question_number": 6,
+        "question": "A team grades a real-estate underwriting benchmark solely by checking that each output's final displayed numbers fall within ±2% of reference values. In light of BLUEFIN's findings, which kind of flaw is this grading most likely to miss?",
+        "options": [
+          "A cap rate typed as 6 rather than 6%, so every valuation comes out wildly off from the reference.",
+          "A rent roll read one row off, so each unit's projected income is quietly taken from its neighbour.",
+          "Correct-looking totals pasted in as constants, so they match today but ignore any change to inputs.",
+          "A capital expenditure added rather than subtracted, so the cash flow line ends up visibly too high."
+        ],
+        "correct_index": 2,
+        "explanation": "BLUEFIN highlights the gap between static correctness and dynamic correctness. Unit, misalignment and sign errors change the displayed numbers, so a value comparison catches them. A hardcode that matches today's reference changes nothing visible; only a perturbation step (change an input, recalculate, recheck) exposes it, and that is where models scored lowest.",
+        "option_explanations": [
+          "Entering a rate as a plain number distorts the outputs, which a comparison against reference values would detect.",
+          "A row misalignment changes displayed values, so it would be caught whenever it moves an output outside the tolerance.",
+          "Right. A hardcoded value that matches the reference passes any value-only check; only a perturbation-style test reveals that it does not respond to inputs.",
+          "A sign error moves the displayed number away from the reference, which is exactly what a value comparison is built to catch."
+        ]
+      },
+      {
+        "question_number": 6,
+        "question": "A grading scheme for a budgeting benchmark compares only final displayed outputs against reference values. A model learns to type the correct current totals in as constants. Which additional check, of the kind BLUEFIN uses, would catch this?",
+        "options": [
+          "Scanning every cell for error values such as #REF! or #DIV/0! after the workbook is opened.",
+          "Tightening the tolerance from ±2% to ±0.1% so that near-miss constants are flagged as wrong.",
+          "Checking that row labels, headers and number formats follow standard finance conventions.",
+          "Changing an input, recalculating, and checking that the dependent outputs move to the right values."
+        ],
+        "correct_index": 3,
+        "explanation": "Hardcoded totals that match today's reference are statically correct but dynamically wrong. Only a perturbation check, which changes an input, recalculates and rechecks the output, reveals that they do not respond. BLUEFIN's models scored lowest on exactly this category.",
+        "option_explanations": [
+          "Typed-in constants produce no error values, so an error-value scan would find nothing to flag.",
+          "Constants that exactly match today's reference pass any tolerance, however tight; the flaw is not visible in the current numbers.",
+          "Labels and formats can be perfect on a hardcoded workbook; the missing formulas are not a formatting issue.",
+          "Right. A perturbation check exposes outputs that fail to update when inputs change, which is precisely what hardcoded totals do."
+        ]
+      }
+    ],
+    "blurb": [
+      {
+        "question_number": 2,
+        "prompt": "An agent builds a new debt schedule tab that needs the corporate tax rate. Rather than referencing the tax rate cell on the Assumptions tab, it types 25% directly into a cell on the debt tab. Every figure currently matches the reference. Name the rubric category that would flag this and explain why it is a problem even though today's numbers are correct.",
+        "model_answer": "Model Integration would flag it, because the tax rate is not linked to its authoritative source on the Assumptions tab but hardcoded locally. The problem shows up when the tax rate is later changed on the Assumptions tab: the debt tab keeps the old 25%, so its results silently diverge from the rest of the model. A perturbation test changing the tax rate would expose this.",
+        "rubric": [
+          {
+            "criterion": "Identifies Model Integration (linking to the authoritative source rather than hardcoding or recomputing locally) as the category that flags it.",
+            "required": true
+          },
+          {
+            "criterion": "Explains that when the source input changes, the local copy does not update, so results become stale, wrong or inconsistent.",
+            "required": true
+          },
+          {
+            "criterion": "Notes that a Perturbation check on the tax rate would also fail.",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 2,
+        "prompt": "An agent adds a valuation tab. Instead of pointing to the EBITDA already calculated on the Income Statement tab, it rebuilds EBITDA from scratch with its own local formulas, and the result matches exactly today. Which rubric category is concerned with this choice, and what risk does it create for the model over time?",
+        "model_answer": "This falls under Model Integration, which expects new work to link to the authoritative source rather than hardcode or recompute values locally. The risk is that the two calculations can drift apart: if someone later edits the Income Statement (a new line item, a changed input), the valuation tab's own EBITDA may not reflect it, so the model becomes inconsistent without anyone noticing. A perturbation test could reveal the divergence.",
+        "rubric": [
+          {
+            "criterion": "Identifies Model Integration (linking to the authoritative source rather than hardcoding or recomputing locally) as the relevant category.",
+            "required": true
+          },
+          {
+            "criterion": "Explains that later changes to the source would not be reflected in the local recomputation, leading to inconsistent or wrong results.",
+            "required": true
+          },
+          {
+            "criterion": "Mentions that a perturbation test on a relevant input could expose the divergence.",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 5,
+        "prompt": "Some agents in BLUEFIN rarely call recalc_workbook while building, and those same agents tend to fail perturbation checks. Describe what the judge does during a perturbation check, and explain why an agent that skips recalculation is more likely to leave behind the kinds of errors that check catches.",
+        "model_answer": "In a perturbation check the judge changes an input, recalculates the workbook and checks whether the dependent output moves to the correct value. An agent that never recalculates cannot observe whether its own formulas propagate changes, so hardcoded values, broken or wrong references and non-converging circular logic stay hidden during the build. They are still there when the judge perturbs the input, so the output fails to update correctly. The link is a correlation the authors describe as consistent, not a proven cause.",
+        "rubric": [
+          {
+            "criterion": "Describes the perturbation check as changing an input, recalculating and verifying that the dependent output updates correctly.",
+            "required": true
+          },
+          {
+            "criterion": "Explains that without recalculating, the agent cannot verify its own dynamic behaviour, so errors such as hardcodes or broken links go unnoticed.",
+            "required": true
+          },
+          {
+            "criterion": "Notes that the relationship is a correlation rather than a demonstrated cause.",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 5,
+        "prompt": "A team building a spreadsheet agent decides to make it call recalc_workbook and re-inspect key outputs before finishing every task. Using how BLUEFIN's judge runs perturbation checks, explain why this habit might plausibly improve the agent's Perturbation scores.",
+        "model_answer": "The judge's perturbation check changes an input, recalculates and reads whether the output moves to the right value. If the agent itself recalculates and inspects results while building, it gets a chance to see whether its formulas really respond to their inputs, and can spot hardcoded numbers, broken references or circular structures that do not converge. Fixing those before finishing means the outputs update correctly when the judge perturbs an input. The paper only shows that low recalculation goes with weak Perturbation scores, so this is plausible rather than proven.",
+        "rubric": [
+          {
+            "criterion": "Describes the perturbation check as changing an input, recalculating and checking that the output updates correctly.",
+            "required": true
+          },
+          {
+            "criterion": "Explains that recalculating lets the agent observe and fix dynamic errors (such as hardcodes or broken links) that would otherwise fail the check.",
+            "required": true
+          },
+          {
+            "criterion": "Acknowledges that the evidence is correlational, not a proven causal effect.",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 7,
+        "prompt": "Models in BLUEFIN do better at synthesis tasks (building a workbook from scratch) than at manipulation tasks (changing an existing workbook). Explain what makes manipulation harder, and support your explanation with one concrete example of a failure observed in the paper.",
+        "model_answer": "In manipulation the model must fit its work into an existing workbook whose formulas, layouts and cross-references already constrain where things go and how they must link. Synthesis lets it choose its own structure freely. These integration constraints are brittle: in the OpEx case study, models pointed at the Inputs row one off from the right one, or bypassed the new tab altogether, and those integration mistakes rather than arithmetic drove their scores down.",
+        "rubric": [
+          {
+            "criterion": "Explains that manipulation requires integrating with an existing workbook's formulas, layout and references, constraining the model more than building from scratch.",
+            "required": true
+          },
+          {
+            "criterion": "Gives at least one concrete piece of evidence, such as off-by-one or wrong-row references, bypassed links, hardcoded links that break on input change, or weak Perturbation/Output Validation pass rates.",
+            "required": true
+          },
+          {
+            "criterion": "Notes that manipulation reflects most real analyst work, making the weakness consequential.",
+            "required": false
+          }
+        ]
+      },
+      {
+        "question_number": 7,
+        "prompt": "A product manager says: \"Our agent scores well building new models from scratch, so it should be fine editing clients' existing models.\" Using BLUEFIN's findings, explain why this does not follow, and cite one specific kind of failure the paper reports on manipulation tasks.",
+        "model_answer": "It does not follow because editing an existing model is a different challenge: the agent must respect the workbook's existing formulas, layout and references and link its additions correctly into them, while from-scratch synthesis imposes no such constraints. BLUEFIN found models score lower on manipulation for this reason. For example, in the OpEx case study models referenced the wrong Inputs row (off by one) or bypassed the new tab, so integration errors rather than arithmetic cost them. Since most real banking and PE analyst work is manipulation, this matters a lot.",
+        "rubric": [
+          {
+            "criterion": "Explains that manipulation requires integrating with an existing workbook's structure and references, which is harder than unconstrained synthesis.",
+            "required": true
+          },
+          {
+            "criterion": "Cites at least one concrete failure from the paper, such as off-by-one or wrong-row references, bypassed links, hardcodes breaking on input change, or weak Perturbation/Output Validation results.",
+            "required": true
+          },
+          {
+            "criterion": "Mentions that manipulation makes up most real finance spreadsheet work.",
+            "required": false
+          }
+        ]
+      }
+    ]
+  },
+  "trigger": "after_generation",
+  "stage": "review_bank",
+  "questions": [
+    {
+      "number": 1,
+      "block": "b03",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 2,
+      "block": "b09",
+      "type": "blurb"
+    },
+    {
+      "number": 3,
+      "block": "b13",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 4,
+      "block": "b18",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 5,
+      "block": "b20",
+      "type": "blurb"
+    },
+    {
+      "number": 6,
+      "block": "b24",
+      "type": "multiple_choice"
+    },
+    {
+      "number": 7,
+      "block": "b25",
+      "type": "blurb"
+    }
+  ],
+  "variants": [
+    {
+      "question": 1,
+      "block": "b03",
+      "content": {
+        "question": "Coding has plenty of benchmarks, but professional finance spreadsheet work has very few. Which two obstacles do the authors give for this gap?",
+        "options": [
+          "Finance experts are scarce and costly to recruit, and models often refuse to handle financial records.",
+          "Realistic workbooks contain confidential data, and usability and convention criteria cannot be tested automatically.",
+          "Workbooks exceed model context windows, and open-source engines evaluate Excel formulas differently.",
+          "No public corpus of formulas exists, and spreadsheet file formats are too proprietary to parse reliably."
+        ],
+        "private": {
+          "correct_index": 1,
+          "explanation": "The authors name procurement (realistic workbooks hold confidential client and corporate data, so they are hard to obtain) and verification (usability and convention criteria resist programmatic tests). The other pairs sound like plausible engineering hurdles but are not the reasons given.",
+          "option_explanations": [
+            "The paper does not cite a shortage of willing experts or model refusals; it recruited and paid experts. The obstacles it names concern access to realistic workbooks and how success is judged.",
+            "Right. These are the procurement obstacle (sensitive data) and the verification obstacle (criteria that automatic tests cannot capture).",
+            "Context size and engine differences are not named as obstacles. The harness truncates large results and recalculates through LibreOffice by design.",
+            "A missing formula corpus and unparseable files are not named; the harness reads workbooks with openpyxl without trouble."
+          ]
+        }
+      }
+    },
+    {
+      "question": 1,
+      "block": "b03",
+      "content": {
+        "question": "A startup wants to create a benchmark of real investment-banking spreadsheet tasks, modelled on coding benchmarks. Based on the obstacles the authors describe, which two problems should it expect?",
+        "options": [
+          "Getting realistic workbooks, which hold sensitive client data, and checking usability and convention requirements automatically.",
+          "Fitting large workbooks into a model's context, and reconciling how different spreadsheet engines evaluate formulas.",
+          "Persuading finance experts to write tasks, and stopping frontier models from refusing to touch financial data.",
+          "Assembling a public corpus of formulas, and parsing proprietary workbook file formats reliably."
+        ],
+        "private": {
+          "correct_index": 0,
+          "explanation": "The two obstacles are procurement, because realistic finance workbooks contain confidential data, and verification, because many success criteria concern usability and convention rather than anything a test script can check.",
+          "option_explanations": [
+            "Right. These match the procurement and verification obstacles: confidential data limits access, and convention and usability criteria resist automatic tests.",
+            "Context size and engine differences are not given as obstacles; the authors' harness handles large outputs by truncation and recalculates via LibreOffice.",
+            "Expert willingness and model refusals are not named. The stated obstacles concern the workbooks themselves and how success is judged.",
+            "A formula corpus and file parsing are not named as obstacles; workbooks are read through openpyxl in the harness."
+          ]
+        }
+      }
+    },
+    {
+      "question": 2,
+      "block": "b09",
+      "content": {
+        "prompt": "An agent builds a new debt schedule tab that needs the corporate tax rate. Rather than referencing the tax rate cell on the Assumptions tab, it types 25% directly into a cell on the debt tab. Every figure currently matches the reference. Name the rubric category that would flag this and explain why it is a problem even though today's numbers are correct.",
+        "min_words": 30,
+        "private": {
+          "model_answer": "Model Integration would flag it, because the tax rate is not linked to its authoritative source on the Assumptions tab but hardcoded locally. The problem shows up when the tax rate is later changed on the Assumptions tab: the debt tab keeps the old 25%, so its results silently diverge from the rest of the model. A perturbation test changing the tax rate would expose this.",
+          "rubric": [
+            {
+              "criterion": "Identifies Model Integration (linking to the authoritative source rather than hardcoding or recomputing locally) as the category that flags it.",
+              "required": true
+            },
+            {
+              "criterion": "Explains that when the source input changes, the local copy does not update, so results become stale, wrong or inconsistent.",
+              "required": true
+            },
+            {
+              "criterion": "Notes that a Perturbation check on the tax rate would also fail.",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 2,
+      "block": "b09",
+      "content": {
+        "prompt": "An agent adds a valuation tab. Instead of pointing to the EBITDA already calculated on the Income Statement tab, it rebuilds EBITDA from scratch with its own local formulas, and the result matches exactly today. Which rubric category is concerned with this choice, and what risk does it create for the model over time?",
+        "min_words": 30,
+        "private": {
+          "model_answer": "This falls under Model Integration, which expects new work to link to the authoritative source rather than hardcode or recompute values locally. The risk is that the two calculations can drift apart: if someone later edits the Income Statement (a new line item, a changed input), the valuation tab's own EBITDA may not reflect it, so the model becomes inconsistent without anyone noticing. A perturbation test could reveal the divergence.",
+          "rubric": [
+            {
+              "criterion": "Identifies Model Integration (linking to the authoritative source rather than hardcoding or recomputing locally) as the relevant category.",
+              "required": true
+            },
+            {
+              "criterion": "Explains that later changes to the source would not be reflected in the local recomputation, leading to inconsistent or wrong results.",
+              "required": true
+            },
+            {
+              "criterion": "Mentions that a perturbation test on a relevant input could expose the divergence.",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 3,
+      "block": "b13",
+      "content": {
+        "question": "In BLUEFIN, the model being evaluated receives a very short system prompt with no finance conventions, while the judge model receives a long, opinionated prompt full of them. What is the reason for this difference?",
+        "options": [
+          "The judge reviews only the final outputs without tools, so conventions must be written into its prompt directly.",
+          "The agent picks up conventions from its tool descriptions, so repeating them in its prompt would be wasted text.",
+          "The agent's prompt was cut back after longer versions let models copy a reference template the judge needs.",
+          "The agent is left uncoached to measure raw capability, while the judge needs conventions to grade like an expert."
+        ],
+        "private": {
+          "correct_index": 3,
+          "explanation": "The prompts serve different roles. The agent's minimal prompt isolates what the model can do unaided, in the style of HELM and GAIA. The judge's rich prompt makes its yes/no verdicts approximate an expert's, which was checked against expert labels.",
+          "option_explanations": [
+            "The judge does not just read outputs; it inspects workbooks through the same tool environment as the agent.",
+            "The paper does not say conventions are conveyed through tool descriptions, and the judge uses the same tools as the agent.",
+            "No such episode with agent prompts is described. Template copying was the reason a rubric section was dropped, not the reason for the short agent prompt.",
+            "Right. A minimal agent prompt measures unaided capability rather than instruction-following, and a rich judge prompt supplies the expectations an expert grader would apply."
+          ]
+        }
+      }
+    },
+    {
+      "question": 3,
+      "block": "b13",
+      "content": {
+        "question": "A reviewer suggests giving the agent under test the same detailed finance-convention prompt the judge receives, \"to be fair\". What would this change most undermine in BLUEFIN's design?",
+        "options": [
+          "The 30,000-character limit, since a longer prompt would crowd out tool results the agent needs to read.",
+          "Measuring what the model can do unaided, since the score would partly reflect following coached instructions.",
+          "The judge's tool access, since the judge would then need a separate tool set to stay independent of the agent.",
+          "The ban on template copying, since convention-rich prompts were what let agents copy reference workbooks."
+        ],
+        "private": {
+          "correct_index": 1,
+          "explanation": "The agent's prompt is deliberately minimal so the benchmark measures raw capability, following HELM and GAIA. The judge's prompt is rich for a different reason: so its verdicts approximate an expert rater's. Coaching the agent would blur capability with instruction-following.",
+          "option_explanations": [
+            "The character cap applies to tool results, not the system prompt, and it is not the reason for the asymmetry.",
+            "Right. Coaching the agent with conventions would mean the benchmark measures how well it follows instructions rather than what it can do unaided.",
+            "Both agent and judge already work through the same tool environment; tool access is not what the prompt asymmetry protects.",
+            "Template copying relates to why a rubric section was dropped, not to the content of the agent's prompt."
+          ]
+        }
+      }
+    },
+    {
+      "question": 4,
+      "block": "b18",
+      "content": {
+        "question": "On a manipulation task, an agent adds a header row and two labels, then stops. Its Pitfalls pass rate comes out at nearly 100%. What is the best reading of that result?",
+        "options": [
+          "The agent worked carefully, and the clean record will offset most of what it lost in other categories.",
+          "Almost no defect check had anything to fire on, so the high rate reflects how little it built.",
+          "The scale is inverted for penalties, so nearly 100% actually means it triggered almost every defect.",
+          "The judge must have erred, because an unfinished build should itself count as a Pitfalls defect."
+        ],
+        "private": {
+          "correct_index": 1,
+          "explanation": "Penalty checks can only fire on content that exists. A near-empty build gives them almost nothing to catch, so it passes nearly all of them. The authors read Grok's high Pitfalls rate this way: as a sign of thin output, not care. Pitfalls only subtract points; they do not earn any.",
+          "option_explanations": [
+            "Pitfalls only remove points; avoiding them cannot replace the positive points awarded by the other categories, so a thin build still scores poorly.",
+            "Right. Defect checks such as #REF! errors or truncated text need something to inspect; with little content they rarely fire, which is how the authors explain Grok's high Pitfalls rate.",
+            "In the Pitfalls section a higher pass rate means fewer detected errors, not more.",
+            "Pitfall criteria look for specific defects such as error values or truncated text, not missing work; missing work costs points in the other categories."
+          ]
+        }
+      }
+    },
+    {
+      "question": 4,
+      "block": "b18",
+      "content": {
+        "question": "Grok shows a high Pitfalls pass rate in BLUEFIN. How do the authors interpret this?",
+        "options": [
+          "As evidence of careful checking, since it avoided errors like #REF! and truncated text more than other models.",
+          "As a scoring artefact, since higher Pitfalls pass rates actually indicate that more errors were detected.",
+          "As a sign of thin output, since a model that builds little gives the penalty checks little to catch.",
+          "As a strength that nearly closes its gap with models that produced complete, fully linked builds."
+        ],
+        "private": {
+          "correct_index": 2,
+          "explanation": "Pitfalls are penalty checks that fire on defects present in the workbook. A model producing thin output leaves little for them to fire on, so a high pass rate there signals sparse work rather than care. And since Pitfalls only deduct, a clean record cannot lift the total toward that of a complete build.",
+          "option_explanations": [
+            "The authors do not credit care; avoiding defects is easy when little is built, so the high rate says more about output volume.",
+            "In the Pitfalls section a higher pass rate means fewer detected errors, not more.",
+            "Right. Penalty checks need content to inspect; with sparse output almost none fire, which is the authors' explanation.",
+            "Pitfalls only subtract points; the positive points come from the other five categories, so avoiding penalties cannot close the gap."
+          ]
+        }
+      }
+    },
+    {
+      "question": 5,
+      "block": "b20",
+      "content": {
+        "prompt": "Some agents in BLUEFIN rarely call recalc_workbook while building, and those same agents tend to fail perturbation checks. Describe what the judge does during a perturbation check, and explain why an agent that skips recalculation is more likely to leave behind the kinds of errors that check catches.",
+        "min_words": 35,
+        "private": {
+          "model_answer": "In a perturbation check the judge changes an input, recalculates the workbook and checks whether the dependent output moves to the correct value. An agent that never recalculates cannot observe whether its own formulas propagate changes, so hardcoded values, broken or wrong references and non-converging circular logic stay hidden during the build. They are still there when the judge perturbs the input, so the output fails to update correctly. The link is a correlation the authors describe as consistent, not a proven cause.",
+          "rubric": [
+            {
+              "criterion": "Describes the perturbation check as changing an input, recalculating and verifying that the dependent output updates correctly.",
+              "required": true
+            },
+            {
+              "criterion": "Explains that without recalculating, the agent cannot verify its own dynamic behaviour, so errors such as hardcodes or broken links go unnoticed.",
+              "required": true
+            },
+            {
+              "criterion": "Notes that the relationship is a correlation rather than a demonstrated cause.",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 5,
+      "block": "b20",
+      "content": {
+        "prompt": "A team building a spreadsheet agent decides to make it call recalc_workbook and re-inspect key outputs before finishing every task. Using how BLUEFIN's judge runs perturbation checks, explain why this habit might plausibly improve the agent's Perturbation scores.",
+        "min_words": 35,
+        "private": {
+          "model_answer": "The judge's perturbation check changes an input, recalculates and reads whether the output moves to the right value. If the agent itself recalculates and inspects results while building, it gets a chance to see whether its formulas really respond to their inputs, and can spot hardcoded numbers, broken references or circular structures that do not converge. Fixing those before finishing means the outputs update correctly when the judge perturbs an input. The paper only shows that low recalculation goes with weak Perturbation scores, so this is plausible rather than proven.",
+          "rubric": [
+            {
+              "criterion": "Describes the perturbation check as changing an input, recalculating and checking that the output updates correctly.",
+              "required": true
+            },
+            {
+              "criterion": "Explains that recalculating lets the agent observe and fix dynamic errors (such as hardcodes or broken links) that would otherwise fail the check.",
+              "required": true
+            },
+            {
+              "criterion": "Acknowledges that the evidence is correlational, not a proven causal effect.",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 6,
+      "block": "b24",
+      "content": {
+        "question": "A team grades a real-estate underwriting benchmark solely by checking that each output's final displayed numbers fall within ±2% of reference values. In light of BLUEFIN's findings, which kind of flaw is this grading most likely to miss?",
+        "options": [
+          "A cap rate typed as 6 rather than 6%, so every valuation comes out wildly off from the reference.",
+          "A rent roll read one row off, so each unit's projected income is quietly taken from its neighbour.",
+          "Correct-looking totals pasted in as constants, so they match today but ignore any change to inputs.",
+          "A capital expenditure added rather than subtracted, so the cash flow line ends up visibly too high."
+        ],
+        "private": {
+          "correct_index": 2,
+          "explanation": "BLUEFIN highlights the gap between static correctness and dynamic correctness. Unit, misalignment and sign errors change the displayed numbers, so a value comparison catches them. A hardcode that matches today's reference changes nothing visible; only a perturbation step (change an input, recalculate, recheck) exposes it, and that is where models scored lowest.",
+          "option_explanations": [
+            "Entering a rate as a plain number distorts the outputs, which a comparison against reference values would detect.",
+            "A row misalignment changes displayed values, so it would be caught whenever it moves an output outside the tolerance.",
+            "Right. A hardcoded value that matches the reference passes any value-only check; only a perturbation-style test reveals that it does not respond to inputs.",
+            "A sign error moves the displayed number away from the reference, which is exactly what a value comparison is built to catch."
+          ]
+        }
+      }
+    },
+    {
+      "question": 6,
+      "block": "b24",
+      "content": {
+        "question": "A grading scheme for a budgeting benchmark compares only final displayed outputs against reference values. A model learns to type the correct current totals in as constants. Which additional check, of the kind BLUEFIN uses, would catch this?",
+        "options": [
+          "Scanning every cell for error values such as #REF! or #DIV/0! after the workbook is opened.",
+          "Tightening the tolerance from ±2% to ±0.1% so that near-miss constants are flagged as wrong.",
+          "Checking that row labels, headers and number formats follow standard finance conventions.",
+          "Changing an input, recalculating, and checking that the dependent outputs move to the right values."
+        ],
+        "private": {
+          "correct_index": 3,
+          "explanation": "Hardcoded totals that match today's reference are statically correct but dynamically wrong. Only a perturbation check, which changes an input, recalculates and rechecks the output, reveals that they do not respond. BLUEFIN's models scored lowest on exactly this category.",
+          "option_explanations": [
+            "Typed-in constants produce no error values, so an error-value scan would find nothing to flag.",
+            "Constants that exactly match today's reference pass any tolerance, however tight; the flaw is not visible in the current numbers.",
+            "Labels and formats can be perfect on a hardcoded workbook; the missing formulas are not a formatting issue.",
+            "Right. A perturbation check exposes outputs that fail to update when inputs change, which is precisely what hardcoded totals do."
+          ]
+        }
+      }
+    },
+    {
+      "question": 7,
+      "block": "b25",
+      "content": {
+        "prompt": "Models in BLUEFIN do better at synthesis tasks (building a workbook from scratch) than at manipulation tasks (changing an existing workbook). Explain what makes manipulation harder, and support your explanation with one concrete example of a failure observed in the paper.",
+        "min_words": 35,
+        "private": {
+          "model_answer": "In manipulation the model must fit its work into an existing workbook whose formulas, layouts and cross-references already constrain where things go and how they must link. Synthesis lets it choose its own structure freely. These integration constraints are brittle: in the OpEx case study, models pointed at the Inputs row one off from the right one, or bypassed the new tab altogether, and those integration mistakes rather than arithmetic drove their scores down.",
+          "rubric": [
+            {
+              "criterion": "Explains that manipulation requires integrating with an existing workbook's formulas, layout and references, constraining the model more than building from scratch.",
+              "required": true
+            },
+            {
+              "criterion": "Gives at least one concrete piece of evidence, such as off-by-one or wrong-row references, bypassed links, hardcoded links that break on input change, or weak Perturbation/Output Validation pass rates.",
+              "required": true
+            },
+            {
+              "criterion": "Notes that manipulation reflects most real analyst work, making the weakness consequential.",
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "question": 7,
+      "block": "b25",
+      "content": {
+        "prompt": "A product manager says: \"Our agent scores well building new models from scratch, so it should be fine editing clients' existing models.\" Using BLUEFIN's findings, explain why this does not follow, and cite one specific kind of failure the paper reports on manipulation tasks.",
+        "min_words": 35,
+        "private": {
+          "model_answer": "It does not follow because editing an existing model is a different challenge: the agent must respect the workbook's existing formulas, layout and references and link its additions correctly into them, while from-scratch synthesis imposes no such constraints. BLUEFIN found models score lower on manipulation for this reason. For example, in the OpEx case study models referenced the wrong Inputs row (off by one) or bypassed the new tab, so integration errors rather than arithmetic cost them. Since most real banking and PE analyst work is manipulation, this matters a lot.",
+          "rubric": [
+            {
+              "criterion": "Explains that manipulation requires integrating with an existing workbook's structure and references, which is harder than unconstrained synthesis.",
+              "required": true
+            },
+            {
+              "criterion": "Cites at least one concrete failure from the paper, such as off-by-one or wrong-row references, bypassed links, hardcodes breaking on input change, or weak Perturbation/Output Validation results.",
+              "required": true
+            },
+            {
+              "criterion": "Mentions that manipulation makes up most real finance spreadsheet work.",
+              "required": false
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

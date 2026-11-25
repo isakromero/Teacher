@@ -5,11 +5,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from teacher import cli
-from teacher.config import ENV_HOME, Settings
+from teacher.config import Settings
 from teacher.db.engine import session_scope
 from teacher.managers import KnowledgeSourceManager, SourceReferenceManager
 from teacher.reference_extraction import ReferenceExtractor
@@ -18,9 +19,9 @@ CITING = "# Citing\n\n## References\n\n- Vaswani. \"Attention Is All You Need\".
 
 
 @pytest.fixture
-def home(settings: Settings, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Settings:
+def home(settings: Settings, settings_env: Any, tmp_path: Path) -> Settings:
     """$TEACHER_HOME at the migrated `settings`, with sources `citing`, `attention`, `plain`."""
-    monkeypatch.setenv(ENV_HOME, str(settings.root))
+    settings_env(settings)
     for slug, text, kw in (
         ("citing", CITING, {}),
         ("attention", "# Attention\n", {"identifiers": {"arxiv": "1706.03762"},

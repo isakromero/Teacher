@@ -48,8 +48,15 @@
   <section id="state-ready" class="lab" aria-label="Lab" {% if status != "ready" %}hidden{% endif %}>
     <div id="lab-runtime" class="notice lab-runtime" role="status" aria-live="polite" hidden></div>
 
+    {#- Narrow screens show one half at a time (lab.js switches them; app.css shows this bar
+        only in a narrow container); wide ones show both side by side. #}
+    <div id="lab-views" class="lab-views" role="group" aria-label="Show">
+      <button type="button" class="lab-view-button" data-view="text" aria-controls="lab-text" aria-pressed="true">Instructions</button>
+      <button type="button" class="lab-view-button" data-view="code" aria-controls="lab-workspace" aria-pressed="false">Code</button>
+    </div>
+
     <div class="lab-grid">
-      <div class="lab-text">
+      <div id="lab-text" class="lab-text">
         <section class="lab-brief" aria-labelledby="lab-brief-heading">
           <h2 id="lab-brief-heading">Brief</h2>
           <div id="lab-brief"></div>
@@ -62,7 +69,7 @@
         </section>
       </div>
 
-      <section class="lab-workspace" aria-labelledby="lab-code-heading">
+      <section id="lab-workspace" class="lab-workspace" aria-labelledby="lab-code-heading">
         <div class="lab-code-header">
           <h2 id="lab-code-heading">Code</h2>
           <p id="lab-save-status" class="lab-save-status small" role="status" aria-live="polite"></p>
@@ -70,21 +77,29 @@
         <div id="lab-save-error" class="error" role="alert" hidden></div>
         <div id="lab-tabs" class="lab-tabs" role="tablist" aria-label="Files"></div>
         <div id="lab-editors" class="lab-editors"></div>
-        <p id="lab-editor-keys" class="hint lab-editor-keys">
-          Tab indents and Shift+Tab outdents. To leave the editor with the keyboard, press Escape, then Tab.
-          Ctrl+Enter (Cmd+Enter on a Mac) runs the program.
-          <span id="lab-cursor" class="lab-cursor" aria-live="off"></span>
-        </p>
+        <div class="lab-editor-foot">
+          {#- For touch keyboards, which have no Tab key (app.css shows these on touch screens). #}
+          <div class="lab-indent-tools" role="group" aria-label="Indentation">
+            <button id="lab-outdent" type="button" class="button compact" aria-label="Outdent, as Shift+Tab does">⇤ Outdent</button>
+            <button id="lab-indent" type="button" class="button compact" aria-label="Indent, as Tab does">Indent ⇥</button>
+          </div>
+          <p id="lab-editor-keys" class="hint lab-editor-keys">
+            <span class="lab-keys-text">Tab indents and Shift+Tab outdents. To leave the editor with the keyboard, press Escape, then Tab.
+            Ctrl+Enter (Cmd+Enter on a Mac) runs the program.</span>
+            <span id="lab-cursor" class="lab-cursor" aria-live="off"></span>
+          </p>
+        </div>
 
+        <div class="lab-step-choice">
+          <label for="lab-current-step">Working on</label>
+          <select id="lab-current-step" name="step" aria-describedby="lab-current-step-hint"></select>
+        </div>
+        <p id="lab-current-step-hint" class="visually-hidden">Runs are recorded against this step, so the tutor knows what you were trying.</p>
+        {#- On narrow screens this bar sticks to the bottom of the screen while the code is in view. #}
         <div class="lab-run-bar">
           <button id="lab-run" type="button" class="button primary" aria-describedby="lab-run-status">Run</button>
-          <div class="lab-step-choice">
-            <label for="lab-current-step">Working on</label>
-            <select id="lab-current-step" name="step" aria-describedby="lab-current-step-hint"></select>
-          </div>
-          <p id="lab-current-step-hint" class="visually-hidden">Runs are recorded against this step, so the tutor knows what you were trying.</p>
+          <button id="lab-check" type="button" class="button" aria-describedby="lab-run-status" hidden>Check</button>
         </div>
-        <p id="lab-run-status" class="status-text lab-run-status" role="status" aria-live="polite"></p>
 
         <div class="lab-tools actions">
           <button id="lab-reset" type="button" class="button compact" aria-expanded="false" aria-controls="lab-reset-confirm">Reset to starter code</button>
@@ -117,6 +132,7 @@
 
         <section class="lab-output" aria-labelledby="lab-output-heading">
           <h3 id="lab-output-heading">Output</h3>
+          <p id="lab-run-status" class="status-text lab-run-status" role="status" aria-live="polite"></p>
           <div id="lab-output" class="lab-output-body">
             <p class="muted">Run the program to see what it prints. A program is stopped after 20 seconds.</p>
           </div>

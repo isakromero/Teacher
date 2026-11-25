@@ -75,7 +75,9 @@ subclass with a key-free message starting "Relations could not be found: ". An u
 the manager's NotFoundError.
 
 Per focus concept: one or two Claude calls (proposals; the judge only if a candidate is left)
-and at most two embedding requests (stale concepts, if any; the proposals, if any).
+and at most two embedding requests (stale concepts, if any; the proposals, if any). Each is
+recorded in the cost ledger (`teacher.costs`) as `concept_relating`, with no link (the ledger
+links calls to pages, sources and conversations, not to concepts).
 """
 
 from __future__ import annotations
@@ -116,6 +118,7 @@ from teacher.concept_extraction import NEIGHBOUR_LIMIT as PROPOSAL_NEIGHBOUR_LIM
 from teacher.concept_extraction import SIMILARITY_FLOOR as PROPOSAL_SIMILARITY_FLOOR
 from teacher.concepts import BUILDS_ON, normalize_name
 from teacher.config import DEFAULT_CONCEPT_MODEL, GENERATION_MODEL_CHOICES, Settings
+from teacher.costs import cost_scope
 from teacher.db.engine import session_scope
 from teacher.db.fts import ConceptSearchUnavailableError
 from teacher.db.models import Concept, ConceptRelation
@@ -1339,7 +1342,10 @@ class ConceptRelater:
         )
 
     def _call(self, step: str, request: dict[str, Any], tally: _Tally) -> Any:
-        message = stream_message(self._get_client(), request, stage_name=step, error=_unavailable)
+        message = stream_message(
+            self._get_client(), request, stage_name=step, error=_unavailable,
+            purpose="concept_relating",
+        )
         tally.add(step, message)
         return message
 
@@ -1499,8 +1505,14 @@ class ConceptRelater:
     ) -> RelateRun:
         """Find, judge and write relations for concept `slug` (see the module docstring). With
         `regenerate`, F's unreviewed model-made relations are re-decided and replaced; `model`
-        (one of `model_choices()`, default the relater's) runs both Claude calls."""
+        (one of `model_choices()`, default the relater's) runs both Claude calls. Every API call
+        is recorded in the cost ledger as `concept_relating` (with no link: the ledger links
+        calls to pages, sources and conversations, not to concepts)."""
         model = self.choose_model(model)
+        with cost_scope(settings, purpose="concept_relating"):
+            return self._relate(settings, slug, regenerate=regenerate, model=model)
+
+    def _relate(self, settings: Settings, slug: str, *, regenerate: bool, model: str) -> RelateRun:
         focus = self._focus(settings, slug)
         tally = _Tally(None)
         stale_embedded = self._refresh_index(settings)

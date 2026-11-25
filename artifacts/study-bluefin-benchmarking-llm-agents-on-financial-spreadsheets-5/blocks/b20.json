@@ -1,0 +1,12 @@
+{
+  "prompt": "The most expensive model, Opus 4.7, costs about $49 per task. How do you expect it to compare with cheaper models on the cost-performance chart?",
+  "options": [
+    "It is dominated: a cheaper model scores about the same",
+    "It clearly leads the cost-performance frontier",
+    "It is the cheapest per point of score"
+  ],
+  "private": {
+    "correct_index": 0,
+    "resolution": "GPT-5.5 reaches a similar score at 5.6x lower cost, so Opus is dominated. The next section explains the frontier and a case study."
+  }
+}

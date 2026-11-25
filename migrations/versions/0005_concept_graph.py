@@ -26,13 +26,28 @@ New tables only; existing rows are untouched.
   Both are created with raw SQL (see teacher.db.fts) and kept in sync by the concept manager.
   They are created first, so a SQLite without FTS5 or the trigram tokenizer fails before
   anything else changes. Existing databases have no concepts, so both start empty.
+
+On PostgreSQL: the search indexes are plain tables (see teacher.db.fts and
+teacher.db.search.postgres), created first as on SQLite:
+- the pg_trgm extension, unless installed already: in the `extensions` schema when there is one
+  (Supabase), else in the current schema (`teacher.db.fts.require_pg_trgm`; it needs CREATE
+  privilege on the database, which Supabase's postgres role has);
+- concept_search (rowid bigint PK, name, aliases, summary);
+- concept_search_tokens (rowid, col, pos, token COLLATE "C"; PK (rowid, col, pos); CHECK col in
+  0..2) with the b-tree ix_concept_search_tokens_key on substr(token, 1, 200);
+- concept_trigram (rowid bigint PK, text, compact, label) with the GIN indexes
+  ix_concept_trigram_text and ix_concept_trigram_compact (gin_trgm_ops, schema-qualified).
+The downgrade drops the three tables and leaves pg_trgm installed (it may predate this
+migration or serve others). The slug trigger is a PL/pgSQL function
+`trg_concepts_slug_immutable()` with a trigger of the same name and the same message; the
+ck_concept_relations_pair CHECK uses LEAST/GREATEST (SQLite's two-argument min/max).
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
 
-from teacher.db.fts import require_concept_search
+from teacher.db.fts import require_concept_search, require_pg_trgm
 
 
 # revision identifiers, used by Alembic.
@@ -44,15 +59,47 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    require_concept_search(op.get_bind())
-    op.execute(
-        "CREATE VIRTUAL TABLE concept_search USING fts5("
-        "name, aliases, summary, tokenize = 'unicode61 remove_diacritics 2', prefix = '2 3 4')"
-    )
-    op.execute(
-        "CREATE VIRTUAL TABLE concept_trigram USING fts5("
-        "text, compact, label UNINDEXED, tokenize = 'trigram case_sensitive 1')"
-    )
+    sqlite = op.get_context().dialect.name == 'sqlite'
+    if sqlite:
+        require_concept_search(op.get_bind())
+        op.execute(
+            "CREATE VIRTUAL TABLE concept_search USING fts5("
+            "name, aliases, summary, tokenize = 'unicode61 remove_diacritics 2', prefix = '2 3 4')"
+        )
+        op.execute(
+            "CREATE VIRTUAL TABLE concept_trigram USING fts5("
+            "text, compact, label UNINDEXED, tokenize = 'trigram case_sensitive 1')"
+        )
+    else:
+        trgm = op.get_bind().dialect.identifier_preparer.quote(require_pg_trgm(op.get_bind()))
+        op.execute(
+            "CREATE TABLE concept_search (rowid bigint NOT NULL, name text NOT NULL, "
+            "aliases text NOT NULL, summary text NOT NULL, "
+            "CONSTRAINT pk_concept_search PRIMARY KEY (rowid))"
+        )
+        op.execute(
+            "CREATE TABLE concept_search_tokens (rowid bigint NOT NULL, col smallint NOT NULL, "
+            'pos integer NOT NULL, token text COLLATE "C" NOT NULL, '
+            "CONSTRAINT pk_concept_search_tokens PRIMARY KEY (rowid, col, pos), "
+            "CONSTRAINT ck_concept_search_tokens_col CHECK (col IN (0, 1, 2)))"
+        )
+        op.execute(
+            "CREATE INDEX ix_concept_search_tokens_key ON concept_search_tokens "
+            "(substr(token, 1, 200))"
+        )
+        op.execute(
+            "CREATE TABLE concept_trigram (rowid bigint NOT NULL, text text NOT NULL, "
+            "compact text NOT NULL, label text NOT NULL, "
+            "CONSTRAINT pk_concept_trigram PRIMARY KEY (rowid))"
+        )
+        op.execute(
+            "CREATE INDEX ix_concept_trigram_text ON concept_trigram "
+            f"USING gin (text {trgm}.gin_trgm_ops)"
+        )
+        op.execute(
+            "CREATE INDEX ix_concept_trigram_compact ON concept_trigram "
+            f"USING gin (compact {trgm}.gin_trgm_ops)"
+        )
 
     op.create_table('concepts',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -70,11 +117,22 @@ def upgrade() -> None:
     )
     with op.batch_alter_table('concepts', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_concepts_name_norm'), ['name_norm'], unique=False)
-    op.execute(
-        "CREATE TRIGGER trg_concepts_slug_immutable BEFORE UPDATE OF slug ON concepts "
-        "WHEN NEW.slug IS NOT OLD.slug "
-        "BEGIN SELECT RAISE(ABORT, 'concepts.slug is immutable'); END"
-    )
+    if sqlite:
+        op.execute(
+            "CREATE TRIGGER trg_concepts_slug_immutable BEFORE UPDATE OF slug ON concepts "
+            "WHEN NEW.slug IS NOT OLD.slug "
+            "BEGIN SELECT RAISE(ABORT, 'concepts.slug is immutable'); END"
+        )
+    else:
+        op.execute(
+            "CREATE FUNCTION trg_concepts_slug_immutable() RETURNS trigger LANGUAGE plpgsql AS $$ "
+            "BEGIN RAISE EXCEPTION 'concepts.slug is immutable' USING ERRCODE = 'integrity_constraint_violation'; END $$"
+        )
+        op.execute(
+            "CREATE TRIGGER trg_concepts_slug_immutable BEFORE UPDATE OF slug ON concepts "
+            "FOR EACH ROW WHEN (NEW.slug IS DISTINCT FROM OLD.slug) "
+            "EXECUTE FUNCTION trg_concepts_slug_immutable()"
+        )
 
     op.create_table('concept_aliases',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -117,7 +175,8 @@ def upgrade() -> None:
     sa.CheckConstraint("origin IN ('paper', 'model', 'user')", name=op.f('ck_concept_relations_origin')),
     sa.CheckConstraint('from_id != to_id', name=op.f('ck_concept_relations_not_self')),
     sa.CheckConstraint("type = 'builds_on' OR from_id < to_id", name=op.f('ck_concept_relations_symmetric_order')),
-    sa.CheckConstraint('low_id = min(from_id, to_id) AND high_id = max(from_id, to_id)', name=op.f('ck_concept_relations_pair')),
+    sa.CheckConstraint('low_id = min(from_id, to_id) AND high_id = max(from_id, to_id)', name=op.f('ck_concept_relations_pair')).ddl_if(dialect='sqlite'),
+    sa.CheckConstraint('low_id = LEAST(from_id, to_id) AND high_id = GREATEST(from_id, to_id)', name=op.f('ck_concept_relations_pair')).ddl_if(dialect='postgresql'),
     sa.ForeignKeyConstraint(['from_id'], ['concepts.id'], name=op.f('fk_concept_relations_from_id_concepts'), ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['to_id'], ['concepts.id'], name=op.f('fk_concept_relations_to_id_concepts'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_concept_relations')),
@@ -130,6 +189,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
+    sqlite = op.get_context().dialect.name == 'sqlite'
     with op.batch_alter_table('concept_relations', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_concept_relations_to_id'))
         batch_op.drop_index(batch_op.f('ix_concept_relations_from_id'))
@@ -140,10 +200,19 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f('ix_concept_aliases_alias_norm'))
 
     op.drop_table('concept_aliases')
-    op.execute("DROP TRIGGER trg_concepts_slug_immutable")
+    if sqlite:
+        op.execute("DROP TRIGGER trg_concepts_slug_immutable")
+    else:
+        op.execute("DROP TRIGGER trg_concepts_slug_immutable ON concepts")
+        op.execute("DROP FUNCTION trg_concepts_slug_immutable()")
     with op.batch_alter_table('concepts', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_concepts_name_norm'))
 
     op.drop_table('concepts')
-    op.execute("DROP TABLE concept_trigram")  # also drops its FTS5 shadow tables
-    op.execute("DROP TABLE concept_search")  # likewise
+    if sqlite:
+        op.execute("DROP TABLE concept_trigram")  # also drops its FTS5 shadow tables
+        op.execute("DROP TABLE concept_search")  # likewise
+    else:
+        op.execute("DROP TABLE concept_trigram")  # with its indexes; pg_trgm stays installed
+        op.execute("DROP TABLE concept_search_tokens")
+        op.execute("DROP TABLE concept_search")

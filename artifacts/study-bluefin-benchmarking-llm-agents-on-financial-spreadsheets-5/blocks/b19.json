@@ -1,0 +1,17 @@
+{
+  "prompt": "Imagine a model's DCF workbook shows the correct enterprise value today, but changing WACC leaves it unchanged. Explain why this passes some criteria but fails others, and what likely went wrong.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "It would pass an Output Validation check because the current value is within tolerance, and possibly a surface Formula check. It fails the Perturbation criterion because the output does not recompute when WACC changes. Most likely the model hardcoded the value or overwrote a formula with a constant instead of linking it.",
+    "rubric": [
+      {
+        "criterion": "States that Output Validation can pass while Perturbation fails",
+        "required": true
+      },
+      {
+        "criterion": "Identifies hardcoding or an overwritten formula as the likely cause",
+        "required": true
+      }
+    ]
+  }
+}

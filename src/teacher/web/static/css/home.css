@@ -1,7 +1,9 @@
 /* Home (home.html, home.js, home_search.js): the search box as the hero, then "Continue
    studying" and "Suggested next" on the left and "Recent study" on the right (one column on
    narrow screens). While a query is in the box the results take the place of the sections.
-   Colours, type and spacing come from app.css. */
+   On phones the hero is the search box alone (the header's "Add" is the same link as the hero's
+   "Add a source"), and on touch screens the keyboard shortcuts are not mentioned. Colours, type
+   and spacing come from app.css. */
 
 .home {
   display: flex;
@@ -48,13 +50,26 @@
 .search-hint {
   margin-top: var(--space-2);
 }
+/* Phones: the header's "Add" button, just above, is the same link, so the hero keeps only the
+   search box. */
 @media (max-width: 40rem) {
-  .search {
-    flex-direction: column;
+  .home-hero {
+    padding-bottom: var(--space-4);
   }
   .search-add {
-    width: 100%;
+    display: none;
   }
+  .search-key {
+    display: none;
+  }
+  .search .search-field input[type="search"] {
+    padding-right: 0.75rem;
+    font-size: 1rem;
+  }
+}
+/* A touch screen with no hover is a phone or tablet: the keyboard shortcuts do not apply. */
+@media (hover: none) and (pointer: coarse) {
+  .search-hint-keys,
   .search-key {
     display: none;
   }
@@ -190,6 +205,19 @@
   font-size: var(--text-sm);
   font-weight: 550;
 }
+/* Touch screens: the small links get a 44px-tall hit area without moving anything (inline
+   padding, or an inline-block's padding taken back by a negative margin). */
+@media (pointer: coarse) {
+  .section-more {
+    display: inline-block;
+    padding: 0.7rem 0;
+    margin: -0.7rem 0;
+  }
+  .suggestion-card .card-title a,
+  .suggestion-card .action-link {
+    padding: 0.75rem 0;
+  }
+}
 .section-foot {
   margin: var(--space-2) 0 0;
 }
@@ -323,4 +351,13 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Phones and other touch screens: the small capitals and chips no smaller than 13px. */
+@media (max-width: 40rem), (pointer: coarse) {
+  .stat-label,
+  .home .suggestion-kind,
+  .home .standing-chip {
+    font-size: 0.8125rem;
+  }
 }

@@ -1,0 +1,511 @@
+{
+  "stage": "question_check",
+  "round": 0,
+  "model": "claude-sonnet-5-5",
+  "judge_model": "claude-haiku-5-5",
+  "source": {
+    "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+    "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets"
+  },
+  "rule_violations": [
+    "block 8 (multiple_choice 'Why did the designers choose, for interrogation tasks…'): the correct option (121 characters) is more than 30% longer than the longest wrong option (93 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+    "block 16 (multiple_choice 'What explanation do the authors offer for models scoring…'): the correct option (145 characters) is more than 30% longer than the longest wrong option (78 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+    "block 23 (multiple_choice 'GPT-5.5 often starts with executepython and uses fewer…'): the correct option (102 characters) is more than 30% longer than the longest wrong option (61 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+    "block 28 (multiple_choice 'Suppose a company has a large, routine task of wiring…'): the correct option (127 characters) is more than 30% longer than the longest wrong option (80 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly"
+  ],
+  "open_book": [
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChP4QqtEv8ZyDpZD25AL5",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 1960,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 122
+      },
+      "source": {
+        "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+        "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        3
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 3,
+            "reasoning": "Block 2 says prior spreadsheet benchmarks test formula generation, atomic edits, flat tables, or QA over fixed sheets, all of which map cleanly onto automatic checks, so they avoid open-ended, underspecified builds. That matches option 0.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChP4R1gqQzezwe5eyHiVg",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 1249,
+        "cache_read_input_tokens": 1960,
+        "output_tokens": 105
+      },
+      "source": {
+        "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+        "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        8
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 8,
+            "reasoning": "Block 7 says the team favored inputs acting through multi-step calculation chains rather than simple links because they make harder questions; option 0 matches this by saying changed assumptions must be propagated, making them harder than lookups.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChP4R77Ww7v2dxacQk1yh",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 189,
+        "cache_creation_input_tokens": 493,
+        "cache_read_input_tokens": 3209,
+        "output_tokens": 206
+      },
+      "source": {
+        "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+        "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        10
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 10,
+            "reasoning": "The page defines Model Integration (hardcoded vs linked), Perturbation (change an input, output must recompute), Output Validation (value within tolerance) and Formula Correctness; a typed number fails these, though the page doesn't say exactly which criteria each task would include.",
+            "choice": null,
+            "answer": "Perturbation would catch it, because changing a driving input would not update a typed 10,342. Model Integration flags the hardcoded value instead of a link. Formula Correctness fails with no formula, and Output Validation passes only if the number happens to be near the reference.}"
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChP4RS6mzTukxeU46gko6",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 625,
+        "cache_read_input_tokens": 3702,
+        "output_tokens": 117
+      },
+      "source": {
+        "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+        "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        12
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 12,
+            "reasoning": "The page says Perturbation criteria change a driving input and check that the dependent output recomputes correctly. The judge runs dynamic tests (change input X, recalculate, read output Y), so it needs a recalculation tool. The other options misdescribe the categories.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChP4RZQaGoEFeZ7cE2SPy",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 1051,
+        "cache_read_input_tokens": 4327,
+        "output_tokens": 105
+      },
+      "source": {
+        "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+        "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        16
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 16,
+            "reasoning": "Block 14 says the authors suggest synthesis is easier because building from scratch is more flexible, while modifying a workbook imposes brittle integration constraints from existing formulas, layouts and references. This matches option 0.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChP4RhF6wiLSymd8Qgeo5",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 189,
+        "cache_creation_input_tokens": 864,
+        "cache_read_input_tokens": 5378,
+        "output_tokens": 202
+      },
+      "source": {
+        "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+        "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        19
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 19,
+            "reasoning": "The page separates static checks (Formula Correctness, Output Validation) from dynamic Perturbation checks, and says Perturbation fails when models hardcode values or overwrite formulas with constants.",
+            "choice": null,
+            "answer": "The correct enterprise value satisfies Output Validation, since the number lands within tolerance, and likely some static or presentation checks. But the Perturbation criterion fails because changing WACC doesn't recompute the output. Probably the model hardcoded the value or overwrote the formula with a constant, breaking the link to WACC."
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChP4S3V1aspGnX4oCcxA6",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 198,
+        "cache_creation_input_tokens": 964,
+        "cache_read_input_tokens": 6242,
+        "output_tokens": 123
+      },
+      "source": {
+        "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+        "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        23
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 23,
+            "reasoning": "Block 21 says GPT-5.5 used execute_python first on 64% of manipulation tasks, needing fewer turns but doing worse on Output Validation. The page doesn't state the mechanism about recalculation, but option 0 is the only one matching the linked weakness.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    },
+    {
+      "generator": "claude-study-v1",
+      "model": "claude-sonnet-5-5",
+      "message_id": "msg_011ChP4SEou6Aj3La77t7Duw",
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 315,
+        "cache_creation_input_tokens": 1037,
+        "cache_read_input_tokens": 7206,
+        "output_tokens": 464
+      },
+      "source": {
+        "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+        "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+        "media_type": "application/pdf"
+      },
+      "blocks": [
+        26,
+        27,
+        28
+      ],
+      "output": {
+        "answers": [
+          {
+            "block": 26,
+            "reasoning": "Block 17 reports 50-68% pass rates for Formula Correctness but only 20-48% for Output Validation and 15-37% for Perturbation, a roughly 30 point static-versus-dynamic gap.",
+            "choice": 0,
+            "answer": null
+          },
+          {
+            "block": 27,
+            "reasoning": "Block 11 says the judge runs static inspections and dynamic tests (change an input, recalculate, read the output), and reports validation against expert labels (alpha 0.826, macro-F1 0.839). The page does not spell out why simple tests fail, but block 2 says clarity and usability are hard to script.",
+            "choice": null,
+            "answer": "Many criteria cannot be checked by a fixed script: the agent must be judged on structure, usability, and whether outputs react correctly when inputs change. An agentic judge with the same tools can inspect cells, recalculate, and test perturbations. Trust comes from expert labels on 384 criteria: Krippendorff's alpha 0.826 and macro-F1 0.839, above Gemini and Sonnet as judges."
+          },
+          {
+            "block": 28,
+            "reasoning": "Block 21 shows Gemini scored 100% at $3.00 versus Opus 95% at $83.05 on a routine balance-sheet task, and the authors suggest saving expensive models for ambiguous or novel tasks.",
+            "choice": 0,
+            "answer": null
+          }
+        ]
+      }
+    }
+  ],
+  "judged": [
+    {
+      "block": 10,
+      "answer": "Perturbation would catch it, because changing a driving input would not update a typed 10,342. Model Integration flags the hardcoded value instead of a link. Formula Correctness fails with no formula, and Output Validation passes only if the number happens to be near the reference.}",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "Identifies Perturbation as catching the hardcode because changing an input does not change the output",
+          "required": true,
+          "met": true,
+          "justification": "The learner states that Perturbation would catch the hardcode because changing a driving input would not update the typed 10,342, which matches the criterion."
+        },
+        {
+          "criterion": "Notes that Output Validation alone could pass because the current number is right",
+          "required": false,
+          "met": true,
+          "justification": "The learner says Output Validation passes only if the number happens to be near the reference, which conveys that a correct current number could pass validation, matching the criterion."
+        },
+        {
+          "criterion": "Mentions Formula Correctness or Model Integration as also failing",
+          "required": false,
+          "met": true,
+          "justification": "The learner says Model Integration flags the hardcoded value and Formula Correctness fails with no formula, so both are named as also failing."
+        }
+      ],
+      "feedback": "You correctly explained that perturbing a driving input would expose the typed value, since it would not update. You also noted that Output Validation can pass when the typed number happens to be close to the reference, and that Model Integration and Formula Correctness would also flag it. Your answer covers the key points well."
+    },
+    {
+      "block": 19,
+      "answer": "The correct enterprise value satisfies Output Validation, since the number lands within tolerance, and likely some static or presentation checks. But the Perturbation criterion fails because changing WACC doesn't recompute the output. Probably the model hardcoded the value or overwrote the formula with a constant, breaking the link to WACC.",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "States that Output Validation can pass while Perturbation fails",
+          "required": true,
+          "met": true,
+          "justification": "The learner states that the correct value satisfies Output Validation while the Perturbation criterion fails because changing WACC does not recompute the output, which matches the required point."
+        },
+        {
+          "criterion": "Identifies hardcoding or an overwritten formula as the likely cause",
+          "required": true,
+          "met": true,
+          "justification": "The learner names the model hardcoding the value or overwriting the formula with a constant, breaking the link to WACC, as the likely cause."
+        }
+      ],
+      "feedback": "You correctly explained that the right enterprise value passes Output Validation while the failed perturbation test exposes the problem. You also identified the likely cause: a hardcoded value or an overwritten formula that breaks the link to WACC. Your answer meets the requirements."
+    },
+    {
+      "block": 27,
+      "answer": "Many criteria cannot be checked by a fixed script: the agent must be judged on structure, usability, and whether outputs react correctly when inputs change. An agentic judge with the same tools can inspect cells, recalculate, and test perturbations. Trust comes from expert labels on 384 criteria: Krippendorff's alpha 0.826 and macro-F1 0.839, above Gemini and Sonnet as judges.",
+      "graded": true,
+      "grader": "llm-judge-v2",
+      "model": "claude-haiku-5-5",
+      "verdict": "passed",
+      "missing": [],
+      "criteria": [
+        {
+          "criterion": "Explains that the criteria are not easily programmatically verifiable and need inspection or perturbation",
+          "required": true,
+          "met": true,
+          "justification": "The learner states that many criteria cannot be checked by a fixed script and need judging on structure, usability, and responsiveness to changed inputs, with an agentic judge inspecting cells and running perturbation tests. This matches the required explanation."
+        },
+        {
+          "criterion": "Cites validation against expert labels (alpha 0.826 or macro-F1 0.839)",
+          "required": true,
+          "met": true,
+          "justification": "The learner cites validation against expert labels on 384 criteria with Krippendorff's alpha 0.826 and macro-F1 0.839, which are the figures the criterion asks for."
+        }
+      ],
+      "feedback": "You explained well that many BLUEFIN criteria, such as usability and how outputs respond to changed inputs, cannot be checked by a fixed script, so an agentic judge that inspects and perturbs the workbook is needed. You also cited the expert-label validation with the correct agreement and F1 figures. Both required points are covered."
+    }
+  ],
+  "closed_book": {
+    "generator": "claude-study-v1",
+    "model": "claude-sonnet-5-5",
+    "message_id": "msg_011ChP4T2dh3iATgcFiE1tZA",
+    "stop_reason": "end_turn",
+    "usage": {
+      "input_tokens": 2036,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 150
+    },
+    "source": {
+      "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+      "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+      "media_type": "application/pdf"
+    },
+    "blocks": [
+      3,
+      8,
+      12,
+      16,
+      23,
+      26,
+      28
+    ],
+    "correct_by_guess": [],
+    "output": {
+      "answers": [
+        {
+          "block": 3,
+          "choice": 0,
+          "basis": "options"
+        },
+        {
+          "block": 8,
+          "choice": 0,
+          "basis": "options"
+        },
+        {
+          "block": 12,
+          "choice": 0,
+          "basis": "options"
+        },
+        {
+          "block": 16,
+          "choice": 0,
+          "basis": "options"
+        },
+        {
+          "block": 23,
+          "choice": 0,
+          "basis": "options"
+        },
+        {
+          "block": 26,
+          "choice": 0,
+          "basis": "options"
+        },
+        {
+          "block": 28,
+          "choice": 0,
+          "basis": "options"
+        }
+      ]
+    }
+  },
+  "issues": [
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 3,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'They focus on simple, well-specified tasks whose outputs can be checked automatically, avoiding open-ended end-to-end builds' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 8,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'Such questions force the agent to propagate changed assumptions through the model, making them harder than simple lookups' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 12,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'Perturbation criteria require changing an input and seeing whether the output updates, which only works after recomputing formulas' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 16,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'Modifying an existing workbook demands integration with its existing formulas, layouts and references, which is more brittle than building freely' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 23,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'Weaker Output Validation, since code-driven writes are harder to verify without explicit recalculation' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 26,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'Models pass most static formula checks but far fewer output-validation and perturbation checks' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    },
+    {
+      "origin": "closed_book",
+      "severity": "should_fix",
+      "block": 28,
+      "kind": "closed_book_options",
+      "problem": "without the page or the document, a model chose the correct option 'Try a cheaper frontier model like Gemini first, since routine, well-specified wiring showed no benefit from the costliest model' from the wording of the question and its options alone.",
+      "suggestion": "make the wrong options as specific, qualified and plausible as the correct one, or ask about what is specific to this document rather than what is generally known."
+    }
+  ],
+  "must_fix_remaining": [
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 8 (multiple_choice 'Why did the designers choose, for interrogation tasks…'): the correct option (121 characters) is more than 30% longer than the longest wrong option (93 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+      "suggestion": ""
+    },
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 16 (multiple_choice 'What explanation do the authors offer for models scoring…'): the correct option (145 characters) is more than 30% longer than the longest wrong option (78 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+      "suggestion": ""
+    },
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 23 (multiple_choice 'GPT-5.5 often starts with executepython and uses fewer…'): the correct option (102 characters) is more than 30% longer than the longest wrong option (61 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+      "suggestion": ""
+    },
+    {
+      "origin": "page_rules",
+      "severity": "must_fix",
+      "block": null,
+      "kind": null,
+      "problem": "block 28 (multiple_choice 'Suppose a company has a large, routine task of wiring…'): the correct option (127 characters) is more than 30% longer than the longest wrong option (80 characters), so its length gives it away; write the wrong options as full, specific claims of the same length and grammatical form as the correct one, or say the correct one more briefly",
+      "suggestion": ""
+    }
+  ],
+  "note": null
+}

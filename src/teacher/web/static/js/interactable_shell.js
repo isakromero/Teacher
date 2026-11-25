@@ -10,8 +10,9 @@
 // What the frame promises to the widget (keep the generation prompt in sync): the CSS variables
 // --fg --muted --bg --surface --border --accent --accent-fg --series-1 --series-2 --series-3
 // (light and dark), the app's UI font, and plain default styles for text, headings, buttons,
-// inputs, selects, range sliders, labels, tables, svg/canvas and focus rings. Widgets may
-// override any of it.
+// inputs, selects, range sliders, labels, tables, svg/canvas and focus rings; on touch screens
+// 44px controls, 16px text fields, and range sliders that a vertical swipe scrolls past. Widgets
+// may override any of it.
 
 /** The `source` tag on every message the shell posts to the host page. */
 export const MESSAGE_SOURCE = "teacher-interactable";
@@ -147,6 +148,13 @@ svg, img, video { height: auto; }
 svg { overflow: visible; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: 1px; }
+input[type="range"] { touch-action: pan-y; }
+@media (pointer: coarse) {
+  button, select, input[type="text"], input[type="number"], input:not([type]) { min-height: 2.75rem; }
+  input[type="text"], input[type="number"], input:not([type]), select, textarea { font-size: 1rem; }
+  input[type="range"] { min-height: 2.75rem; }
+  input[type="checkbox"], input[type="radio"] { width: 1.35rem; height: 1.35rem; }
+}
 `;
 
 // Runs before the fragment. Plain ES5-ish code in an IIFE so it leaves no globals behind.

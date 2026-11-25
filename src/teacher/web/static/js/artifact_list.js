@@ -4,6 +4,9 @@
 // own wording for progress: a study page's gates are checkpoints, a lab's are its checked
 // steps. In a list, a lab is shown under the study page it was made from when that page is in
 // the same list, and on its own otherwise (its study page was deleted, or is not listed).
+//
+// Failed generations and superseded versions are "historical": `artifactListNodes` keeps them
+// out of the list and behind a closed "View historical artifacts" disclosure under it.
 
 import { seg } from "./api.js";
 import { formatDate, h, plural, statusBadge } from "./dom.js";
@@ -94,4 +97,48 @@ export function artifactItems(artifacts, { datePrefix = "" } = {}) {
     );
   }
   return items;
+}
+
+/** Whether an artifact is a failed generation or was superseded by a newer version. */
+export const isHistoricalArtifact = (artifact) =>
+  artifact.status === "failed" || Boolean(artifact.superseded_by);
+
+/**
+ * `artifacts` split into `{ current, historical }`, each in the given order. Historical are
+ * the failed and the superseded ones, and the labs made from a historical study page of the
+ * same list (a lab stays with its page).
+ */
+export function splitHistorical(artifacts) {
+  const pages = new Map(artifacts.filter((a) => !isLab(a)).map((a) => [a.slug, a]));
+  const historical = (artifact) => {
+    if (isHistoricalArtifact(artifact)) return true;
+    const page = isLab(artifact) && artifact.params ? pages.get(artifact.params.study_page) : null;
+    return Boolean(page) && isHistoricalArtifact(page);
+  };
+  return {
+    current: artifacts.filter((a) => !historical(a)),
+    historical: artifacts.filter(historical),
+  };
+}
+
+/**
+ * The list of `artifacts` (already in display order) as nodes: the current ones as a list,
+ * then the historical ones inside a closed disclosure. `label` names the list for assistive
+ * technology; `empty` is shown in place of the list when every artifact is historical.
+ */
+export function artifactListNodes(artifacts, { datePrefix = "", label = null, empty = null } = {}) {
+  const { current, historical } = splitHistorical(artifacts);
+  const list = (items, name) =>
+    h("ul", { class: "artifact-list", ...(name ? { "aria-label": name } : {}) }, artifactItems(items, { datePrefix }));
+  return [
+    current.length ? list(current, label) : empty,
+    historical.length
+      ? h(
+          "details",
+          { class: "artifact-history" },
+          h("summary", {}, `View historical artifacts (${historical.length})`),
+          list(historical, label ? `Historical: ${label}` : "Historical artifacts")
+        )
+      : null,
+  ].filter(Boolean);
 }

@@ -49,6 +49,7 @@ from teacher.managers import (
     NotFoundError,
 )
 from teacher.concept_relating import SLOTS, ConceptRelater
+from tests.conftest import raw_json
 
 # -- helpers ----------------------------------------------------------------------------------
 
@@ -135,7 +136,7 @@ def memo(settings: Settings) -> list[dict[str, Any]]:
             item = dict(row)
             item["pair"] = (slugs[item["low_id"]], slugs[item["high_id"]])
             item["focus"] = slugs[item["focus_id"]]
-            item["found_by"] = json.loads(item["found_by"])
+            item["found_by"] = raw_json(item["found_by"])
             out.append(item)
         return out
 

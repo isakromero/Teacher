@@ -90,7 +90,8 @@ document set their own: medium for the open-book reader, who should read as care
 student, and low for the closed-book one, whose job is a quick test-wise guess. Every model call
 of the checks uses the artifact's model except the judge, which is the app's judge model on
 purpose: the point is to grade the rubric as the reader's answers will be graded. There is no
-setting to turn the checks off.
+setting to turn the checks off. Every call (the judge's included) is recorded in the cost
+ledger (`teacher.costs`) with the stage's run, as part of the generation.
 
 Fail loudly: API errors, refusals, truncation and malformed replies (a review naming a block
 that does not exist, an answer for a block it was not asked about, a choice that is not an
@@ -769,7 +770,8 @@ class PageReviser:
                 "timeout": self.timeout,
             }
             message = stream_message(
-                self.client, request, stage_name="open-book check", error=GenerationError
+                self.client, request, stage_name="open-book check", error=GenerationError,
+                purpose="generation",
             )
             tokens.add(*token_counts(message))
             reply = parse_reply(
@@ -938,7 +940,8 @@ class PageReviser:
             "timeout": self.timeout,
         }
         message = stream_message(
-            self.client, request, stage_name="closed-book check", error=GenerationError
+            self.client, request, stage_name="closed-book check", error=GenerationError,
+            purpose="generation",
         )
         tokens.add(*token_counts(message))
         reply = parse_reply(
@@ -1001,7 +1004,10 @@ class PageReviser:
             format=format,
             max_tokens=max_tokens,
         )
-        return stream_message(self.client, request, stage_name=stage_name, error=GenerationError)
+        return stream_message(
+            self.client, request, stage_name=stage_name, error=GenerationError,
+            purpose="generation",
+        )
 
 
 __all__ = [

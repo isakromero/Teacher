@@ -1,0 +1,21 @@
+{
+  "prompt": "Interrogation tasks have a single correct answer and no rubric, yet frontier models scored only 34.7–50% on them. Using how these questions were built and what you learned about the models' failure patterns, explain why they are so hard.",
+  "min_words": 35,
+  "private": {
+    "model_answer": "The questions were deliberately built around inputs that reach the answer through multi-step calculation chains, so the agent must change assumptions, let them propagate through several layers and read the new result. That is exactly the dynamic correctness models are weakest at: they pass far fewer perturbation and output checks than formula checks, and several rarely recalculate.",
+    "rubric": [
+      {
+        "criterion": "Explains that the questions require changing inputs and following them through multi-step calculation chains rather than reading a value directly",
+        "required": true
+      },
+      {
+        "criterion": "Connects the difficulty to the models' weakness at dynamic correctness, e.g. low perturbation or output-validation pass rates or failing to recalculate",
+        "required": true
+      },
+      {
+        "criterion": "Notes that a single exact answer leaves little room for partial credit",
+        "required": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+{#- The sign-in page of the password gate (teacher.web.auth). Standalone, not base.html: the
+    header's scripts call the API, which needs a session. It loads only the stylesheets the gate
+    serves without one (auth.OPEN_STATIC) and no script. -#}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="robots" content="noindex">
+  <title>Sign in - Teacher</title>
+  <link rel="stylesheet" href="{{ static('css/app.css') }}">
+  <link rel="stylesheet" href="{{ static('css/login.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-nav">
+      <span class="brand">
+        <svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 5.5C6 4 9 4 12 6c3-2 6-2 9-.5V19c-3-1.5-6-1.5-9 .5-3-2-6-2-9-.5z"/><path d="M12 6v13.5"/></svg>
+        <span>Teacher</span>
+      </span>
+    </div>
+  </header>
+  <main id="main" class="page page-login">
+    <div class="card login-card">
+      <h1>Sign in</h1>
+      <p class="muted">This Teacher is private. Enter its password to continue.</p>
+      {% if error %}<p id="login-error" class="error" role="alert">{{ error }}</p>{% endif %}
+      <form class="form login-form" method="post" action="/login">
+        <input type="hidden" name="next" value="{{ next }}">
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" required autofocus{% if error %} aria-invalid="true" aria-describedby="login-error"{% endif %}>
+        </div>
+        <div class="form-actions">
+          <button class="button primary" type="submit">Sign in</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

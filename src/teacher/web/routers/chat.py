@@ -17,6 +17,11 @@ database session only to store the reply, so no session is held during the model
 thread's reply slot is released when the stream ends, fails, is closed, or is dropped by a
 disconnected client.
 
+Costs (`teacher.costs`, fields in `teacher.web.common.CostOut`): a thread's `cost` is every call
+the ledger links to it (its replies, also the ones that failed, and the grading of its
+exercises); an assistant Message's `cost` is that reply's model calls (null when the ledger has
+none for it, e.g. a reply stored before the ledger and not backfilled).
+
 A Message's `parts` are an assistant reply in display order: `{"type": "text", "text"}` and
 `{"type": "block", "block": <ChatBlock>}`. A ChatBlock has the shape of a study-page block
 (`content` is the public part; `revealed` the private part once the exercise is cleared), and
@@ -42,9 +47,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from teacher.blocks import private_content, public_content
 from teacher.config import Settings
+from teacher.costs import Meter, cost_scope, link_message, message_costs, thread_cost
 from teacher.db.engine import session_scope
 from teacher.db.models import ChatBlock, ChatBlockResponse, ChatMessage
 from teacher.grading import Verdict
@@ -70,7 +77,7 @@ from teacher.tutor import (
     exercise_answer,
     is_lab,
 )
-from teacher.web.common import to_iso
+from teacher.web.common import CostOut, to_iso
 from teacher.web.deps import SessionDep, SettingsDep
 from teacher.web.routers.reading import GradersDep, MaxAttemptsDep, ResponseIn, ResponseOut
 
@@ -162,6 +169,7 @@ class MessageOut(BaseModel):
     parts: list[PartOut]  # an assistant message in display order; [] for a user message
     answers: list[AnswerOut]  # the attempts a user message reported to the tutor
     created_at: str
+    cost: CostOut | None  # an assistant reply's model calls; null when the ledger has none
 
 
 class ChatSubmitOut(BaseModel):
@@ -181,6 +189,7 @@ class ThreadOut(BaseModel):
     created_at: str
     message_count: int
     preview: str | None
+    cost: CostOut  # every call of the thread: its replies (failed ones too) and its grading
 
 
 class ThreadDetailOut(ThreadOut):
@@ -250,6 +259,7 @@ def messages_out(
             )
         )
     }
+    costs = message_costs(chat.session, [m.id for m in messages if m.role == "assistant"])
     result = []
     for message in messages:
         rows = blocks.get(message.id, [])
@@ -276,6 +286,7 @@ def messages_out(
                     for r in reported.get(message.id, [])
                 ],
                 created_at=to_iso(message.created_at),
+                cost=CostOut.of(costs[message.id]) if message.id in costs else None,
             )
         )
     return result
@@ -310,13 +321,14 @@ def pending_answers(
     return answers
 
 
-def thread_out(slug: str, summary: ThreadSummary) -> ThreadOut:
+def thread_out(session: Session, slug: str, summary: ThreadSummary) -> ThreadOut:
     return ThreadOut(
         id=summary.thread.id,
         artifact=slug,
         created_at=to_iso(summary.thread.created_at),
         message_count=summary.message_count,
         preview=summary.preview,
+        cost=CostOut.of(thread_cost(session, summary.thread.id)),
     )
 
 
@@ -414,14 +426,16 @@ def reply_events(
     user_message: dict[str, Any],
     slot: ReplySlot,
     max_attempts: int,
+    meter: Meter,
 ) -> Iterator[str]:
     """`user_message`, the deltas and block markers, then `done` (after storing the reply and
-    its blocks) or `error`."""
+    its blocks) or `error`. The tutor's calls are recorded through `meter` (with the thread)
+    and linked to the stored reply in the transaction that stores it."""
     try:
         yield sse("user_message", user_message)
         reply: TutorReply | None = None
         try:
-            for item in tutor.stream(request):
+            for item in tutor.stream(request, meter=meter):
                 if isinstance(item, TutorReply):
                     reply = item
                 elif isinstance(item, PresentedBlock):
@@ -461,6 +475,7 @@ def reply_events(
                         for b in reply.blocks
                     ],
                 )
+                link_message(session, meter.recorded_ids, row.id)
                 stored = message_out(chat, row, max_attempts).model_dump()
         except Exception as exc:
             logger.exception("storing the tutor reply in thread %s failed", thread_id)
@@ -513,7 +528,10 @@ def list_threads(slug: str, session: SessionDep, settings: SettingsDep) -> list[
     """The artifact's chat threads, newest first."""
     artifact = ArtifactManager(session, settings).get_by_slug(slug)
     chat = ChatManager(session, settings)
-    return [thread_out(artifact.slug, s) for s in chat.summaries(chat.list_threads(artifact))]
+    return [
+        thread_out(session, artifact.slug, s)
+        for s in chat.summaries(chat.list_threads(artifact))
+    ]
 
 
 @router.post("/artifacts/{slug}/chat/threads", status_code=201)
@@ -528,7 +546,7 @@ def create_thread(slug: str, session: SessionDep, settings: SettingsDep) -> Thre
         **({"lab": artifact} if is_lab(artifact) else {"artifact": artifact}),
         payload={"thread_id": thread.id},
     )
-    return thread_out(artifact.slug, chat.summary(thread))
+    return thread_out(session, artifact.slug, chat.summary(thread))
 
 
 @router.get("/artifacts/{slug}/chat/threads/{thread_id}")
@@ -543,7 +561,7 @@ def get_thread(
     artifact = ArtifactManager(session, settings).get_by_slug(slug)
     chat = ChatManager(session, settings)
     thread = chat.get_thread(artifact, thread_id)
-    summary = thread_out(artifact.slug, chat.summary(thread))
+    summary = thread_out(session, artifact.slug, chat.summary(thread))
     return ThreadDetailOut(
         **summary.model_dump(),
         messages=messages_out(chat, chat.messages(thread), max_attempts),
@@ -606,6 +624,9 @@ def send_message(
             )
             chat.mark_reported(unreported, row)
             user_message = message_out(chat, row, max_attempts).model_dump()
+            meter = Meter.for_settings(
+                settings, purpose="tutor", artifact_id=artifact.id, chat_thread_id=thread.id
+            )
     except BaseException:
         slot.release()
         raise
@@ -619,6 +640,7 @@ def send_message(
         user_message=user_message,
         slot=slot,
         max_attempts=max_attempts,
+        meter=meter,
     )
     return StreamingResponse(
         ReplyStream(events, slot),
@@ -666,7 +688,13 @@ def create_block_response(
     grader = graders.get(block.type)
     if grader is None:
         raise ValueError(f"no grader for block type {block.type!r}")
-    result = grader.grade(dict(block.content), body.response)
+    with cost_scope(
+        settings,
+        purpose="grading",
+        artifact_id=artifact.id,
+        chat_thread_id=block.message.thread_id,
+    ):
+        result = grader.grade(dict(block.content), body.response)
     row = chat.record_response(
         block,
         response=body.response,

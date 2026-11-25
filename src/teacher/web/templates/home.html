@@ -16,8 +16,8 @@
       <div class="search-field">
         <svg class="icon search-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
         <input id="home-search-input" name="q" type="search" value="{{ q }}" autocomplete="off"
-               spellcheck="false" enterkeyhint="search"
-               placeholder="Search study pages, labs and sources"
+               spellcheck="false" autocapitalize="off" autocorrect="off" enterkeyhint="search"
+               placeholder="Search pages, labs and sources"
                aria-describedby="home-search-hint" aria-controls="home-results">
         <kbd class="search-key" aria-hidden="true">/</kbd>
       </div>
@@ -26,7 +26,8 @@
         Add a source
       </a>
     </form>
-    <p id="home-search-hint" class="hint search-hint">Titles, authors, sections, glossary terms and concepts. Press / to search, the arrow keys to move through the results, Escape to clear.</p>
+    {#- The keyboard part of the hint is hidden on touch screens (home.css). #}
+    <p id="home-search-hint" class="hint search-hint">Titles, authors, sections, glossary terms and concepts.<span class="search-hint-keys"> Press / to search, the arrow keys to move through the results, Escape to clear.</span></p>
   </section>
 
   <section id="home-results" class="home-results" aria-labelledby="home-results-heading" hidden>

@@ -1,0 +1,307 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-opus-5-5",
+  "message_id": "msg_011ChQ19fZMW89yhTBmdjaQ3",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 13899,
+    "cache_creation_input_tokens": 81493,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 5470
+  },
+  "source": {
+    "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+    "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+    "media_type": "application/pdf"
+  },
+  "trigger": "generation",
+  "proposed": 39,
+  "dropped": [],
+  "merged": [],
+  "dropped_aliases": [],
+  "output": {
+    "terms": [
+      {
+        "term": "LLM",
+        "kind": "acronym",
+        "expansion": "large language model",
+        "definition": "A neural network trained on large amounts of text to predict and generate language. Here LLMs act both as the agents being tested and as the grader.",
+        "aliases": [
+          "large language model"
+        ]
+      },
+      {
+        "term": "frontier models",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The most capable, recently released AI models from leading labs at a given time. In this paper these are Claude Opus 4.7, Claude Sonnet 4.6, GPT-5.5, Gemini 3.1 Pro and Grok 4.20.",
+        "aliases": []
+      },
+      {
+        "term": "LLM judge",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A language model used as an automatic grader that decides whether an output meets stated criteria, in place of a human rater.",
+        "aliases": [
+          "LLM-as-a-judge"
+        ]
+      },
+      {
+        "term": "programmatically verifiable",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Describes an output whose correctness a fixed piece of code can check automatically, such as comparing a number with a known answer or running unit tests.",
+        "aliases": []
+      },
+      {
+        "term": "CSV",
+        "kind": "acronym",
+        "expansion": "comma-separated values",
+        "definition": "A plain-text format for a single flat table, one row per line, with no formulas, formatting or links between sheets.",
+        "aliases": []
+      },
+      {
+        "term": "rubric",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A list of specific grading criteria used to score a piece of work. In BLUEFIN each criterion is a yes/no question with a point weight.",
+        "aliases": [
+          "rubrics"
+        ]
+      },
+      {
+        "term": "DCF",
+        "kind": "acronym",
+        "expansion": "discounted cash flow",
+        "definition": "A valuation method that estimates what a company is worth by projecting its future cash flows and discounting them back to today's value.",
+        "aliases": []
+      },
+      {
+        "term": "debt schedule",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A section of a financial model that tracks each loan's balance, interest, repayments and borrowings period by period. Because interest depends on balances that depend on cash, which depends on interest, it often contains circular references.",
+        "aliases": []
+      },
+      {
+        "term": "sources-and-uses table",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A table in a deal model listing where the money for a transaction comes from (loans, equity, cash) and what it is spent on (purchase price, fees, refinancing). The two totals must match.",
+        "aliases": []
+      },
+      {
+        "term": "investment-banking",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The part of finance that advises companies on deals such as mergers and acquisitions and helps them raise capital. Junior analysts there build many spreadsheet models.",
+        "aliases": []
+      },
+      {
+        "term": "private-equity",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Investment firms that buy companies, often with heavy borrowing, and later sell them. Their analysts build and maintain detailed deal and debt models.",
+        "aliases": []
+      },
+      {
+        "term": "advance rate",
+        "kind": "term",
+        "expansion": null,
+        "definition": "In asset-based lending, the percentage of the value of the collateral (here, oil inventory) that a lender will lend against.",
+        "aliases": []
+      },
+      {
+        "term": "bps",
+        "kind": "acronym",
+        "expansion": "basis points",
+        "definition": "A unit for rates and percentages: one basis point is 0.01 percentage points, so 1,000 bps equals 10 percentage points.",
+        "aliases": []
+      },
+      {
+        "term": "held-out",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Kept private and not released publicly, so the tasks cannot leak into model training data and still give an honest measurement.",
+        "aliases": []
+      },
+      {
+        "term": "SOFR",
+        "kind": "acronym",
+        "expansion": "Secured Overnight Financing Rate",
+        "definition": "A benchmark US interest rate. Many loans charge SOFR plus a fixed spread, so it is a common input in debt models.",
+        "aliases": []
+      },
+      {
+        "term": "seed workbook",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A starting spreadsheet given to task authors. They build a task by modifying it or extending it into a finished deliverable.",
+        "aliases": []
+      },
+      {
+        "term": "IP",
+        "kind": "acronym",
+        "expansion": "intellectual property",
+        "definition": "Legal ownership rights over creative or proprietary work, such as a company's spreadsheets. They matter here because published tasks must not violate anyone's rights.",
+        "aliases": []
+      },
+      {
+        "term": "WACC",
+        "kind": "acronym",
+        "expansion": "weighted average cost of capital",
+        "definition": "A company's blended cost of funding from debt and equity. It is typically used as the discount rate in a DCF valuation.",
+        "aliases": []
+      },
+      {
+        "term": "hardcoded",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Typed into a cell as a fixed number rather than computed by a formula from other cells.",
+        "aliases": [
+          "hardcodes"
+        ]
+      },
+      {
+        "term": "#REF!",
+        "kind": "symbol",
+        "expansion": null,
+        "definition": "A spreadsheet error value shown when a formula refers to a cell or range that no longer exists, for example after a row was deleted.",
+        "aliases": []
+      },
+      {
+        "term": "EBITDA",
+        "kind": "acronym",
+        "expansion": "earnings before interest, taxes, depreciation and amortization",
+        "definition": "A common measure of a company's operating profit that leaves out financing costs, taxes and non-cash accounting charges.",
+        "aliases": []
+      },
+      {
+        "term": "harness",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The software around a model during evaluation: the tools it can call, the prompts it receives and the loop that runs it and records what it does.",
+        "aliases": []
+      },
+      {
+        "term": "iterative calculation",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A spreadsheet setting that lets formulas with circular references be recomputed repeatedly until their values settle, instead of reporting an error.",
+        "aliases": []
+      },
+      {
+        "term": "openpyxl",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A Python library for reading and writing Excel workbook files, including cell values, formulas and formatting.",
+        "aliases": []
+      },
+      {
+        "term": "system prompt",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Standing instructions given to a language model before the task itself, setting its role and the rules it should follow.",
+        "aliases": []
+      },
+      {
+        "term": "scaffolding",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Extra structure built around a model to help it perform, such as detailed workflow instructions, planning steps or specialised tools.",
+        "aliases": []
+      },
+      {
+        "term": "reasoning effort",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A provider setting that controls how much internal step-by-step reasoning a model does before answering. More effort usually costs more tokens.",
+        "aliases": []
+      },
+      {
+        "term": "Krippendorff's α",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A statistic measuring how much several raters agree beyond what chance alone would produce. 1 means perfect agreement and 0 means chance-level agreement.",
+        "aliases": []
+      },
+      {
+        "term": "inter-rater reliability",
+        "kind": "term",
+        "expansion": null,
+        "definition": "How consistently different human raters give the same judgment on the same items. It sets a practical ceiling on how well any grader can match 'the' expert answer.",
+        "aliases": []
+      },
+      {
+        "term": "macro-F1",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An accuracy measure that combines precision and recall into an F1 score for each class (here 'met' and 'not met') and then averages the classes equally.",
+        "aliases": []
+      },
+      {
+        "term": "SWE-bench Pro",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A benchmark that tests AI agents on long, realistic software-engineering tasks in code repositories, graded by running tests.",
+        "aliases": []
+      },
+      {
+        "term": "revolver",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A revolving credit facility: a credit line a company can draw on and repay repeatedly as its cash needs change.",
+        "aliases": []
+      },
+      {
+        "term": "capex",
+        "kind": "acronym",
+        "expansion": "capital expenditure",
+        "definition": "Money a company spends on long-lived assets such as equipment or facilities.",
+        "aliases": []
+      },
+      {
+        "term": "off-by-one",
+        "kind": "term",
+        "expansion": null,
+        "definition": "An error where a reference points one position away from the intended one, for example one row above or below the correct cell.",
+        "aliases": []
+      },
+      {
+        "term": "income statement",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A financial statement showing a company's revenue, expenses and profit over a period.",
+        "aliases": []
+      },
+      {
+        "term": "balance sheet",
+        "kind": "term",
+        "expansion": null,
+        "definition": "A financial statement listing what a company owns (assets) and owes (liabilities) plus equity at a point in time. Assets must equal liabilities plus equity.",
+        "aliases": []
+      },
+      {
+        "term": "output tokens",
+        "kind": "term",
+        "expansion": null,
+        "definition": "The units of text a model generates, including any internal reasoning. Providers typically charge per token, so more output tokens mean higher cost.",
+        "aliases": []
+      },
+      {
+        "term": "micro-averaged",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Averaged over all individual tasks pooled together, so larger groups weigh more. A macro average instead averages group-level scores, weighting each group equally.",
+        "aliases": []
+      },
+      {
+        "term": "confidence intervals",
+        "kind": "term",
+        "expansion": null,
+        "definition": "Ranges around a measured number that show how much it might vary because of chance, for example from a small sample or random differences between runs.",
+        "aliases": []
+      }
+    ]
+  }
+}

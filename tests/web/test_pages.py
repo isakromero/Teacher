@@ -228,6 +228,42 @@ def test_header_marks_nothing_on_other_pages(client: TestClient, source: Json) -
     assert "aria-current" not in nav_of(get_html(client, "/artifacts/missing", status=404))
 
 
+def test_header_shows_the_local_sqlite_badge(tmp_path: Path) -> None:
+    from teacher.db.migrate import upgrade_to_head
+    from teacher.generation import StubGenerator
+    from teacher.web.app import create_app
+
+    local = Settings(root=tmp_path / "local")
+    upgrade_to_head(local)
+    with TestClient(create_app(local, generator=StubGenerator())) as test_client:
+        for path, status in (("/", 200), ("/library", 200), ("/artifacts/missing", 404)):
+            nav = nav_of(get_html(test_client, path, status=status))
+            badge = re.search(r'<span class="db-badge" title="([^"]*)">Local SQLite<', nav)
+            assert badge is not None, path
+            assert badge.group(1) == f"Database: sqlite:{local.db_path}"
+    css = (STATIC_DIR / "css" / "app.css").read_text(encoding="utf-8")
+    rule = css.split(".db-badge {", 1)[1].split("}", 1)[0]
+    assert "min-width: 0" in rule and "text-overflow: ellipsis" in rule  # shrinks, no scroll
+
+
+def test_header_shows_no_badge_on_supabase(tmp_path: Path) -> None:
+    """Supabase mode: no badge (and the connection string appears nowhere). The page itself
+    needs no database, so this runs without one (no lifespan: nothing connects)."""
+    from teacher.generation import StubGenerator
+    from teacher.web.app import create_app
+
+    password = "pw-not-shown"
+    remote = Settings(
+        root=tmp_path / "remote",
+        db="supabase",
+        supabase_db_url=f"postgresql://teacher:{password}@127.0.0.1:9/teacher",
+    )
+    test_client = TestClient(create_app(remote, generator=StubGenerator()))
+    html = get_html(test_client, "/add")
+    assert "db-badge" not in html and "Local SQLite" not in html
+    assert password not in html
+
+
 # -- library ----------------------------------------------------------------------------------
 
 
@@ -521,7 +557,7 @@ def test_artifact_lists_tell_labs_from_study_pages() -> None:
         assert fragment in shared, fragment
     for name in ("library.js", "source.js"):
         code = (JS_DIR / name).read_text(encoding="utf-8")
-        assert "artifactItems(" in code, name
+        assert "artifactListNodes(" in code, name
         # No list of its own that would show a lab as a study page.
         assert "checkpoint" not in code and "statusBadge" not in code, name
 
@@ -611,6 +647,15 @@ def test_lab_page_ready_elements(
     assert "Escape, then Tab" in html and "Ctrl+Enter" in html and keys[0] == "p"
     tag, run = by_id(html, "lab-run")
     assert tag == "button" and run["type"] == "button"
+    # Check next to Run (lab.js shows it for a step with a check), Indent and Outdent for touch
+    # keyboards, and the narrow layout's Instructions / Code switch.
+    tag, check = by_id(html, "lab-check")
+    assert tag == "button" and check["type"] == "button" and "hidden" in check
+    for button_id in ("lab-indent", "lab-outdent"):
+        assert by_id(html, button_id)[0] == "button", button_id
+    for view, panel_id in (("text", "lab-text"), ("code", "lab-workspace")):
+        assert f'data-view="{view}" aria-controls="{panel_id}"' in html
+        by_id(html, panel_id)
     assert by_id(html, "lab-current-step")[0] == "select" and 'for="lab-current-step"' in html
     _, save = by_id(html, "lab-save-status")
     assert save["role"] == "status" and save["aria-live"] == "polite"

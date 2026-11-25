@@ -100,8 +100,13 @@ def test_settings_default_from_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     assert not (tmp_path / "envhome").exists()  # nothing touched until startup
 
 
-def test_lifespan_migrates_fresh_root(tmp_path: Path) -> None:
-    settings = Settings(root=tmp_path / "fresh")
+def test_lifespan_migrates_fresh_root(
+    tmp_path: Path, test_db: str, request: pytest.FixtureRequest
+) -> None:
+    if test_db == "postgres":  # a new, empty database
+        settings = request.getfixturevalue("empty_postgres_settings")
+    else:
+        settings = Settings(root=tmp_path / "fresh")
     try:
         with TestClient(create_app(settings)) as client:
             assert client.get("/api/health").status_code == 200
@@ -292,3 +297,26 @@ def test_default_block_tagger_uses_the_concept_model(
     assert create_app(settings, block_tagger=given).state.generator.block_tagger is given
     with pytest.raises(ValueError, match="block_tagger only configures the default generator"):
         create_app(settings, generator=StubGenerator(), block_tagger=given)
+
+
+def test_startup_fails_runs_left_running(settings: Settings) -> None:
+    from teacher.managers.generation_runs import GenerationRunManager
+
+    with session_scope(settings) as session:
+        mgr = ArtifactManager(session, settings)
+        page = mgr.create(slug="page", kind="study_page", title="Page", generator="stub-v1")
+        mgr.mark_ready(page)
+        runs = GenerationRunManager(session, settings)
+        runs.succeed(runs.start(page, stage="write", model="m"))
+        runs.start(page, stage="review_bank", model="m")
+
+    assert app_module.fail_interrupted_runs(settings) == 1
+    assert app_module.fail_interrupted_runs(settings) == 0
+    with session_scope(settings) as session:
+        mgr = ArtifactManager(session, settings)
+        page = mgr.get_by_slug("page")
+        assert page.status == "ready"
+        runs = GenerationRunManager(session, settings).list(page)
+        assert [(r.stage, r.status) for r in runs] == [("write", "succeeded"), ("review_bank", "failed")]
+        assert runs[1].error == app_module.INTERRUPTED_RUN_ERROR
+        assert runs[1].finished_at is not None

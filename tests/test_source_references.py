@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy import select, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DataError, IntegrityError
 from sqlalchemy.orm import Session
 
 from teacher.config import Settings
@@ -449,7 +449,7 @@ def test_frontier_groups_by_doi_arxiv_and_title_and_ranks_by_citing_sources(
 # -- the schema ---------------------------------------------------------------------------------
 
 
-def test_schema_checks_and_cascades(settings: Settings, tmp_path: Path) -> None:
+def test_schema_checks_and_cascades(settings: Settings, tmp_path: Path, test_db: str) -> None:
     a = add_source(settings, tmp_path, "a")
     b = add_source(settings, tmp_path, "b")
     with session_scope(settings) as session:
@@ -473,8 +473,11 @@ def test_schema_checks_and_cascades(settings: Settings, tmp_path: Path) -> None:
         "UPDATE source_reference_extractions SET reference_count = NULL",
         "UPDATE source_reference_extractions SET status = 'done'",
     ]
+    # Text that is not JSON: SQLite's json_valid CHECK rejects it, Postgres' json type does.
+    not_json = DataError if test_db == "postgres" else IntegrityError
     for statement in bad_rows:
-        with session_scope(settings) as session, pytest.raises(IntegrityError):
+        error = not_json if "not json" in statement else IntegrityError
+        with session_scope(settings) as session, pytest.raises(error):
             session.execute(text(statement), {"a": a})
     with session_scope(settings) as session:  # the matched source goes: SET NULL
         session.execute(text("DELETE FROM knowledge_sources WHERE id = :b"), {"b": b})

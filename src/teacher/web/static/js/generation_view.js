@@ -10,10 +10,12 @@
 import { api, describeError, seg } from "./api.js";
 import { byId, formatDate, h, setChildren, setError, statusBadge } from "./dom.js";
 import { chosenModel, mountModelChoice } from "./model_choice.js";
+import { renderArtifactCost } from "./cost.js";
 
 export const POLL_MS = 2000;
 
-/** The header's meta line: status, the sources, when it was made and with which model. */
+/** The header's meta line: status, the sources, when it was made and with which model; then
+ * what it cost (`renderArtifactCost`). */
 export function renderMeta(el, artifact) {
   const sources = artifact.sources || [];
   // replaceChildren stringifies arrays and null, so build one flat list of nodes and strings.
@@ -29,6 +31,7 @@ export function renderMeta(el, artifact) {
   metaParts.push(`Created ${formatDate(artifact.created_at)}.`);
   if (artifact.model) metaParts.push(" Model: ", h("code", {}, artifact.model), ".");
   setChildren(el, ...metaParts);
+  renderArtifactCost(el, artifact); // the cost line right under it (cost.js)
 }
 
 /** Links to a newer version of this artifact, and to the one it replaces. */

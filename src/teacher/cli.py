@@ -1,6 +1,10 @@
 """The `teacher` command line.
 
+    teacher [--db supabase|sqlite] <command> ...
     teacher serve [--host 127.0.0.1] [--port 8000]
+    teacher db info
+    teacher db copy --from sqlite|supabase --to sqlite|supabase [--dry-run]
+    teacher db rebuild-search
     teacher concepts extract <source-slug>
     teacher concepts reindex [--rebuild-index]
     teacher concepts relate <concept-slug> [--regenerate] [--model ID] [-v] [--stub]
@@ -9,6 +13,16 @@
     teacher labs setup
     teacher history export [--format json|markdown] [--output PATH]
     teacher references extract <source-slug> | --all [--redo] [--stub]
+    teacher costs backfill [--dry-run]
+
+`serve` runs the web app with uvicorn on `--host` and `--port`. With $TEACHER_PASSWORD set,
+every page and API route needs signing in with that password (`teacher.web.auth`); set but blank
+is an error. Without it the app is open to anyone who can reach it, so a `--host` that is not a
+loopback address (127.0.0.1 or any 127.x, ::1, localhost) is refused with status 1 and an error
+naming the variable, before anything starts. uvicorn trusts the `X-Forwarded-For` and
+`X-Forwarded-Proto` headers (the client's address and HTTPS) only from the addresses in
+$FORWARDED_ALLOW_IPS (default: loopback); the container image (`Dockerfile`) trusts its host's
+proxy.
 
 `concepts relate` grows relations between existing concepts (`teacher.concept_relating`): for
 each concept it prints the relations added, how many candidates were judged `none` (listed with
@@ -71,7 +85,43 @@ default, complete) or Markdown (`teacher.history_export`), to stdout or to `--ou
 must not exist yet. It migrates the database to head first; status 1 with the error on stderr
 when it fails.
 
-Data lives under `$TEACHER_HOME` (default: the current directory); see `teacher.config`. The
+`costs backfill` adds the API calls made before the cost ledger existed to it
+(`teacher.cost_backfill`): the calls of every generation run (from its stage files where they
+hold the full token breakdown, else from the run's totals), the graded answers, the tutor
+replies, the reference extractions and the command line's run records in `derived/`. It prints
+how many rows it added, how many are exact, how many are estimates (calls of which only the
+combined input count was kept: their cost is an upper bound) and how many have no known price,
+with the total. It is idempotent (a second run adds nothing) and never duplicates a call the
+ledger recorded live. `--dry-run` prints the same without adding anything. It makes no API call
+and migrates the database to head first; status 1 with the error on stderr when it fails.
+
+`db info` prints the database in use (the provider's description: never a password), the
+revision it is at and the head revision, and the data root its files live under. It changes
+nothing (no migration); status 1 with the error on stderr when the database cannot be read.
+
+`db copy` copies every row and file of one database to the other (`teacher.db_copy`): to seed
+Supabase from the local SQLite data (`--from sqlite --to supabase`) or to pull Supabase down
+into a local database to test against (`--from supabase --to sqlite`); both use
+$TEACHER_HOME, the Supabase one $SUPABASE_DB_URL. It refuses, changing nothing, unless the two
+differ, the source is at the head revision (it is never migrated) with its sources' and pages'
+folders under its data root, and the target is empty: no
+row in any table after it is migrated to head (a SQLite file is created if needed) and empty
+`knowledge_sources/`, `artifacts/` and `derived/` folders. It copies the files and then the rows
+(one snapshot read, one transaction written), resets Postgres's sequences, prints per table the
+row counts of both and whether a digest of every column of every row matches, and rolls
+everything back on any difference; after committing it rebuilds the concept search index and
+the vector index. `--dry-run` checks the same and prints the tables with their row counts and
+the folders with their file counts and sizes, changing nothing. `--db` is not used with it.
+`db rebuild-search` rebuilds the concept search index of the database in use from the concepts
+and checks it (the retry when that last step of a copy failed). Both: status 1 with the error on
+stderr when they fail.
+
+Every API call any command makes is recorded in the cost ledger (`teacher.costs`).
+
+The database is Supabase's Postgres ($SUPABASE_DB_URL) unless $TEACHER_DB=sqlite selects the
+local SQLite file; `--db` overrides $TEACHER_DB for one command (it sets the variable for the
+process, so the server started by `serve` uses it too). Files live under `$TEACHER_HOME` (default:
+the current directory), in `supabase/` there for the Supabase database; see `teacher.config`. The
 models come from `ModelSettings` ($TEACHER_CONCEPT_MODEL, $TEACHER_EMBEDDING_MODEL); Claude needs
 Anthropic credentials and embeddings need $OPENAI_API_KEY.
 """
@@ -79,11 +129,22 @@ Anthropic credentials and embeddings need $OPENAI_API_KEY.
 from __future__ import annotations
 
 import argparse
+import ipaddress
+import os
 import sys
 from collections.abc import Sequence
 from typing import Any
 
-from teacher.config import ModelSettings, Settings
+from teacher.config import (
+    DB_KINDS,
+    DEFAULT_DB_KIND,
+    ENV_DB,
+    ENV_PASSWORD,
+    ConfigError,
+    ModelSettings,
+    Settings,
+    teacher_password_from_env,
+)
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
@@ -91,11 +152,37 @@ DEFAULT_PORT = 8000
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="teacher", description="Local study tool.")
+    parser.add_argument(
+        "--db",
+        choices=DB_KINDS,
+        default=None,
+        help=f"the database to use; overrides ${ENV_DB} (default {DEFAULT_DB_KIND})",
+    )
     commands = parser.add_subparsers(dest="command", required=True)
     serve = commands.add_parser("serve", help="run the local web API with uvicorn")
     serve.add_argument("--host", default=DEFAULT_HOST, help=f"bind address (default {DEFAULT_HOST})")
     serve.add_argument(
         "--port", type=int, default=DEFAULT_PORT, help=f"port (default {DEFAULT_PORT})"
+    )
+    db = commands.add_parser("db", help="the database")
+    db_actions = db.add_subparsers(dest="action", required=True)
+    db_actions.add_parser(
+        "info", help="print the database in use, its revision and the data root"
+    )
+    db_copy = db_actions.add_parser(
+        "copy", help="copy every row and file of one database into the other, empty one"
+    )
+    db_copy.add_argument(
+        "--from", dest="source", choices=DB_KINDS, required=True, help="the database to read"
+    )
+    db_copy.add_argument(
+        "--to", dest="target", choices=DB_KINDS, required=True, help="the empty database to fill"
+    )
+    db_copy.add_argument(
+        "--dry-run", action="store_true", help="check and say what would be copied, change nothing"
+    )
+    db_actions.add_parser(
+        "rebuild-search", help="rebuild the concept search index from the concepts"
     )
     concepts = commands.add_parser("concepts", help="the concept graph")
     actions = concepts.add_subparsers(dest="action", required=True)
@@ -192,16 +279,44 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument(
         "--output", default=None, help="a file to write (must not exist); default: stdout"
     )
+    costs = commands.add_parser("costs", help="the cost ledger of the API calls")
+    cost_actions = costs.add_subparsers(dest="action", required=True)
+    cost_backfill = cost_actions.add_parser(
+        "backfill", help="add the API calls made before the ledger existed (idempotent)"
+    )
+    cost_backfill.add_argument(
+        "--dry-run", action="store_true", help="say what would be added, add nothing"
+    )
     return parser
 
 
+def is_loopback(host: str) -> bool:
+    """Whether `host` (a `--host` value) only accepts connections from this machine."""
+    name = host.strip()
+    if name.lower() == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(name.strip("[]")).is_loopback
+    except ValueError:
+        return False
+
+
 def serve(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT) -> None:
-    """Build the app from `Settings.from_env()` and run it with uvicorn (blocks)."""
+    """Build the app from `Settings.from_env()`, behind the password gate when
+    $TEACHER_PASSWORD is set, and run it with uvicorn (blocks). No password and a host that is
+    not loopback is a ConfigError, raised before anything starts."""
+    password = teacher_password_from_env()
+    if password is None and not is_loopback(host):
+        raise ConfigError(
+            f"refusing to serve on {host!r} without a password: anyone who can reach it could "
+            f"use the app and spend on its API keys. Set ${ENV_PASSWORD} to the password for "
+            "signing in, or serve on 127.0.0.1."
+        )
     import uvicorn
 
     from teacher.web.app import create_app
 
-    uvicorn.run(create_app(), host=host, port=port)
+    uvicorn.run(create_app(password=password), host=host, port=port)
 
 
 # -- concepts -------------------------------------------------------------------------------
@@ -274,6 +389,7 @@ def concepts_reindex(*, rebuild_index: bool = False) -> int:
     """Embed every stale concept (committed), then sync the model's vector index with the
     embeddings and write it, or rebuild it from scratch (`rebuild_index`); print what was done.
     0 on success, else 1."""
+    from teacher.costs import cost_scope
     from teacher.db.engine import session_scope
     from teacher.db.migrate import upgrade_to_head
     from teacher.embeddings import EmbeddingError
@@ -283,7 +399,7 @@ def concepts_reindex(*, rebuild_index: bool = False) -> int:
         settings = Settings.from_env()
         embedder = build_embedder(ModelSettings.from_env())
         upgrade_to_head(settings)
-        with session_scope(settings) as session:
+        with cost_scope(settings, purpose="embedding"), session_scope(settings) as session:
             count = ConceptEmbeddingManager(session, settings).embed_stale(embedder)
     except (EmbeddingError, ManagerError, ValueError) as exc:
         return _fail(str(exc))
@@ -634,10 +750,113 @@ def history_export(*, format: str = "json", output: str | None = None) -> int:
     return 0
 
 
+def costs_backfill(*, dry_run: bool = False) -> int:
+    """Add the past API calls to the cost ledger (`teacher.cost_backfill`) and print what was
+    added. 0 on success, else 1."""
+    from teacher.cost_backfill import backfill
+    from teacher.db.migrate import upgrade_to_head
+
+    try:
+        settings = Settings.from_env()
+        upgrade_to_head(settings)
+        report = backfill(settings, dry_run=dry_run)
+    except (ValueError, OSError) as exc:
+        return _fail(str(exc))
+    for line in report.lines():
+        print(line)
+    return 0
+
+
+# -- db -------------------------------------------------------------------------------------
+
+
+def db_info() -> int:
+    """Print the database (`describe()`), its current and head revision and the data root. 0 on
+    success, else 1."""
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from teacher.db.migrate import current_revision, head_revision
+    from teacher.db.providers import create_db_provider
+
+    try:
+        settings = Settings.from_env()
+        described = create_db_provider(settings).describe()
+        current = current_revision(settings)
+        head = head_revision(settings)
+    except (ValueError, OSError, SQLAlchemyError) as exc:
+        return _fail(str(exc))
+    print(f"Database: {described}")
+    print(f"Revision: {current or 'none (not migrated yet)'}")
+    print(f"Head revision: {head}")
+    print(f"Data root: {settings.data_root}")
+    return 0
+
+
+def db_copy(source: str, target: str, *, dry_run: bool = False) -> int:
+    """Copy every row and file of database `source` into the empty `target`
+    (`teacher.db_copy`), or with `dry_run` print what would be copied. 0 on success, else 1."""
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from teacher.db_copy import DbCopyError, copy_database, plan_copy
+
+    try:
+        if source == target:
+            raise DbCopyError(f"--from and --to are both {source}; copy between two databases")
+        source_settings = Settings.from_env(db=source)
+        target_settings = Settings.from_env(db=target)
+        if dry_run:
+            for line in plan_copy(source_settings, target_settings).lines():
+                print(line)
+            print("Dry run: nothing was changed.")
+            return 0
+        copy_database(source_settings, target_settings, out=print)
+    except (DbCopyError, ValueError, OSError) as exc:
+        return _fail(str(exc))
+    except SQLAlchemyError as exc:  # the first line only: the rest can quote rows
+        orig = getattr(exc, "orig", None) or exc
+        return _fail((str(orig).strip().splitlines() or [type(exc).__name__])[0])
+    return 0
+
+
+def db_rebuild_search() -> int:
+    """Rebuild and check the concept search index of the database in use. 0 on success, else
+    1."""
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from teacher.db.migrate import upgrade_to_head
+    from teacher.db.providers import create_db_provider
+    from teacher.db_copy import rebuild_search_index
+    from teacher.managers import ManagerError
+
+    try:
+        settings = Settings.from_env()
+        upgrade_to_head(settings)
+        count = rebuild_search_index(settings)
+    except (ManagerError, ValueError, RuntimeError, OSError, SQLAlchemyError) as exc:
+        orig = getattr(exc, "orig", None) or exc
+        return _fail((str(orig).strip().splitlines() or [type(exc).__name__])[0])
+    described = create_db_provider(settings).describe()
+    print(f"Rebuilt the concept search index of {described} ({count} concept(s)).")
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "db" and args.action == "copy":
+        if args.db is not None:
+            return _fail("db copy names both databases with --from and --to; --db is not used")
+        return db_copy(args.source, args.target, dry_run=args.dry_run)
+    if args.db is not None:
+        os.environ[ENV_DB] = args.db
+    if args.command == "db" and args.action == "info":
+        return db_info()
+    if args.command == "db" and args.action == "rebuild-search":
+        return db_rebuild_search()
     if args.command == "serve":
-        serve(args.host, args.port)
+        try:
+            serve(args.host, args.port)
+        except ConfigError as exc:  # e.g. no $SUPABASE_DB_URL: say so, without a traceback
+            return _fail(str(exc))
         return 0
     if args.command == "concepts":
         if args.action == "extract":
@@ -670,6 +889,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return labs_setup()
     if args.command == "history" and args.action == "export":
         return history_export(format=args.format, output=args.output)
+    if args.command == "costs" and args.action == "backfill":
+        return costs_backfill(dry_run=args.dry_run)
     raise AssertionError(f"unhandled command {args.command!r}")  # argparse requires one
 
 

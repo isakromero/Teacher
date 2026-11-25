@@ -26,3 +26,7 @@ derived/
 # Secrets
 .env
 .env.*
+!.env.example
+
+# The supabase-mode copy of the runtime files (teacher db copy writes it; the hosted app has its own)
+supabase/

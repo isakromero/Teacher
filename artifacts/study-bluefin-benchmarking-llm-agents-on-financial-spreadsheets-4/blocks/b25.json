@@ -1,0 +1,21 @@
+{
+  "prompt": "The authors say manipulation tasks capture the bulk of real finance spreadsheet work, yet models score lower on them than on synthesis. Explain why manipulation is harder according to the paper, and give one piece of evidence from the failure modes or case studies that shows this difficulty.",
+  "min_words": 35,
+  "private": {
+    "model_answer": "Manipulation means fitting new work into an existing workbook whose formulas, layouts and references impose brittle integration constraints, whereas synthesis lets the model build however it likes. The OpEx case study shows the cost: models referenced the wrong Inputs row by one, or bypassed the new tab, and those integration mistakes, not arithmetic, drove their scores down.",
+    "rubric": [
+      {
+        "criterion": "Explains that manipulation requires integrating with an existing workbook's formulas, layout and references, which constrains the model more than building from scratch.",
+        "required": true
+      },
+      {
+        "criterion": "Gives at least one concrete piece of evidence from the paper, such as wrong-row or off-by-one references, bypassed links, hardcoded links that break on input change, or weak Perturbation/Output Validation pass rates.",
+        "required": true
+      },
+      {
+        "criterion": "Mentions that manipulation reflects most real IB/PE analyst work, which makes the weakness consequential.",
+        "required": false
+      }
+    ]
+  }
+}

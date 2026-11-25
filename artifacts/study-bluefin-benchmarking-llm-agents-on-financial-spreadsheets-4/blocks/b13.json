@@ -1,0 +1,19 @@
+{
+  "question": "The agent under test gets a 61-word system prompt with no finance conventions, while the judge gets a long, opinionated one. Why this asymmetry?",
+  "options": [
+    "The agent's prompt was cut after longer drafts let models copy the reference template, which the judge still needs to see.",
+    "The agent's prompt is kept short to fit the 30,000-character observation cap, while the judge only reads final outputs.",
+    "The agent learns conventions from its tool descriptions, while the judge uses no tools and so needs them spelled out.",
+    "The agent's prompt avoids coaching so raw capability is measured, while the judge needs conventions to act as an expert rater."
+  ],
+  "private": {
+    "correct_index": 3,
+    "explanation": "The two prompts serve different purposes. The agent's is minimal so that BLUEFIN measures what the model can do unaided, following HELM and GAIA. The judge's is rich so that its yes/no verdicts approximate an expert's, which the authors checked against expert labels (macro-F1 0.839). The tempting tool-based story fails because the judge works through the very same tools as the agent.",
+    "option_explanations": [
+      "The paper describes no such episode with agent prompts. Over-rewarding template copying was the reason a rubric section was dropped, not the reason the agent's prompt is short.",
+      "The character cap applies to tool results, not to the system prompt, and the paper gives no such reason. The judge also inspects workbooks through tools rather than just reading outputs.",
+      "The judge uses the same 20-tool environment as the agent, and the paper does not say conventions are conveyed through tool descriptions.",
+      "Right. The minimal agent prompt isolates task capability from instruction-following, and the judge's prompt supplies the domain expectations an expert grader would apply."
+    ]
+  }
+}

@@ -4,7 +4,8 @@
 // Keys in a file: Tab indents (four spaces; across a selection, every line), Shift+Tab outdents,
 // Enter keeps the line's indentation (one level deeper after a ":"), Ctrl+Enter or Cmd+Enter
 // runs the program. Because Tab is taken, Escape followed by Tab leaves the editor (Escape then
-// Shift+Tab goes back). Edits go through document.execCommand("insertText") where the browser
+// Shift+Tab goes back). Touch keyboards have no Tab key: `indent()` does the same edit for the
+// page's Indent and Outdent buttons. Edits go through document.execCommand("insertText") where the browser
 // supports it, so that undo keeps working; otherwise through setRangeText. The tabs follow the
 // ARIA tabs pattern (arrow keys, Home and End move between them).
 
@@ -169,6 +170,14 @@ export function createEditor({ tablist, panels, files, entry, describedBy, onCha
     /** Replace every file (e.g. with the starter code); the current tab is kept if it still exists. */
     setFiles: (list) => build(list),
     focus: () => areas.get(current).focus(),
+    /** Indent (or, with `outdent`, outdent) the current file's line or selected lines, as Tab
+     * and Shift+Tab do; the file keeps the focus. */
+    indent({ outdent = false } = {}) {
+      const area = areas.get(current);
+      applyEdit(area, indentEdit(area.value, area.selectionStart, area.selectionEnd, { outdent }));
+      area.focus();
+      reportCursor();
+    },
     currentPath: () => current,
   };
 }

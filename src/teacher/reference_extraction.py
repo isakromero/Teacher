@@ -34,7 +34,8 @@ itself is never touched.
 
 The app runs it in the background after a source is added (`teacher.web.routers.sources`), on
 demand (`POST /api/sources/{slug}/references/extract`) and from the CLI (`teacher references
-extract`). `StubReferenceExtractor` is the model-free extractor for offline work and tests.
+extract`). `StubReferenceExtractor` is the model-free extractor for offline work and tests. The call is
+recorded in the cost ledger (`teacher.costs`) with the source (`run_claimed`).
 """
 
 from __future__ import annotations
@@ -53,6 +54,7 @@ from sqlalchemy.orm import Session
 from teacher.claude_api import default_client, source_document_block
 from teacher.claude_generator import output_format, parse_reply, stream_message, token_counts
 from teacher.config import DEFAULT_METADATA_MODEL, Settings
+from teacher.costs import cost_scope
 from teacher.db.engine import session_scope
 from teacher.db.models import KnowledgeSource
 from teacher.managers.knowledge_sources import KnowledgeSourceManager
@@ -392,7 +394,8 @@ class ReferenceExtractor:
     def extract(self, document: SourceDocument) -> ExtractedReferences:
         request = self.request(self.document_block(document))
         message = stream_message(
-            self._get_client(), request, stage_name=STEP, error=_unavailable
+            self._get_client(), request, stage_name=STEP, error=_unavailable,
+            purpose="reference_extraction",
         )
         tokens = token_counts(message)
         try:
@@ -557,14 +560,18 @@ def claim_extraction(
 
 def run_claimed(settings: Settings, claim: Claim, extractor: Any) -> ExtractionOutcome:
     """Extract, store and match the references of the claimed run (no transaction is open
-    during the model call). Every failure is recorded on the run and raised again."""
+    during the model call; the call is recorded in the cost ledger with the source). Every
+    failure is recorded on the run and raised again."""
     tokens: tuple[int | None, int | None] = (None, None)
     try:
         with session_scope(settings) as session:
             source = KnowledgeSourceManager(session, settings).get(claim.source_id)
             document = source_document(session, settings, source)
         extractor.check_available()
-        result = extractor.extract(document)
+        with cost_scope(
+            settings, purpose="reference_extraction", knowledge_source_id=claim.source_id
+        ):
+            result = extractor.extract(document)
         tokens = (result.input_tokens, result.output_tokens)
         with session_scope(settings) as session:
             matched = SourceReferenceManager(session, settings).store(

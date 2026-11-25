@@ -12,6 +12,10 @@ After a study page's generation, when the app has a review bank builder
 (`app.state.review_bank_builder`), the same background job builds the page's review variants
 (`teacher.review_bank.build_after_generation`, a `review_bank` run); a failure there leaves the
 page as it is.
+
+An artifact's `cost` is what the cost ledger (`teacher.costs`) links to it: in total, what
+generating it cost and what was spent on it since (`ArtifactCostOut`; `teacher.web.common`
+describes the fields).
 """
 
 from __future__ import annotations
@@ -25,6 +29,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from teacher.config import GENERATION_MODEL_CHOICES, Settings
+from teacher.costs import artifact_cost
 from teacher.db.models import Artifact, GenerationRun, KnowledgeSource
 from teacher.files import slugify, validate_slug
 from teacher.generation import MODEL_PARAM, run_generation, supports_model_choice
@@ -40,7 +45,7 @@ from teacher.managers import (
 from teacher.managers.artifacts import DEFAULT_ROLE
 from teacher.reading import reading_state
 from teacher.review_bank import build_after_generation
-from teacher.web.common import to_iso
+from teacher.web.common import CostOut, to_iso
 from teacher.web.deps import SessionDep, SettingsDep
 from teacher.web.errors import _scrub_paths
 
@@ -107,6 +112,15 @@ class TokensOut(BaseModel):
     output: int
 
 
+class ArtifactCostOut(CostOut):
+    """Everything the ledger links to the artifact (by purpose), split into what generating it
+    cost (`generation`, by stage) and what was spent on it since (`since_generation`, by
+    purpose: tutor, grading, review questions, glossary rebuilds, ...)."""
+
+    generation: CostOut
+    since_generation: CostOut
+
+
 class ArtifactOut(BaseModel):
     slug: str
     kind: str
@@ -122,6 +136,7 @@ class ArtifactOut(BaseModel):
     sources: list[ArtifactSourceOut]
     progress: ProgressOut
     tokens: TokensOut
+    cost: ArtifactCostOut
 
 
 class ModelChoiceOut(BaseModel):
@@ -211,6 +226,16 @@ def artifact_out(
         ],
         progress=_progress(session, settings, artifact, max_attempts),
         tokens=TokensOut(input=tokens_in, output=tokens_out),
+        cost=_cost_out(session, artifact),
+    )
+
+
+def _cost_out(session: Session, artifact: Artifact) -> ArtifactCostOut:
+    cost = artifact_cost(session, artifact.id)
+    return ArtifactCostOut(
+        **CostOut.of(cost.total).model_dump(),
+        generation=CostOut.of(cost.generation),
+        since_generation=CostOut.of(cost.since_generation),
     )
 
 

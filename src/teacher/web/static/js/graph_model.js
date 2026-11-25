@@ -3,7 +3,8 @@
 // endpoints on the circles), merging what the API returns into what is drawn, the roadmap
 // highlight, the inspector's relation groups, the "Find relations" / "Regenerate relations"
 // result summary (and what a regenerate would replace), the search results' notes and the
-// semantic-search notice, and view (pan/zoom/fit) arithmetic.
+// semantic-search notice, view (pan/zoom/fit) arithmetic, and which concepts get a readable
+// name label at the current zoom, which concept a finger tap means, and when a touch drags.
 //
 // A graph here is `{nodes, edges}`: `nodes` are the concepts on the canvas (API node objects:
 // {id, slug, name, origin, reviewed}); `edges` are every relation the page has been told about
@@ -490,4 +491,130 @@ export function centreView(view, p) {
 /** A point given relative to the box centre, in graph coordinates. */
 export function toGraph(view, px, py) {
   return { x: (px - view.x) / view.k, y: (py - view.y) / view.k };
+}
+
+// -- labels and taps at any zoom ---------------------------------------------------------------
+// Captions inside the circles are CAPTION_PX graph units tall, so they shrink with the zoom: with
+// ~90 concepts fitted on a phone they are 3px tall. Below a readable size they are hidden and
+// each concept may instead get a name label under its circle drawn at LABEL_PX on screen
+// whatever the zoom; `pickLabels` decides which, so that labels never overlap.
+
+export const CAPTION_PX = 9; // the in-circle caption's font size, in graph units
+export const LABEL_PX = 13; // a name label's font size, in screen pixels
+export const LABEL_CHARS = 22; // a name label longer than this is clipped with an ellipsis
+export const LABEL_AREA_PX = 12000; // at most one name label per this many square pixels of view
+export const MIN_LABELS = 6;
+
+/** Whether in-circle captions are big enough to read at zoom `k`: `minPx` on screen. */
+export function captionsReadable(k, minPx) {
+  return CAPTION_PX * k >= minPx;
+}
+
+/** A name label's text: `name`, clipped to `max` characters with an ellipsis. */
+export function labelText(name, max = LABEL_CHARS) {
+  const text = String(name);
+  return text.length > max ? text.slice(0, max - 1).trimEnd() + "…" : text;
+}
+
+/**
+ * The order in which concepts are offered a name label: the selected one, then its
+ * neighbours, then the roadmap's concepts (`lit`), then the best connected; ties by name.
+ * `nodes`: [{id, name, degree}]. Returns the ids.
+ */
+export function labelOrder(nodes, { selectedId = null, neighbours = new Set(), lit = new Set() } = {}) {
+  const tier = (n) => (n.id === selectedId ? 0 : neighbours.has(n.id) ? 1 : lit.has(n.id) ? 2 : 3);
+  return [...nodes]
+    .sort((a, b) => tier(a) - tier(b) || b.degree - a.degree || String(a.name).localeCompare(String(b.name)))
+    .map((n) => n.id);
+}
+
+/** The screen box of a name label `side` ("below" or "above") a circle of screen radius
+ * `radius` centred at (x, y). */
+export function labelBox(x, y, text, { radius, fontPx = LABEL_PX, side = "below" } = {}) {
+  const w = text.length * fontPx * 0.56 + 6;
+  const h = fontPx * 1.3;
+  const top = side === "above" ? y - radius - 2 - h : y + radius + 2;
+  return { x0: x - w / 2, x1: x + w / 2, y0: top, y1: top + h };
+}
+
+export const LABEL_SIDES = ["below", "above"];
+
+/** `box` moved sideways (by `dx`, also returned) to lie between 0 and `width`, if it is narrower. */
+function shiftInside(box, width) {
+  const dx = box.x0 < 0 ? -box.x0 : box.x1 > width ? width - box.x1 : 0;
+  return { x0: box.x0 + dx, x1: box.x1 + dx, y0: box.y0, y1: box.y1, dx };
+}
+
+const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+
+/**
+ * Which concepts get a name label, and on which side of the circle: `items` [{id, x, y, text}]
+ * in priority order (`labelOrder`), with (x, y) the circle's centre on screen; `width` x
+ * `height` the visible part of the view. Greedy: an item is labelled when its centre is in view,
+ * its circle is clear of the `blocked` boxes, and below its circle or else above it, its label (moved
+ * sideways by `dx` to stay inside the view's left and right edges) fits in the view and
+ * overlaps neither an earlier label nor the circle of an earlier labelled concept; up to `max`
+ * labels. `blocked` boxes (the buttons and legend over the view) count as earlier labels. `keep`
+ * (the selected concept) is labelled whenever it is in view, below it. Returns a
+ * Map of id -> {side: "below" | "above", dx}.
+ */
+export function pickLabels(items, { width, height, radius, fontPx = LABEL_PX, max = Infinity, keep = null, blocked = [] }) {
+  const chosen = new Map();
+  const boxes = [...blocked];
+  const inside = (b) => b.x0 >= 0 && b.x1 <= width && b.y0 >= 0 && b.y1 <= height;
+  for (const item of items) {
+    if (chosen.size >= max && item.id !== keep) continue;
+    if (item.x < 0 || item.x > width || item.y < 0 || item.y > height) continue;
+    const circle = { x0: item.x - radius, x1: item.x + radius, y0: item.y - radius, y1: item.y + radius };
+    let place = null;
+    let label = null;
+    if (item.id === keep) {
+      label = shiftInside(labelBox(item.x, item.y, item.text, { radius, fontPx }), width);
+      place = { side: "below", dx: label.dx };
+    } else {
+      if (blocked.some((b) => overlaps(b, circle))) continue;
+      for (const side of LABEL_SIDES) {
+        const box = shiftInside(labelBox(item.x, item.y, item.text, { radius, fontPx, side }), width);
+        if (inside(box) && !boxes.some((b) => overlaps(b, box))) {
+          place = { side, dx: box.dx };
+          label = box;
+          break;
+        }
+      }
+      if (!place) continue;
+    }
+    chosen.set(item.id, place);
+    boxes.push(label, circle);
+  }
+  return chosen;
+}
+
+/** How many name labels a `width` x `height` view holds before it turns into a wall of text. */
+export function labelBudget(width, height) {
+  return Math.max(MIN_LABELS, Math.round((width * height) / LABEL_AREA_PX));
+}
+
+/**
+ * The concept a tap at graph point `p` means: the nearest of `points` ([{id, x, y}], graph
+ * units) whose circle (radius `r`) is within `slop` graph units of the tap; null when none is.
+ * Lets a finger hit a circle a few pixels across.
+ */
+export function nearestNode(points, p, { r = R, slop = 0 } = {}) {
+  let best = null;
+  let bestD = Infinity;
+  for (const q of points) {
+    const d = Math.hypot(q.x - p.x, q.y - p.y);
+    if (d <= r + slop && d < bestD) {
+      best = q.id;
+      bestD = d;
+    }
+  }
+  return best;
+}
+
+/** Whether a press that lasted `heldMs` before it moved drags a concept (pinning it) rather
+ * than panning the view: always with a mouse or pen, and with a finger only after a long press,
+ * so that a swipe that starts on a concept pans like one that starts on the background. */
+export function pressDrags(pointerType, heldMs, longPressMs) {
+  return pointerType !== "touch" || heldMs >= longPressMs;
 }

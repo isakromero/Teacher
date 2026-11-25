@@ -3,7 +3,7 @@
 // is its own page (/add, add.js).
 
 import { api, describeError, seg } from "./api.js";
-import { artifactItems } from "./artifact_list.js";
+import { artifactListNodes } from "./artifact_list.js";
 import { byId, h, setChildren } from "./dom.js";
 import { filterWords, groupBySource, groupMatches, libraryCount } from "./library_model.js";
 
@@ -28,7 +28,14 @@ function sourceCard(source, artifacts) {
     h("h3", { class: "source-title" }, h("a", { href: `/sources/${seg(source.slug)}` }, source.title)),
     details.length ? h("p", { class: "source-details muted small" }, details.join(" · ")) : null,
     artifacts.length
-      ? h("ul", { class: "artifact-list", "aria-label": `Study pages and labs of ${source.title}` }, artifactItems(artifacts))
+      ? h(
+          "div",
+          { class: "artifact-lists" },
+          artifactListNodes(artifacts, {
+            label: `Study pages and labs of ${source.title}`,
+            empty: h("p", { class: "muted small empty-inline" }, "No current study page."),
+          })
+        )
       : h(
           "p",
           { class: "muted small empty-inline" },
@@ -94,6 +101,12 @@ async function loadSources() {
 
 filterInput.addEventListener("input", applyFilter);
 filterInput.addEventListener("keydown", (event) => {
+  // The filter applies as you type; Enter ("Done" on a phone) only puts the keyboard away.
+  if (event.key === "Enter") {
+    event.preventDefault();
+    filterInput.blur();
+    return;
+  }
   if (event.key === "Escape" && filterInput.value) {
     event.preventDefault();
     filterInput.value = "";

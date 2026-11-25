@@ -695,7 +695,7 @@ def test_stage_crops_the_figures_and_lists_them_for_the_writer(
     _stage, _status, note, output_file, _error = stages[2]
     assert note == "1 figure(s) found in 1 page(s)"
     assert output_file == "artifacts/page/generation/figures.json"
-    record = json.loads((settings.root / output_file).read_text(encoding="utf-8"))
+    record = json.loads((settings.data_root / output_file).read_text(encoding="utf-8"))
     assert record["outcome"] == "found" and record["source"]["slug"] == "paper"
     [entry] = record["figures"]
     assert entry["label"] == "Figure 1" and entry["caption"] == "A test diagram of the method."
@@ -715,7 +715,7 @@ def test_stage_on_a_text_source_says_there_are_no_figures(
     assert status == "failed"
     _stage, state, note, output_file, _error = _runs(settings)[2]
     assert state == "succeeded" and note.startswith("no figures: the source is not a PDF")
-    record = json.loads((settings.root / output_file).read_text(encoding="utf-8"))
+    record = json.loads((settings.data_root / output_file).read_text(encoding="utf-8"))
     assert record["outcome"] == "not_a_pdf" and record["figures"] == []
     assert "<figures>\nNone: the document is not a PDF" in _write_prompt(fake)
 

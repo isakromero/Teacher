@@ -1,0 +1,19 @@
+{
+  "question": "Why did the designers choose, for interrogation tasks, inputs that influence the answer through long calculation chains?",
+  "options": [
+    "Each chain has one possible formula, so a deterministic answer is cheaper to grade than a rubric",
+    "Chains match the six rubric categories used for synthesis, so scoring stays consistent across families",
+    "Changed assumptions must propagate through many steps, so the questions are harder than lookups",
+    "Long chains expose the answer directly, so the judge can skip recalculating the workbook"
+  ],
+  "private": {
+    "correct_index": 2,
+    "explanation": "The authors prioritized multi-step chains to develop more difficult questions, in contrast with simple direct links that a lookup could answer.",
+    "option_explanations": [
+      "Grading is a comparison to a known answer; chain length is about difficulty, not grading cost.",
+      "Interrogation tasks have no rubric categories at all.",
+      "Correct: multi-step chains mean changing an input requires recomputing downstream cells, which raises difficulty.",
+      "The chain makes the answer harder to find, not easier, and nothing is skipped."
+    ]
+  }
+}

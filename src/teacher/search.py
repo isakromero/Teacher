@@ -77,6 +77,7 @@ from teacher.db.models import (
     KnowledgeSource,
     SourceConcept,
     StudyEvent,
+    by_code_point,
 )
 from teacher.labs import LAB_KIND, STUDY_PAGE_PARAM
 from teacher.managers.artifact_blocks import ArtifactBlockManager
@@ -335,7 +336,7 @@ class _Library:
         for link, concept in session.execute(
             select(SourceConcept, Concept)
             .join(Concept, Concept.id == SourceConcept.concept_id)
-            .order_by(Concept.name_norm)
+            .order_by(by_code_point(Concept.name_norm))
         ):
             self.source_concepts[link.source_id].append(concept)
         self.block_concepts: dict[int, list[Concept]] = defaultdict(list)  # by artifact id
@@ -343,7 +344,7 @@ class _Library:
             select(ArtifactBlock.artifact_id, Concept)
             .join(BlockConcept, BlockConcept.block_id == ArtifactBlock.id)
             .join(Concept, Concept.id == BlockConcept.concept_id)
-            .order_by(ArtifactBlock.position, Concept.name_norm)
+            .order_by(ArtifactBlock.position, by_code_point(Concept.name_norm))
         ):
             self.block_concepts[artifact_id].append(concept)
         self.glossary: dict[int, list[GlossaryTerm]] = defaultdict(list)

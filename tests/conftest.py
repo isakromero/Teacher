@@ -1,5 +1,21 @@
 """Shared fixtures: a migrated tmp-root `settings` and a `session` bound to it.
 
+The database the `settings`/`session` fixtures use: SQLite by default (a fresh file per test,
+as always). With `TEACHER_TEST_DB=postgres` and `TEACHER_TEST_POSTGRES_URL=<admin URL of a local
+Postgres server>` each test gets its own Postgres database instead (Settings with
+`db="supabase"`): a template database is migrated to head once per session, every test gets a
+`CREATE DATABASE teacher_t_<run>_<n> TEMPLATE ...` copy, dropped afterwards; names are unique
+per run, so parallel runs do not collide. Tests that build `Settings(root=...)` themselves stay
+on SQLite either way. Safety: for the whole session `TEACHER_DB` is forced to `sqlite` and
+`SUPABASE_DB_URL` is removed from the environment, and a `TEACHER_TEST_POSTGRES_URL` whose host
+is not 127.0.0.1, localhost or ::1 stops the run, so no test can reach a real Supabase database.
+Markers: `sqlite_only(reason)` skips a test on Postgres (PRAGMA behaviour, the file backup,
+FTS5 internals); `postgres_only(reason)` skips it on SQLite. `test_db` is the kind in use
+("sqlite" or "postgres"); on Postgres runs only, `empty_postgres_settings` is Settings for a new
+empty (unmigrated) database and `postgres_admin(*statements)` runs statements on the server.
+`settings_env(settings)` points $TEACHER_HOME (and on Postgres $TEACHER_DB/$SUPABASE_DB_URL) at
+`settings`, for tests of code that calls `Settings.from_env()` (the command line).
+
 `_no_anthropic_api` (autouse) makes sure no test can reach the real Anthropic API: it removes
 every credential source the SDK would pick up (env vars, profiles, workload identity), points
 the SDK's config dir at an empty temp dir, and points the base URL at a closed local port.
@@ -16,6 +32,10 @@ vector per text's first line, i.e. per concept name), with `check_available()`, 
 and injectable failures; `FakeAnthropic.concepts_reply(...)` / `judge_reply(...)` build the two
 concept-extraction replies.
 
+`cost_meter` installs an in-memory cost meter (`teacher.costs.Meter.in_memory()`) as the
+current meter, for tests that make a component's API calls directly; a test module whose tests
+all do so uses it with `pytestmark = pytest.mark.usefixtures("cost_meter")`.
+
 `make_pdf(pages)` returns the bytes of a real PDF with `pages` blank pages, built with pypdf;
 page i (0-based) is `100 + i` points wide, so tests can tell which pages were kept.
 
@@ -30,11 +50,13 @@ from __future__ import annotations
 
 import io
 import json
+import os
 import re
 import subprocess
 import sys
 import tempfile
 import threading
+import uuid
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -47,9 +69,185 @@ from anthropic.types import Message
 from pypdf import PdfWriter
 from sqlalchemy.orm import Session
 
-from teacher.config import Settings
+from teacher.config import ENV_DB, ENV_HOME, ENV_SUPABASE_DB_URL, Settings
+from teacher.costs import Meter, metering
 from teacher.db.engine import dispose_engine, session_factory
 from teacher.db.migrate import upgrade_to_head
+
+# -- which database the tests use ------------------------------------------------------------
+
+# Forced before any test module is imported, for the whole session: tests never default to
+# Supabase and never see a real connection string (see the module docstring).
+os.environ[ENV_DB] = "sqlite"
+os.environ.pop(ENV_SUPABASE_DB_URL, None)
+
+ENV_TEST_DB = "TEACHER_TEST_DB"
+ENV_TEST_POSTGRES_URL = "TEACHER_TEST_POSTGRES_URL"
+TEST_DB_KINDS = ("sqlite", "postgres")
+LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+TEST_DATABASE_PREFIX = "teacher_t_"
+
+
+def _test_db_kind() -> str:
+    kind = os.environ.get(ENV_TEST_DB, "sqlite").strip().lower() or "sqlite"
+    if kind not in TEST_DB_KINDS:
+        raise pytest.UsageError(
+            f"${ENV_TEST_DB} is {kind!r}; choose one of: {', '.join(TEST_DB_KINDS)}"
+        )
+    return kind
+
+
+def _test_postgres_url() -> Any:
+    """The admin URL of the local test server (`sqlalchemy.URL`), checked to be local."""
+    from sqlalchemy import make_url
+    from sqlalchemy.exc import ArgumentError
+
+    raw = os.environ.get(ENV_TEST_POSTGRES_URL, "").strip()
+    if not raw:
+        raise pytest.UsageError(
+            f"{ENV_TEST_DB}=postgres needs ${ENV_TEST_POSTGRES_URL}: the admin URL of a local "
+            "Postgres server, e.g. postgresql://postgres:<password>@127.0.0.1:5432/postgres"
+        )
+    try:
+        url = make_url(raw)
+    except ArgumentError:
+        raise pytest.UsageError(f"${ENV_TEST_POSTGRES_URL} is not a valid URL") from None
+    if url.host not in LOCAL_HOSTS:
+        raise pytest.UsageError(
+            f"${ENV_TEST_POSTGRES_URL} points at {url.host!r}; tests only run against a local "
+            f"server ({', '.join(sorted(LOCAL_HOSTS))})"
+        )
+    return url.set(drivername="postgresql")
+
+
+TEST_DB = _test_db_kind()
+TEST_POSTGRES_URL = _test_postgres_url() if TEST_DB == "postgres" else None
+_RUN_ID = uuid.uuid4().hex[:10]
+_database_numbers = iter(range(1, 1_000_000_000))
+
+
+
+# What an IntegrityError says on either database, SQLite's wording | Postgres': for
+# `pytest.raises(IntegrityError, match=...)`. A named CHECK is matched by its name alone (both
+# databases quote it).
+FOREIGN_KEY_VIOLATION = r"FOREIGN KEY constraint failed|violates foreign key constraint"
+UNIQUE_VIOLATION = r"UNIQUE constraint failed|violates unique constraint"
+CHECK_VIOLATION = r"CHECK constraint failed|violates check constraint"
+# Postgres rejects text that is not JSON when it is stored (the column type is json); SQLite's
+# json_valid CHECKs reject it as an IntegrityError naming the CHECK.
+POSTGRES_BAD_JSON = r"invalid input syntax for type json"
+
+
+def raw_json(value: Any) -> Any:
+    """A JSON column read with raw SQL, as Python: SQLite returns the stored text, psycopg the
+    parsed value."""
+    return json.loads(value) if isinstance(value, str) else value
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line(
+        "markers", "sqlite_only(reason): the test exercises SQLite itself; skipped on Postgres"
+    )
+    config.addinivalue_line(
+        "markers", "postgres_only(reason): the test exercises Postgres; skipped on SQLite"
+    )
+
+
+def pytest_report_header(config: pytest.Config) -> str:
+    if TEST_DB == "postgres":
+        return f"test database: postgres ({TEST_POSTGRES_URL.host}:{TEST_POSTGRES_URL.port})"
+    return "test database: sqlite"
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    skipped = "postgres_only" if TEST_DB == "sqlite" else "sqlite_only"
+    for item in items:
+        marker = item.get_closest_marker(skipped)
+        if marker is not None:
+            reason = marker.args[0] if marker.args else marker.kwargs.get("reason", "")
+            where = "SQLite" if TEST_DB == "sqlite" else "Postgres"
+            item.add_marker(pytest.mark.skip(reason=f"{skipped} on {where}: {reason}"))
+
+
+def _admin_execute(*statements: str) -> None:
+    import psycopg
+
+    with psycopg.connect(TEST_POSTGRES_URL.render_as_string(hide_password=False),
+                         autocommit=True) as conn:
+        for statement in statements:
+            conn.execute(statement)
+
+
+def _postgres_settings(root: Path, database: str) -> Settings:
+    url = TEST_POSTGRES_URL.set(database=database).render_as_string(hide_password=False)
+    return Settings(root=root, db="supabase", supabase_db_url=url)
+
+
+def _new_database_name(kind: str) -> str:
+    return f"{TEST_DATABASE_PREFIX}{_RUN_ID}_{kind}{next(_database_numbers)}"
+
+
+@pytest.fixture(scope="session")
+def _postgres_template(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
+    """A database migrated to head once per session, the template of every test's database."""
+    name = _new_database_name("tpl")
+    _admin_execute(f'CREATE DATABASE "{name}"')
+    try:
+        settings = _postgres_settings(tmp_path_factory.mktemp("pg-template"), name)
+        upgrade_to_head(settings)
+        dispose_engine(settings)
+        yield name
+    finally:
+        _admin_execute(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+
+
+@pytest.fixture
+def test_db() -> str:
+    """The database kind the `settings` fixture uses: "sqlite" or "postgres"."""
+    return TEST_DB
+
+
+@pytest.fixture
+def settings_env(monkeypatch: pytest.MonkeyPatch) -> Callable[[Settings], None]:
+    """`settings_env(settings)` points the environment, so `Settings.from_env()` (the command
+    line, `create_app()`), at `settings`: $TEACHER_HOME, and for a Postgres test database also
+    $TEACHER_DB=supabase and $SUPABASE_DB_URL (refused unless the host is local). Restored after
+    the test."""
+
+    def apply(settings: Settings) -> None:
+        monkeypatch.setenv(ENV_HOME, str(settings.root))
+        if settings.db == "supabase":
+            from sqlalchemy import make_url
+
+            url = settings.supabase_db_url or ""
+            assert make_url(url).host in LOCAL_HOSTS, "settings_env: not a local test database"
+            monkeypatch.setenv(ENV_DB, "supabase")
+            monkeypatch.setenv(ENV_SUPABASE_DB_URL, url)
+
+    return apply
+
+
+@pytest.fixture
+def empty_postgres_settings(tmp_path: Path) -> Iterator[Settings]:
+    """Postgres runs only: Settings for a new, empty database (not migrated), dropped after."""
+    if TEST_DB != "postgres":
+        pytest.skip("needs the Postgres test database (TEACHER_TEST_DB=postgres)")
+    name = _new_database_name("empty")
+    _admin_execute(f'CREATE DATABASE "{name}"')
+    try:
+        s = _postgres_settings(tmp_path / "home", name)
+        yield s
+        dispose_engine(s)
+    finally:
+        _admin_execute(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+
+
+@pytest.fixture
+def postgres_admin() -> Callable[..., None]:
+    """Postgres runs only: run statements on the test server's admin database (autocommit)."""
+    if TEST_DB != "postgres":
+        pytest.skip("needs the Postgres test database (TEACHER_TEST_DB=postgres)")
+    return _admin_execute
 
 ANTHROPIC_CREDENTIAL_ENV = (
     "ANTHROPIC_API_KEY",
@@ -92,12 +290,25 @@ def _no_openai_api(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def settings(tmp_path: Path) -> Iterator[Settings]:
-    """Settings rooted at a fresh `tmp_path / "home"`, with the database migrated to head."""
-    s = Settings(root=tmp_path / "home")
-    upgrade_to_head(s)
-    yield s
-    dispose_engine(s)
+def settings(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[Settings]:
+    """Settings rooted at a fresh `tmp_path / "home"`, with the database migrated to head: a
+    new SQLite file, or on Postgres a new database copied from the session's template."""
+    if TEST_DB == "sqlite":
+        s = Settings(root=tmp_path / "home")
+        upgrade_to_head(s)
+        yield s
+        dispose_engine(s)
+        return
+    template = request.getfixturevalue("_postgres_template")
+    name = _new_database_name("db")
+    _admin_execute(f'CREATE DATABASE "{name}" TEMPLATE "{template}"')
+    try:
+        s = _postgres_settings(tmp_path / "home", name)
+        upgrade_to_head(s)  # at head already: creates the data folders
+        yield s
+        dispose_engine(s)
+    finally:
+        _admin_execute(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
 
 
 @pytest.fixture
@@ -329,6 +540,19 @@ class FakeAnthropic:
 @pytest.fixture
 def fake_anthropic() -> type[FakeAnthropic]:
     return FakeAnthropic
+
+
+# -- the cost ledger -----------------------------------------------------------------------
+
+
+@pytest.fixture
+def cost_meter() -> Iterator[Meter]:
+    """An in-memory cost meter as the current meter (`teacher.costs`), for tests that call a
+    component's API calls directly (outside the app and outside any `cost_scope`): without a
+    meter a component refuses to make the call. What was recorded is in `cost_meter.entries`."""
+    meter = Meter.in_memory()
+    with metering(meter):
+        yield meter
 
 
 # -- a fake embedder for the concept graph -------------------------------------------------

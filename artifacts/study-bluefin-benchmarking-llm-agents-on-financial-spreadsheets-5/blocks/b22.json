@@ -1,0 +1,9 @@
+{
+  "asset": "figures/figure-5-e105b582a6.png",
+  "label": "Figure 5",
+  "source_caption": "We show average per-task agent run costs on the held-out set (judge cost is roughly constant across models and is excluded in the calculation) against micro-averaged task scores for each model. The Pareto frontier traces Grok 4.20 → Gemini 3.1 Pro → GPT-5.5 ; Opus is fully dominated – GPT-5.5 achieves a similar overall score range at 5.6 × lower cost ( $8 . 85 vs $49 . 21 per task).",
+  "page": 9,
+  "width": 595,
+  "height": 382,
+  "caption": "Find the dashed frontier and see which points lie to the lower right of GPT-5.5 and Gemini. Opus sits far right at a similar height."
+}

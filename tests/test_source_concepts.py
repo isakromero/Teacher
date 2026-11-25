@@ -20,6 +20,7 @@ from teacher.managers import (
     LinkSpec,
     SourceConceptManager,
 )
+from tests.conftest import UNIQUE_VIOLATION
 
 
 @pytest.fixture
@@ -104,6 +105,33 @@ def test_for_concept_orders_by_role_then_title(
     ]
 
 
+def test_titles_and_names_are_ordered_by_code_point_on_every_database(
+    concepts: ConceptManager, links: SourceConceptManager, add_source
+) -> None:
+    """SQLite's order, by code point: upper case before lower case, punctuation in ASCII order,
+    accented letters after z. (Postgres' own collation, e.g. ICU en-US, would give apple, Ápple,
+    Zebra; a_b, a-b, a(b); résumé, rz.)"""
+    x = make(concepts, "x")
+    for slug, title in [("a", "apple"), ("b", "Zebra"), ("c", "Ápple")]:
+        links.replace(add_source(slug, title), [LinkSpec(x, "uses", "exact", "x")])
+    assert [l.source.title for l in links.for_concept(x)] == ["Zebra", "apple", "Ápple"]
+    paper = add_source("paper")
+    made = [
+        concepts.create(name, f"About {name}.", "paper", slug=slug)
+        for name, slug in (
+            ("a_b", "u"), ("résumé", "r"), ("a-b", "h"), ("rz", "z"), ("a(b)", "p")
+        )
+    ]
+    links.replace(paper, [LinkSpec(c, "uses", "exact", c.name) for c in made])
+    assert [l.concept.name for l in links.for_source(paper)] == [
+        "a(b)", "a-b", "a_b", "rz", "résumé"
+    ]
+    owner = concepts.create(
+        "owner", "About owner.", "paper", aliases=["a_b", "rz", "a-b", "résumé"]
+    )
+    assert [a.alias for a in owner.aliases] == ["a-b", "a_b", "rz", "résumé"]
+
+
 @pytest.mark.parametrize(
     ("spec", "error", "fragment"),
     [
@@ -159,7 +187,7 @@ def test_database_constraints(
             session.execute(text(insert), {"s": paper.id, "c": a.id, **values})
     session.execute(text(insert), {"s": paper.id, "c": a.id, "role": "uses", "res": "exact",
                                    "why": None})
-    with pytest.raises(IntegrityError, match="UNIQUE"), session.begin_nested():
+    with pytest.raises(IntegrityError, match=UNIQUE_VIOLATION), session.begin_nested():
         session.execute(text(insert), {"s": paper.id, "c": a.id, "role": "uses",
                                        "res": "exact", "why": None})
 

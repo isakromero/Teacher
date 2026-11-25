@@ -16,7 +16,7 @@
         <legend>Where is it?</legend>
         <label class="choice">
           <input id="upload-mode-file" name="mode" type="radio" value="file" checked>
-          A PDF on this computer
+          A PDF on this device
         </label>
         <label class="choice">
           <input id="upload-mode-url" name="mode" type="radio" value="url">
@@ -38,6 +38,7 @@
         <label for="upload-url">Web address <span class="req">(required)</span></label>
         <div class="input-row">
           <input id="upload-url" name="url" type="url" inputmode="url" autocomplete="off"
+                 autocapitalize="off" autocorrect="off" enterkeyhint="go"
                  spellcheck="false" placeholder="https://" aria-describedby="upload-url-hint">
           <button id="upload-url-fetch" type="button" class="button">Fetch</button>
         </div>
@@ -62,13 +63,14 @@
         <div class="field">
           <label for="upload-authors">Authors</label>
           <input id="upload-authors" name="authors" type="text" autocomplete="off"
-                 aria-describedby="upload-authors-hint">
+                 autocapitalize="words" aria-describedby="upload-authors-hint">
           <p id="upload-authors-hint" class="hint">Separate names with commas.</p>
         </div>
         <div class="field-row">
           <div class="field">
             <label for="upload-arxiv">arXiv id</label>
             <input id="upload-arxiv" name="arxiv" type="text" autocomplete="off"
+                   autocapitalize="off" autocorrect="off"
                    placeholder="1706.03762" spellcheck="false">
           </div>
           <div class="field field-narrow">
@@ -80,6 +82,7 @@
         <div class="field">
           <label for="upload-doi">DOI</label>
           <input id="upload-doi" name="doi" type="text" autocomplete="off"
+                 autocapitalize="off" autocorrect="off"
                  placeholder="10.48550/arXiv.1706.03762" spellcheck="false">
         </div>
         <div class="field">

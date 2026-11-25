@@ -1,0 +1,21 @@
+{
+  "prompt": "The paper notes that Sonnet and Grok call recalc_workbook on under half of tasks and also have weak Perturbation scores. Using how the judge runs a perturbation check, explain why skipping recalculation could plausibly go with failing those checks.",
+  "min_words": 35,
+  "private": {
+    "model_answer": "The judge's perturbation check changes an input, recalculates and then reads whether the output moved to the right value. An agent that never recalculates while building cannot see whether its formulas actually propagate changes. Hardcodes, broken links or non-converging circular structures go unnoticed, so they are still there when the judge perturbs the input and the output fails to update.",
+    "rubric": [
+      {
+        "criterion": "Describes the perturbation check as changing an input, recalculating and checking that the dependent output updates correctly.",
+        "required": true
+      },
+      {
+        "criterion": "Explains that without recalculating, the agent cannot verify its own dynamic behaviour, so errors such as hardcodes or broken links go uncaught.",
+        "required": true
+      },
+      {
+        "criterion": "Notes that this is a correlation the authors call 'consistent with', not a proven cause.",
+        "required": false
+      }
+    ]
+  }
+}

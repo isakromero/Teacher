@@ -53,9 +53,9 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.CheckConstraint("role IN ('user', 'assistant')", name=op.f('ck_chat_messages_role')),
     sa.CheckConstraint("kind IN ('message', 'check_understanding')", name=op.f('ck_chat_messages_kind')),
-    sa.CheckConstraint('json_valid("references")', name=op.f('ck_chat_messages_references_json')),
-    sa.CheckConstraint('json_valid(api_content)', name=op.f('ck_chat_messages_api_content_json')),
-    sa.CheckConstraint('json_valid(context_blocks)', name=op.f('ck_chat_messages_context_blocks_json')),
+    sa.CheckConstraint('json_valid("references")', name=op.f('ck_chat_messages_references_json')).ddl_if(dialect='sqlite'),
+    sa.CheckConstraint('json_valid(api_content)', name=op.f('ck_chat_messages_api_content_json')).ddl_if(dialect='sqlite'),
+    sa.CheckConstraint('json_valid(context_blocks)', name=op.f('ck_chat_messages_context_blocks_json')).ddl_if(dialect='sqlite'),
     sa.ForeignKeyConstraint(['thread_id'], ['chat_threads.id'], name=op.f('fk_chat_messages_thread_id_chat_threads'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_chat_messages')),
     sa.UniqueConstraint('thread_id', 'position', name=op.f('uq_chat_messages_thread_id_position'))

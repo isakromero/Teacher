@@ -483,16 +483,19 @@ def test_a_failed_concept_stage_fails_the_generation(
     from teacher.concept_extraction import ConceptExtractor
 
     slug = make_artifact()
-    fake = fake_anthropic(fake_anthropic.concepts_reply([], input_tokens=9, output_tokens=1))
+    # A rejected reply is asked for once more; the second rejection fails the stage.
+    empty = fake_anthropic.concepts_reply([], input_tokens=9, output_tokens=1)
+    fake = fake_anthropic(empty, empty)
     extractor = ConceptExtractor(fake, embedder=fake_embedder())
     assert run_generation(settings, slug, StubGenerator(extractor)) == "failed"
     status, runs, contents = state(settings, slug)
     assert status == "failed" and contents == []
     stage, run_status, error, tokens_in, tokens_out = runs[-1]
-    assert (stage, run_status, tokens_in, tokens_out) == ("concepts", "failed", 9, 1)
+    assert (stage, run_status, tokens_in, tokens_out) == ("concepts", "failed", 18, 2)
     assert error == (
         "ConceptOutputError: Concepts could not be extracted: Claude listed 0 concepts; "
-        "between 1 and 40 are allowed"
+        "between 1 and 40 are allowed (second attempt; the first reply was rejected too: "
+        "Claude listed 0 concepts; between 1 and 40 are allowed)"
     )
     assert _concept_links(settings) == []
 

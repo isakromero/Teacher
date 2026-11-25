@@ -4,6 +4,7 @@ embedding model setting. No request leaves the process."""
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 from typing import Any
 
 import httpx2
@@ -18,6 +19,10 @@ from teacher.embeddings import (
     EmbeddingUnavailableError,
     OpenAIEmbedder,
 )
+
+# The components here make their API calls directly: an in-memory cost meter records them
+# (without a meter a component refuses to make a call; see `teacher.costs`).
+pytestmark = pytest.mark.usefixtures("cost_meter")
 
 KEY = "sk-test-not-a-real-key-123"
 
@@ -108,7 +113,8 @@ def test_batches_requests_and_keeps_order() -> None:
         ([response([[1.0], [float("inf")]])], "vector 2 contains inf"),
         ([response([[1.0], []])], "vector 2 is empty"),
         ([echo(2), echo(3)], "vector 1 has 3 dimensions, expected 2"),  # across batches
-        ([object()], "returned no data list"),
+        ([object()], "returned no token usage"),
+        ([SimpleNamespace(usage=SimpleNamespace(prompt_tokens=1))], "returned no data list"),
     ],
 )
 def test_bad_responses_fail_loudly(outcomes: list[Any], fragment: str) -> None:

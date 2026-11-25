@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 import pytest
 from sqlalchemy import delete, func, select, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DataError, IntegrityError
 from sqlalchemy.orm import Session
 
 from teacher.config import Settings
@@ -23,6 +24,12 @@ from teacher.db.models import (
     LabRunRecord,
     LabWorkspace,
     SourceSegment,
+)
+from tests.conftest import (
+    FOREIGN_KEY_VIOLATION,
+    POSTGRES_BAD_JSON,
+    UNIQUE_VIOLATION,
+    raw_json,
 )
 
 LOCATOR = {"type": "text_span", "start_char": 0, "end_char": 10}
@@ -96,6 +103,7 @@ def populate(session: Session) -> tuple[KnowledgeSource, Artifact]:
 # --- foreign keys -----------------------------------------------------------------------------
 
 
+@pytest.mark.sqlite_only("SQLite's foreign_keys PRAGMA")
 def test_foreign_keys_pragma_on(session: Session) -> None:
     assert session.execute(text("PRAGMA foreign_keys")).scalar() == 1
 
@@ -107,7 +115,7 @@ def test_foreign_key_violation_rejected(session: Session) -> None:
             locator=LOCATOR,
         )
     )
-    with pytest.raises(IntegrityError, match="FOREIGN KEY"):
+    with pytest.raises(IntegrityError, match=FOREIGN_KEY_VIOLATION):
         session.flush()
 
 
@@ -147,17 +155,25 @@ def test_generation_run_status_check(session: Session) -> None:
     ],
 )
 def test_json_valid_checks_on_update(
-    session: Session, table: str, column: str, constraint: str
+    session: Session, test_db: str, table: str, column: str, constraint: str
 ) -> None:
     make_source(session)
     make_artifact(session)
-    with pytest.raises(IntegrityError, match=constraint):
+    with bad_json(test_db, constraint):
         session.execute(text(f'UPDATE {table} SET "{column}" = :v'), {"v": "{not json"})
 
 
-def test_json_valid_check_on_locator_and_response(session: Session) -> None:
+def bad_json(test_db: str, constraint: str) -> Any:
+    """`pytest.raises` for storing text that is not JSON: SQLite's json_valid CHECK
+    `constraint` rejects it, Postgres' json type does."""
+    if test_db == "postgres":
+        return pytest.raises(DataError, match=POSTGRES_BAD_JSON)
+    return pytest.raises(IntegrityError, match=constraint)
+
+
+def test_json_valid_check_on_locator_and_response(session: Session, test_db: str) -> None:
     source = make_source(session)
-    with pytest.raises(IntegrityError, match="ck_source_segments_locator_json"):
+    with bad_json(test_db, "ck_source_segments_locator_json"):
         with session.begin_nested():
             session.execute(
                 text(
@@ -167,11 +183,11 @@ def test_json_valid_check_on_locator_and_response(session: Session) -> None:
                 {"s": source.id},
             )
     block = make_block(session, make_artifact(session))
-    with pytest.raises(IntegrityError, match="ck_block_responses_response_json"):
+    with bad_json(test_db, "ck_block_responses_response_json"):
         session.execute(
             text(
                 "INSERT INTO block_responses (block_id, attempt, response, passed, grader)"
-                " VALUES (:b, 1, '[1,', 0, 'exact')"
+                " VALUES (:b, 1, '[1,', false, 'exact')"
             ),
             {"b": block.id},
         )
@@ -179,12 +195,12 @@ def test_json_valid_check_on_locator_and_response(session: Session) -> None:
 
 def test_unique_constraints(session: Session) -> None:
     make_source(session, slug="one", sha="1" * 64)
-    with pytest.raises(IntegrityError, match="UNIQUE"):
+    with pytest.raises(IntegrityError, match=UNIQUE_VIOLATION):
         with session.begin_nested():
             make_source(session, slug="two", sha="1" * 64)  # same content hash
     artifact = make_artifact(session)
     make_block(session, artifact, 1)
-    with pytest.raises(IntegrityError, match="UNIQUE"):
+    with pytest.raises(IntegrityError, match=UNIQUE_VIOLATION):
         make_block(session, artifact, 1)
 
 
@@ -240,7 +256,7 @@ def test_metadata_attribute_maps_metadata_column(session: Session) -> None:
     raw = session.execute(
         text("SELECT metadata FROM knowledge_sources WHERE id = :i"), {"i": source.id}
     ).scalar()
-    assert raw == '{"venue": "NeurIPS"}'
+    assert raw_json(raw) == {"venue": "NeurIPS"}
 
 
 # --- cascades ---------------------------------------------------------------------------------
@@ -289,10 +305,10 @@ def test_orm_delete_cascades(session: Session) -> None:
 
 def test_source_delete_restricted_while_used_by_artifact(session: Session) -> None:
     source, _ = populate(session)
-    with pytest.raises(IntegrityError, match="FOREIGN KEY"):
+    with pytest.raises(IntegrityError, match=FOREIGN_KEY_VIOLATION):
         with session.begin_nested():
             session.execute(delete(KnowledgeSource).where(KnowledgeSource.id == source.id))
-    with pytest.raises(IntegrityError, match="FOREIGN KEY"):
+    with pytest.raises(IntegrityError, match=FOREIGN_KEY_VIOLATION):
         session.delete(source)
         session.flush()
 

@@ -4,7 +4,8 @@
 - `OpenAIEmbedder`: the OpenAI embeddings endpoint through the official `openai` SDK. The client
   is created lazily from `$OPENAI_API_KEY`, so the app starts without a key; a missing key is an
   `EmbeddingUnavailableError` the first time an embedding is requested (or when
-  `check_available()` is called, which the generation preflight does).
+  `check_available()` is called, which the generation preflight does). Every request is
+  recorded in the cost ledger (`teacher.costs`) with its input tokens.
 - `concept_text(name, aliases, summary)`: the exact text embedded for a concept; its SHA-256
   (`text_sha256`) is stored with the vector to tell when the embedding is stale.
 - `check_vectors(...)`: the response checks (one finite, non-empty vector per text, all the same
@@ -24,6 +25,7 @@ import openai
 
 from teacher.concepts import normalize_name
 from teacher.config import DEFAULT_EMBEDDING_MODEL
+from teacher.costs import record_embedding, require_meter
 
 ENV_OPENAI_API_KEY = "OPENAI_API_KEY"
 DEFAULT_BATCH_SIZE = 256  # the API allows 2048 inputs (and 300k tokens) per request
@@ -166,7 +168,9 @@ def describe_openai_error(exc: Exception, *, model: str, timeout: float) -> str:
 class OpenAIEmbedder:
     """Embeddings from the OpenAI API (`client.embeddings.create`), `batch_size` texts per
     request. Pass `client` to use a ready client (tests pass a fake); otherwise one is created
-    on first use from `$OPENAI_API_KEY`."""
+    on first use from `$OPENAI_API_KEY`. Each request is recorded in the cost ledger
+    (`teacher.costs`, step "embedding"; purpose "embedding" unless the current scope names the
+    job) before its vectors are checked; without a current meter nothing is sent."""
 
     def __init__(
         self,
@@ -210,6 +214,7 @@ class OpenAIEmbedder:
         dimensions: int | None = None
         for start in range(0, len(texts), self.batch_size):
             batch = texts[start : start + self.batch_size]
+            meter = require_meter(what="embedding request to OpenAI")
             try:
                 response = client.embeddings.create(
                     model=self.model, input=batch, encoding_format="float"
@@ -217,6 +222,12 @@ class OpenAIEmbedder:
             except openai.OpenAIError as exc:
                 reason = describe_openai_error(exc, model=self.model, timeout=self.timeout)
                 raise EmbeddingUnavailableError(f"Embedding failed: {reason}") from exc
+            if not isinstance(getattr(getattr(response, "usage", None), "prompt_tokens", None), int):
+                raise EmbeddingResponseError(
+                    f"embedding model {self.model!r} returned no token usage, so the request's "
+                    "cost could not be recorded"
+                )
+            record_embedding(response, model=self.model, meter=meter, purpose="embedding")
             checked = check_vectors(
                 _ordered_embeddings(response, len(batch), self.model),
                 count=len(batch),

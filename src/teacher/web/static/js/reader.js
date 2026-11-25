@@ -1,12 +1,14 @@
 // The reader (artifact status `ready`): a single column of the visible blocks, a progress bar
 // (gates cleared / total), a "N more sections locked" footer and a completion message. The
 // glossary (glossary.js) marks terms in the blocks and is refreshed whenever a gate is cleared
-// or blocks unlock, since the API lists only terms in what the reader can see.
+// or blocks unlock, since the API lists only terms in what the reader can see. Wide content
+// that scrolls sideways in its own box gets an edge hint (scroll_hints.js).
 
 import { api, seg } from "./api.js";
 import { renderBlock } from "./blocks/index.js";
 import { byId, h, plural, prefersReducedMotion, showPageError } from "./dom.js";
 import { mountGlossary } from "./glossary.js";
+import { mountScrollHints } from "./scroll_hints.js";
 
 const CLEARED = new Set(["passed", "revealed"]);
 
@@ -110,6 +112,7 @@ export async function mountReader(artifact) {
   paintProgress();
   paintFooter();
   glossary = mountGlossary(artifact);
+  mountScrollHints(list);
   moveToLinkedBlock(list);
 }
 

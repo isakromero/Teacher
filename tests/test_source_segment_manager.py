@@ -16,6 +16,7 @@ from teacher.locators import DiffLocator, PdfLocator, PdfRegion, TextSpanLocator
 from teacher.managers.errors import DuplicateError, NotFoundError
 from teacher.managers.knowledge_sources import KnowledgeSourceManager
 from teacher.managers.source_segments import SourceSegmentManager
+from tests.conftest import raw_json
 
 SPAN = {"type": "text_span", "start_char": 0, "end_char": 10}
 PDF = {"type": "pdf_regions", "regions": [{"page": 2, "x0": 0.1, "y0": 0.2, "x1": 0.9, "y1": 0.5}]}
@@ -76,10 +77,10 @@ def test_add_stores_validated_locator(
     )
     assert seg.locator_type == "pdf_regions"
     assert seg.locator == PDF
-    raw = session.execute(
-        text("SELECT locator_type, json_extract(locator, '$.type') FROM source_segments")
+    locator_type, locator = session.execute(
+        text("SELECT locator_type, locator FROM source_segments")
     ).one()
-    assert tuple(raw) == ("pdf_regions", "pdf_regions")
+    assert (locator_type, raw_json(locator)["type"]) == ("pdf_regions", "pdf_regions")
 
 
 @pytest.mark.parametrize(

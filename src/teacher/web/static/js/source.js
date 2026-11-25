@@ -4,7 +4,7 @@
 
 import { logEvent } from "./activity.js";
 import { api, describeError, seg } from "./api.js";
-import { artifactItems } from "./artifact_list.js";
+import { artifactListNodes } from "./artifact_list.js";
 import { byId, formatDate, h, setError, setChildren } from "./dom.js";
 import { chosenModel, mountModelChoice } from "./model_choice.js";
 
@@ -88,7 +88,13 @@ async function loadArtifacts() {
     return;
   }
   artifacts.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
-  setChildren(listEl, h("ul", { class: "artifact-list" }, artifactItems(artifacts, { datePrefix: "Created " })));
+  setChildren(
+    listEl,
+    ...artifactListNodes(artifacts, {
+      datePrefix: "Created ",
+      empty: h("p", { class: "muted" }, "No current study page."),
+    })
+  );
 }
 
 // -- concepts --------------------------------------------------------------------------------

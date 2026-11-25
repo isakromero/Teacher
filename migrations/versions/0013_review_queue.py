@@ -22,6 +22,9 @@ answered before this revision are derived from their answers the first time the 
 CURRENT_TIMESTAMP server defaults on every created_at; '[]' on review_attempts.missing; 0 on
 review_items.reviews. The check texts are frozen here as written; while 0013 is the head they
 match `teacher.db.models`. Downgrade drops the three tables (the review history is lost).
+
+On PostgreSQL `POSTGRES_CHECKS` replaces the SQLite-only texts: no json_valid() CHECK (the json
+type refuses invalid JSON) and json_typeof() for SQLite's json_type().
 """
 from typing import Sequence, Union
 
@@ -72,11 +75,35 @@ CHECKS = {
 }
 
 
+# The PostgreSQL text of each check whose SQLite text does not run there (None: no such check).
+POSTGRES_CHECKS = {
+    'content_json': None,
+    'presented_order_json': None,
+    'asked_json': None,
+    'option_order_json': None,
+    'response_json': None,
+    'details_json': None,
+    'missing_json': None,
+    'missing_array': "json_typeof(missing) = 'array'",
+}
+
+
 def _checks(table: str) -> list[sa.CheckConstraint]:
-    return [
-        sa.CheckConstraint(sqltext, name=op.f(f'ck_{table}_{name}'))
-        for name, sqltext in CHECKS[table]
-    ]
+    """The table's checks; one whose text is SQLite-only is created only there, and its
+    PostgreSQL form (if any) only on PostgreSQL."""
+    checks = []
+    for name, sqltext in CHECKS[table]:
+        check = sa.CheckConstraint(sqltext, name=op.f(f'ck_{table}_{name}'))
+        if name not in POSTGRES_CHECKS:
+            checks.append(check)
+            continue
+        checks.append(check.ddl_if(dialect='sqlite'))
+        if POSTGRES_CHECKS[name] is not None:
+            checks.append(
+                sa.CheckConstraint(POSTGRES_CHECKS[name], name=op.f(f'ck_{table}_{name}'))
+                .ddl_if(dialect='postgresql')
+            )
+    return checks
 
 
 def upgrade() -> None:

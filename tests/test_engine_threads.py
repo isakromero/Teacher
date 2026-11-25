@@ -5,6 +5,7 @@ from __future__ import annotations
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+import pytest
 from sqlalchemy import text
 
 from teacher.config import Settings
@@ -12,6 +13,7 @@ from teacher.db.engine import BUSY_TIMEOUT_MS, get_engine, session_scope
 from teacher.db.models import KnowledgeSource
 
 
+@pytest.mark.sqlite_only("SQLite connection PRAGMAs")
 def test_connection_pragmas(settings: Settings) -> None:
     with get_engine(settings).connect() as conn:
         assert conn.execute(text("PRAGMA foreign_keys")).scalar() == 1

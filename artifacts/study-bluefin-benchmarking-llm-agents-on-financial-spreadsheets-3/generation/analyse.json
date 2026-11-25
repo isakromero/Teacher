@@ -1,0 +1,206 @@
+{
+  "generator": "claude-study-v1",
+  "model": "claude-opus-5-5",
+  "message_id": "msg_011ChNwpXM86QufoazZ4jWk9",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 556,
+    "cache_creation_input_tokens": 81670,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 4991
+  },
+  "source": {
+    "slug": "bluefin-benchmarking-llm-agents-on-financial-spreadsheets",
+    "title": "BLUEFIN: Benchmarking LLM Agents on Financial Spreadsheets",
+    "media_type": "application/pdf"
+  },
+  "ignored_sources": [],
+  "segments": [
+    {
+      "label": "motivation-gap",
+      "id": 49,
+      "created": false
+    },
+    {
+      "label": "task-families",
+      "id": 50,
+      "created": false
+    },
+    {
+      "label": "dataset-construction",
+      "id": 51,
+      "created": false
+    },
+    {
+      "label": "rubric-design",
+      "id": 74,
+      "created": true
+    },
+    {
+      "label": "harness-judge",
+      "id": 75,
+      "created": true
+    },
+    {
+      "label": "overall-results",
+      "id": 54,
+      "created": false
+    },
+    {
+      "label": "failure-modes",
+      "id": 55,
+      "created": false
+    },
+    {
+      "label": "cost-behavior",
+      "id": 76,
+      "created": true
+    },
+    {
+      "label": "limitations-conclusion",
+      "id": 77,
+      "created": true
+    }
+  ],
+  "output": {
+    "summary": "BLUEFIN is a benchmark for testing whether LLM agents can do the spreadsheet work of professional finance analysts: building financial models from a prompt (synthesis), modifying existing workbooks (manipulation), and answering questions that require tracing or recomputing a workbook's dependencies (interrogation). The authors argue that existing spreadsheet benchmarks test shallow, programmatically checkable operations on flat tables. Real finance work is underspecified, multi-step and convention-laden, and it is hard to verify by code. So they had 78 vetted finance experts build 131 tasks scored by 3,225 binary, weighted rubric criteria. The criteria are grouped into six categories (formula correctness, model integration, output validation, perturbation, presentation, pitfalls). An agentic LLM judge (GPT-5.4) grades them by inspecting the output workbook with the same 20-tool harness the agents use, and its agreement with expert labels was validated (Krippendorff's alpha 0.826, macro-F1 0.839). Five frontier models were evaluated on the 120 held-out tasks, and none scored above 50% overall. The gap between static formula correctness and dynamic correctness (perturbation and output validation) is roughly 30 points. The behavioural and cost analyses show that more expensive models are not always better: GPT-5.5 matches Opus 4.7's overall score at 5.6x lower cost. This matters because spreadsheet errors in finance can be very costly and AI spreadsheet tools are already being deployed, so reliable, expert-grounded evaluation is needed.",
+    "main_claims": [
+      "Existing spreadsheet and finance benchmarks fall short of real finance work in one or more ways: they test shallow or atomic operations, flat tables or programmatically verifiable answers, or they include only a few relevant finance tasks. BLUEFIN instead targets underspecified, multi-step, convention-laden finance tasks over realistic workbooks.",
+      "Granular, expert-vetted binary rubric criteria, graded by an agentic LLM judge that inspects and perturbs the workbook, can reliably evaluate complex spreadsheet outputs that resist programmatic verification; the judge matches expert consensus (alpha = 0.826, macro-F1 = 0.839).",
+      "No frontier model exceeds 50% overall on the held-out set: GPT-5.5 scores 49.6% and Opus 4.7 49.2%, and Grok 4.20 is lowest at 31.3%.",
+      "Models are much better at static formula correctness than at dynamic correctness: perturbation and output-validation pass rates trail formula correctness by roughly 30 points. Hardcoded values, broken links and skipped recalculation are recurring causes.",
+      "Cost and quality are decoupled. GPT-5.5 matches Opus 4.7's overall score at 5.6x lower cost, and on a routine but large wiring task Gemini 3.1 Pro outscored Opus at 27.7x lower cost, so expensive reasoning models are not always the right choice."
+    ],
+    "background": [
+      "What a large language model (LLM) is and what an LLM agent with tool calls does",
+      "Basic spreadsheet concepts: cells, formulas, cross-sheet references, recalculation, hardcoded values versus formulas",
+      "What a benchmark, a held-out test set and a rubric-based score are",
+      "The idea of using an LLM as a judge to grade outputs",
+      "Rough familiarity with financial modelling artefacts such as DCF valuation, debt schedules and balance sheets (briefly explained where needed)",
+      "Inter-annotator agreement and classification metrics such as F1 (the page will briefly explain Krippendorff's alpha and macro-F1)"
+    ],
+    "sections": [
+      {
+        "label": "motivation-gap",
+        "title": "Why finance spreadsheets need their own benchmark",
+        "start_page": 1,
+        "end_page": 4,
+        "key_points": [
+          "Finance is highly spreadsheet-intensive (about 2.5M US finance professionals), and spreadsheet errors can be very costly. The paper cites Powell et al.'s audit finding 0.8–1.8% of formula cells in error, the London Whale loss and Fannie Mae's $1.1B restatement.",
+          "Dell'Acqua et al. found that AI can hurt productivity when a task exceeds the AI's capability, which motivates the need to evaluate AI spreadsheet tools carefully.",
+          "The authors name two obstacles to building such benchmarks. Realistic finance spreadsheets are hard to procure because of privacy and IP concerns. Success is hard to verify programmatically because outputs must also meet usability and convention criteria.",
+          "Prior spreadsheet benchmarks test formula generation, atomic operations, flat CSV-like tables or verifiable QA. Even SheetRM makes tasks longer simply by chaining well-defined instructions.",
+          "Spreadsheets differ from code: they involve 2D spatial reasoning, visual formatting and finance-specific modelling conventions. Code is also far better represented in training data and easier to verify by execution.",
+          "Related work includes GDPVal, OfficeBench, Fin-SheetBench and the concurrent BankerToolBench; the paper presents BankerToolBench as complementary, with similar 40–60% score ranges."
+        ]
+      },
+      {
+        "label": "task-families",
+        "title": "Three task families: synthesis, manipulation, interrogation",
+        "start_page": 2,
+        "end_page": 5,
+        "key_points": [
+          "Synthesis tasks go from a prompt to a new workbook (for example, a DCF model for Take Two Interactive); there are 10 such tasks.",
+          "Manipulation tasks take a workbook and a prompt and return an updated workbook (for example, adding a debt schedule). With 82 tasks they are the largest family, mirroring IB/PE analyst work, and each requires 45+ minutes of analyst work.",
+          "Interrogation tasks take a workbook and a question and return an answer (39 tasks). They are auto-graded against a known answer, and many require changing assumptions and recomputing multi-step dependencies.",
+          "Prompts are deliberately underspecified, written 'as you would brief a capable analyst', so the agent must infer a plan and satisfy implicit domain expectations.",
+          "In total there are 131 tasks and 3,225 rubric criteria; 11 tasks (305 criteria) are public and the rest are held out to avoid leakage."
+        ]
+      },
+      {
+        "label": "dataset-construction",
+        "title": "How the tasks were built by domain experts",
+        "start_page": 5,
+        "end_page": 6,
+        "key_points": [
+          "78 vetted contributors from seven countries were recruited through outreach and referral and paid well above market rates. They ranged from finance professionals with 1–20 years' experience to senior-year undergraduates with prior IB/PE internships, and were calibrated through asynchronous training and a live exercise.",
+          "For manipulation tasks, annotators received seed workbooks (averaging 1.5 tasks each) and submitted the modified workbook plus a natural-language instruction. Claude Opus 4.6 drafted candidate rubric criteria, which reviewers validated and refined.",
+          "Synthesis tasks came from expert-built seed workbooks or pre-existing industry models. Interrogation questions were built by tracing a model's dependency flow and prioritising inputs that affect outputs through multi-step chains.",
+          "Each task took about 5 hours of labour, split roughly evenly between authoring, review and rework. Evolving quality standards (less prescriptive prompts, a complexity floor, outcome-focused rubrics, workbook hygiene checks) triggered retroactive rework.",
+          "The held-out manipulation set (n=75) spans 5 modelling categories, led by Planning & Forecasting at 39%, and 16 industries."
+        ]
+      },
+      {
+        "label": "rubric-design",
+        "title": "The six rubric categories",
+        "start_page": 6,
+        "end_page": 15,
+        "key_points": [
+          "Each criterion is a binary yes/no check with a point weight that reflects importance and difficulty. Scores are the weighted ratio of points met to maximum points.",
+          "Formula Correctness credits any methodologically valid formula. Model Integration checks that values are linked to their authoritative source tab rather than recomputed or hardcoded.",
+          "Output Validation checks key outputs against a reference within a tolerance such as ±2%. Perturbation changes a driving input and checks that dependent outputs recompute to the correct new value.",
+          "Presentation checks formatting conventions, such as blue font for hardcoded inputs and A/P year suffixes. Pitfalls are penalty criteria with negative points for defects like #REF! errors or truncated text.",
+          "Formula Correctness is the largest category (1,082 criteria) and Pitfalls the smallest (193).",
+          "A separate 'structural completeness' category was dropped because it over-rewarded copying a template and penalised valid alternative builds; structure is instead captured jointly by the other categories."
+        ]
+      },
+      {
+        "label": "harness-judge",
+        "title": "The agent harness and the agentic LLM judge",
+        "start_page": 6,
+        "end_page": 22,
+        "key_points": [
+          "The harness has 20 tools in six categories (read, write, format, other, virtual), including an explicit LibreOffice recalculation tool with iterative calculation for circular references, and a sandboxed execute_python tool exposing the workbook via openpyxl.",
+          "The agent prompt is a deliberately minimal 61 words with no workflow prescriptions, following HELM/GAIA, to isolate raw capability. The authors acknowledge that richer scaffolding could improve scores.",
+          "The judge (GPT-5.4, high reasoning) uses the same tools under a prescriptive, domain-specific system prompt. It inspects formulas versus values, actively searches for pitfalls, and performs perturbations: read, mutate, recalc_workbook, re-read, restore.",
+          "The judge must give a binary verdict per criterion with cell-level evidence; a missing sheet or cell means NOT MET.",
+          "The judge was validated on 384 binary criteria against expert consensus (Krippendorff's alpha 0.826). GPT-5.4's macro-F1 of 0.839 beat Gemini 3.1 Pro (0.803) and Sonnet 4.6 (0.805).",
+          "Interrogation answers are graded by component-level matching with format normalisation and a 1% relative tolerance."
+        ]
+      },
+      {
+        "label": "overall-results",
+        "title": "Headline results: no model clears 50%",
+        "start_page": 7,
+        "end_page": 8,
+        "key_points": [
+          "On the 120 held-out tasks, overall scores are GPT-5.5 49.6%, Opus 4.7 49.2%, Gemini 3.1 Pro 45.9%, Sonnet 4.6 42.9% and Grok 4.20 31.3%. Non-completions count as zero.",
+          "Synthesis is the easiest family (Opus 66.7%), which the authors suggest reflects the freedom of building from scratch. Manipulation is harder because the agent must integrate with existing formulas and layouts.",
+          "On interrogation, closed models score 34.7–50.0%, which the authors note is barely the lower end of Fin-SheetBench accuracies. They attribute this to the need to recompute multi-level dependencies.",
+          "On the 75 manipulation tasks, the 5-model median task score is 46.2%; only 44% of tasks average at least 50%, none reach 70%, and 23% fall below 30%.",
+          "On the 11-task public set, the open-weight models Kimi K2.6 (42.3%) and MiniMax M2.5 (20.9%) were also evaluated; all models score exactly 50.0% on the 3 public interrogation tasks."
+        ]
+      },
+      {
+        "label": "failure-modes",
+        "title": "Static vs dynamic correctness: where models fail",
+        "start_page": 8,
+        "end_page": 10,
+        "key_points": [
+          "Pass rates are 50–68% for Formula Correctness, but only 20–48% for Output Validation and 15–37% for Perturbation, a gap of roughly 30 points between static and dynamic correctness.",
+          "Perturbation failures come from hardcoded intermediates, formulas overwritten with constants, or circular structures that do not converge.",
+          "Output Validation misses have four recurring causes: sign errors on outflows, date-axis misalignment, rate-vs-amount confusion (5.0 instead of 0.05), and end- versus beginning-of-period discounting.",
+          "Pitfalls are a penalty section, and Grok's high pass rate there is an artefact: it produces less content, so fewer penalties can be triggered.",
+          "Models that call recalc_workbook less often (Sonnet and Grok, under 50% of tasks) have weaker Perturbation scores, because they cannot self-verify dynamic values.",
+          "The case studies illustrate these patterns. In a merger-model task no model scored above 35% because shared items had to be linked rather than recomputed. In an OpEx-tab task, off-by-one row references separated models (Gemini 32%, Opus 64%, GPT-5.5 88%)."
+        ]
+      },
+      {
+        "label": "cost-behavior",
+        "title": "Cost-performance tradeoffs and behavioural profiles",
+        "start_page": 9,
+        "end_page": 26,
+        "key_points": [
+          "The Pareto frontier runs Grok 4.20 → Gemini 3.1 Pro → GPT-5.5. Opus 4.7 is dominated: GPT-5.5 reaches a similar score at $8.85 versus $49.21 per task.",
+          "Evaluating five models on the held-out set cost about $20K in total, roughly $24 per agent attempt and about $34 including judging.",
+          "On a large but routine balance-sheet task, Gemini scored 100% at $3.00 while Opus scored 95% at $83.05 (27.7x the cost). The authors attribute this to Opus's broad reads and heavy output tokens, and suggest reserving expensive models for ambiguous or novel tasks.",
+          "GPT-5.5's first action after reading the workbook state was execute_python on 64% of manipulation tasks. This gave it fewer turns (24 vs 38 for Opus) but, the authors argue, made its writes harder to verify, contributing to weaker Output Validation.",
+          "Sonnet returned an unmodified workbook after only reading it on about 8% of manipulation tasks.",
+          "In a small human utility study, two former finance professionals judged outputs useful for Opus 75% of the time, GPT-5.5 68.75%, Gemini and Sonnet 56.25%, and Grok 0%. Matching the existing workbook's formatting was a common weakness."
+        ]
+      },
+      {
+        "label": "limitations-conclusion",
+        "title": "Limitations and outlook",
+        "start_page": 10,
+        "end_page": 10,
+        "key_points": [
+          "Each task uses at most one workbook as context, with no other artefacts such as slide decks or retrieved documents.",
+          "The uniform minimal harness may understate models that were trained for particular harnesses; a future leaderboard accepting custom harnesses is planned, and current results are framed as a strong baseline.",
+          "The authors acknowledge that automating finance work may have mixed or negative effects on job security and working conditions.",
+          "They argue that AI benchmarks over-represent coding and math relative to employment, and offer their methodology as a template for building expert benchmarks in specialised domains."
+        ]
+      }
+    ]
+  }
+}

@@ -35,7 +35,8 @@ the cache breakpoint, then the instructions with the outline and the page. The r
 repeats that prefix exactly (same system prompt, document, instructions and JSON-schema format)
 and adds two turns after it, so it reads the document from the prompt cache the write call
 wrote. Fail loudly: API errors, refusals, truncation and schema-invalid replies raise
-`GenerationError`, as in the study-page generator.
+`GenerationError`, as in the study-page generator. Every call is recorded in the cost ledger
+(`teacher.costs`) as a `lab_generation` call of the lab and its stage's run.
 
 `StubLabGenerator` is the model-free TEST/OFFLINE tool: a fixed small real lab (scaled
 dot-product attention in numpy, one implement step) that genuinely passes `verify_lab`. Given a
@@ -589,7 +590,8 @@ class ClaudeLabGenerator:
 
     def _call(self, stage_name: str, request: dict[str, Any], stage: Any) -> Any:
         message = stream_message(
-            self._get_client(), request, stage_name=stage_name, error=GenerationError
+            self._get_client(), request, stage_name=stage_name, error=GenerationError,
+            purpose="lab_generation",
         )
         stage.set_tokens(*token_counts(message))
         return message

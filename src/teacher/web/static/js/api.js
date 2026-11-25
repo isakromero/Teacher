@@ -7,6 +7,13 @@ export class ApiError extends Error {
     super(message);
     this.name = "ApiError";
     this.status = status; // 0 means the request never got an HTTP response
+    // 401 only comes from the password gate (teacher.web.auth): there is no session, or it has
+    // expired. Every API failure ends up here (api.js, the home search, the tutor's stream), so
+    // this is the one place that sends the reader to the sign-in page, and back here afterwards.
+    if (status === 401 && typeof window !== "undefined" && window.location) {
+      const here = window.location.pathname + window.location.search;
+      window.location.assign(`/login?next=${encodeURIComponent(here)}`);
+    }
   }
 }
 

@@ -53,7 +53,7 @@ def upgrade() -> None:
     sa.CheckConstraint("(verdict = 'none') = (outcome = 'none')", name=op.f('ck_concept_pair_judgements_none_outcome')),
     sa.CheckConstraint("(outcome = 'refused') = (refusal IS NOT NULL)", name=op.f('ck_concept_pair_judgements_refusal')),
     sa.CheckConstraint("relation_id IS NULL OR outcome = 'added'", name=op.f('ck_concept_pair_judgements_relation_outcome')),
-    sa.CheckConstraint('json_valid(found_by)', name=op.f('ck_concept_pair_judgements_found_by_json')),
+    sa.CheckConstraint('json_valid(found_by)', name=op.f('ck_concept_pair_judgements_found_by_json')).ddl_if(dialect='sqlite'),
     sa.ForeignKeyConstraint(['low_id'], ['concepts.id'], name=op.f('fk_concept_pair_judgements_low_id_concepts'), ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['high_id'], ['concepts.id'], name=op.f('fk_concept_pair_judgements_high_id_concepts'), ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['relation_id'], ['concept_relations.id'], name=op.f('fk_concept_pair_judgements_relation_id_concept_relations'), ondelete='SET NULL'),

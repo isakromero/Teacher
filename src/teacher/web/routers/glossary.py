@@ -36,6 +36,7 @@ from teacher.claude_generator import (
     write_record,
 )
 from teacher.config import Settings
+from teacher.costs import cost_scope
 from teacher.db.engine import session_scope
 from teacher.db.models import Artifact, GenerationRun
 from teacher.generation import source_infos
@@ -166,11 +167,15 @@ def build_glossary(
         run_id = GenerationRunManager(session, settings).start(
             artifact, stage=GLOSSARY_STAGE, model=builder.model
         ).id
+        artifact_id = artifact.id
         StudyHistoryManager(session, settings).log("glossary_build_requested", artifact=artifact)
 
     message: Any = None
     try:
-        message = builder.call(document, blocks)  # no session is open here
+        with cost_scope(
+            settings, purpose="glossary", artifact_id=artifact_id, generation_run_id=run_id
+        ):
+            message = builder.call(document, blocks)  # no session is open here
         result = builder.interpret(message, blocks)
         write_record(path, builder.record(message, result, source=source, trigger="on_demand"))
         tokens = token_counts(message)

@@ -397,7 +397,7 @@ def test_index_follows_updates_alias_changes_and_deletes(
 
 
 def test_check_reports_and_rebuild_repairs_index_drift(
-    concepts: ConceptManager, library: dict[str, Concept], session: Session
+    concepts: ConceptManager, library: dict[str, Concept], session: Session, test_db: str
 ) -> None:
     attn, soft = library["attn"], library["soft"]
     session.execute(text("DELETE FROM concept_search WHERE rowid = :i"), {"i": attn.id})
@@ -405,6 +405,10 @@ def test_check_reports_and_rebuild_repairs_index_drift(
     session.execute(
         text("INSERT INTO concept_search (rowid, name, aliases, summary) VALUES (99, 'ghost', '', 'boo')")
     )
+    if test_db == "postgres":  # its words, which FTS5 makes by itself (teacher.db.search.postgres)
+        session.execute(
+            text("INSERT INTO concept_search_tokens VALUES (99, 0, 0, 'ghost'), (99, 2, 0, 'boo')")
+        )
     assert concepts.check() == [
         Issue("missing_search_row", "self-attention", "no concept_search row"),
         Issue("stale_search_row", "softmax", "concept_search row differs from the concept"),

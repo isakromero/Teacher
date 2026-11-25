@@ -1,6 +1,7 @@
 // Run by tests/web/test_pages.py (`node graph_model_test.mjs`): the concept graph page's pure
 // logic: edge geometry, captions, the pair index, merging on expand, the roadmap highlight, the
-// inspector's relation groups and the view arithmetic.
+// inspector's relation groups, the view arithmetic, and the zoom-aware name labels, finger taps
+// and touch drags.
 
 import assert from "node:assert/strict";
 
@@ -225,6 +226,80 @@ const edge = (id, from_id, to_id, type = "builds_on", extra = {}) => ({
   assert.equal(m.zoomView(v, 0.0001).k, m.ZOOM_MIN);
   const c = m.centreView({ x: 0, y: 0, k: 2 }, { x: 10, y: -5 });
   assert.deepEqual(m.toGraph(c, 0, 0), { x: 10, y: -5 });
+}
+
+// -- labels at any zoom ------------------------------------------------------------------------
+{
+  // captions are readable from the zoom at which CAPTION_PX graph units reach the minimum size
+  assert.equal(m.captionsReadable(1, 9), true);
+  assert.equal(m.captionsReadable(0.35, 9), false);
+  assert.equal(m.captionsReadable(1.2, 11), false);
+  assert.equal(m.captionsReadable(1.25, 11), true);
+  // name labels are clipped with an ellipsis
+  assert.equal(m.labelText("true fan"), "true fan");
+  const long = m.labelText("reinforcement learning from human feedback");
+  assert.equal(long.length, m.LABEL_CHARS);
+  assert.ok(long.endsWith("…"));
+}
+// label order: the selected concept, its neighbours, the roadmap, then the best connected
+{
+  const nodes = [
+    { id: 1, name: "a", degree: 9 },
+    { id: 2, name: "b", degree: 1 },
+    { id: 3, name: "c", degree: 0 },
+    { id: 4, name: "d", degree: 5 },
+    { id: 5, name: "e", degree: 5 },
+  ];
+  assert.deepEqual(m.labelOrder(nodes), [1, 4, 5, 2, 3]); // by degree, ties by name
+  assert.deepEqual(m.labelOrder(nodes, { selectedId: 3, neighbours: new Set([2]), lit: new Set([5]) }), [3, 2, 5, 1, 4]);
+}
+// picking labels: no two overlap, none is cut off, the budget holds, the selected one always shows
+{
+  const view = { width: 400, height: 300, radius: 10 };
+  const at = (id, x, y, text = "concept") => ({ id, x, y, text });
+  // two concepts side by side: the second label would overlap the first, so it goes above
+  const two = m.pickLabels([at(1, 200, 100), at(2, 230, 100)], view);
+  assert.deepEqual(two.get(1), { side: "below", dx: 0 });
+  assert.equal(two.get(2).side, "above");
+  // a third one between them has no room left on either side
+  assert.equal(m.pickLabels([at(1, 200, 100), at(2, 230, 100), at(3, 215, 100)], view).has(3), false);
+  // off screen: no label; near the edge: moved inside
+  const edge = m.pickLabels([at(1, -5, 100), at(2, 3, 100)], view);
+  assert.equal(edge.has(1), false);
+  assert.ok(edge.get(2).dx > 0);
+  const box = m.labelBox(3 + edge.get(2).dx, 100, "concept", { radius: 10 });
+  assert.ok(box.x0 >= 0);
+  // a label that would run off the bottom goes above, or nowhere
+  assert.equal(m.pickLabels([at(1, 200, 295)], view).get(1).side, "above");
+  // the budget
+  const many = Array.from({ length: 20 }, (_, i) => at(i, 30 + (i % 4) * 100, 30 + Math.floor(i / 4) * 55, "x"));
+  assert.equal(m.pickLabels(many, { ...view, max: 5 }).size, 5);
+  // the selected concept is labelled even where it collides, but not when out of view
+  const kept = m.pickLabels([at(1, 200, 100), at(2, 205, 100)], { ...view, keep: 2 });
+  assert.ok(kept.has(1) && kept.has(2));
+  assert.equal(m.pickLabels([at(2, 500, 100)], { ...view, keep: 2 }).has(2), false);
+  // blocked boxes (buttons over the view) are avoided like labels
+  const blocked = [{ x0: 150, x1: 250, y0: 80, y1: 140 }];
+  assert.equal(m.pickLabels([at(1, 200, 100)], { ...view, blocked }).has(1), false);
+  // the budget grows with the view, never below MIN_LABELS
+  assert.equal(m.labelBudget(100, 100), m.MIN_LABELS);
+  assert.ok(m.labelBudget(1200, 800) > m.labelBudget(360, 500));
+}
+// a finger tap: the nearest concept within reach, or none
+{
+  const pts = [{ id: 1, x: 0, y: 0 }, { id: 2, x: 100, y: 0 }];
+  assert.equal(m.nearestNode(pts, { x: 10, y: 0 }), 1); // inside the circle
+  assert.equal(m.nearestNode(pts, { x: 50, y: 0 }), null); // between them, no slop
+  assert.equal(m.nearestNode(pts, { x: 60, y: 0 }, { slop: 20 }), 2); // nearer the second
+  assert.equal(m.nearestNode(pts, { x: 50, y: 80 }, { slop: 20 }), null); // out of reach
+  assert.equal(m.nearestNode([], { x: 0, y: 0 }, { slop: 99 }), null);
+}
+// a press drags a concept with a mouse at once, with a finger only after a long press
+{
+  assert.equal(m.pressDrags("mouse", 0, 350), true);
+  assert.equal(m.pressDrags("pen", 0, 350), true);
+  assert.equal(m.pressDrags("touch", 100, 350), false);
+  assert.equal(m.pressDrags("touch", 400, 350), true);
 }
 
 console.log("graph ok");

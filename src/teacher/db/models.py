@@ -1,10 +1,24 @@
-"""ORM models for all thirty-one Teacher tables.
+"""ORM models for all thirty-two Teacher tables.
 
 Conventions: naive-UTC timestamps with both a Python default and a CURRENT_TIMESTAMP server default;
 JSON columns carry a named `CHECK (json_valid(col))`; all constraints are named via `Base.metadata`.
 
-The concept graph also has the FTS5 virtual tables `concept_search` and `concept_trigram`, which
-are not ORM models (see `teacher.db.fts`).
+The models serve SQLite and PostgreSQL. Check texts are SQLite's (the migrations froze them that
+way); the ones that do not run on PostgreSQL are marked `ddl_if(dialect="sqlite")`: the
+json_valid() checks (there the json type refuses invalid JSON), json_type() and the two-argument
+min()/max(). On PostgreSQL the migrations create json_typeof()/LEAST/GREATEST forms of the last
+two instead (0005, 0012, 0013); Alembic does not compare CHECKs, so these are not mirrored here.
+Boolean server defaults are `false()` (0 on SQLite, false on PostgreSQL).
+
+Text is ordered by code point on both databases: SQLite's BINARY collation; on PostgreSQL the
+database's collation would decide instead (Supabase's is ICU en-US: 'Zebra' after 'apple'), so
+an ORDER BY on free text (titles, names, aliases, identifiers) wraps the column in
+`by_code_point(...)`, which adds `COLLATE "C"` there. Slugs (`[a-z0-9-]`) sort the same either
+way.
+
+The concept graph also has its search tables, which are not ORM models (see `teacher.db.fts`):
+the FTS5 virtual tables `concept_search` and `concept_trigram` on SQLite, plain tables
+`concept_search`, `concept_search_tokens` and `concept_trigram` on PostgreSQL.
 """
 
 from __future__ import annotations
@@ -24,13 +38,37 @@ from sqlalchemy import (
     PrimaryKeyConstraint,
     Text,
     UniqueConstraint,
+    false,
     text,
 )
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql.compiler import SQLCompiler
+from sqlalchemy.sql.functions import FunctionElement
 
 from teacher.db.base import Base
 
 CURRENT_TIMESTAMP = text("CURRENT_TIMESTAMP")
+
+
+class by_code_point(FunctionElement[str]):
+    """A text column to ORDER BY in code point order, as SQLite's BINARY collation orders it:
+    the column itself on SQLite, `<column> COLLATE "C"` on PostgreSQL (see the module
+    docstring)."""
+
+    type = Text()
+    inherit_cache = True
+    name = "by_code_point"
+
+
+@compiles(by_code_point)
+def _by_code_point(element: by_code_point, compiler: SQLCompiler, **kw: Any) -> str:
+    return compiler.process(element.clauses, **kw)
+
+
+@compiles(by_code_point, "postgresql")
+def _by_code_point_postgres(element: by_code_point, compiler: SQLCompiler, **kw: Any) -> str:
+    return f'{compiler.process(element.clauses, **kw)} COLLATE "C"'
 
 
 def utcnow() -> datetime:
@@ -41,8 +79,8 @@ def utcnow() -> datetime:
 class KnowledgeSource(Base):
     __tablename__ = "knowledge_sources"
     __table_args__ = (
-        CheckConstraint("json_valid(creators)", name="creators_json"),
-        CheckConstraint("json_valid(metadata)", name="metadata_json"),
+        CheckConstraint("json_valid(creators)", name="creators_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(metadata)", name="metadata_json").ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -72,7 +110,10 @@ class KnowledgeSource(Base):
         back_populates="source",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        order_by="[KnowledgeSourceIdentifier.scheme, KnowledgeSourceIdentifier.value]",
+        order_by=lambda: [
+            by_code_point(KnowledgeSourceIdentifier.scheme),
+            by_code_point(KnowledgeSourceIdentifier.value),
+        ],
     )
     segments: Mapped[list[SourceSegment]] = relationship(
         back_populates="source",
@@ -112,7 +153,7 @@ class SourceSegment(Base):
     __tablename__ = "source_segments"
     __table_args__ = (
         UniqueConstraint("source_id", "kind", "label"),
-        CheckConstraint("json_valid(locator)", name="locator_json"),
+        CheckConstraint("json_valid(locator)", name="locator_json").ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -155,7 +196,7 @@ class Artifact(Base):
     __tablename__ = "artifacts"
     __table_args__ = (
         CheckConstraint("status IN ('generating', 'ready', 'failed')", name="status"),
-        CheckConstraint("json_valid(params)", name="params_json"),
+        CheckConstraint("json_valid(params)", name="params_json").ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -267,7 +308,7 @@ class ArtifactBlock(Base):
     position: Mapped[int] = mapped_column(Integer)
     key: Mapped[str] = mapped_column(Text)
     type: Mapped[str] = mapped_column(Text)
-    is_gate: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("0"))
+    is_gate: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     content_file: Mapped[str] = mapped_column(Text)
     content_sha256: Mapped[str] = mapped_column(Text)
 
@@ -321,8 +362,8 @@ def _verdict_constraints() -> tuple[CheckConstraint, ...]:
     return (
         CheckConstraint(VERDICT_CHECK, name="verdict"),
         CheckConstraint(VERDICT_PASSED_CHECK, name="verdict_passed"),
-        CheckConstraint("json_valid(missing)", name="missing_json"),
-        CheckConstraint(MISSING_ARRAY_CHECK, name="missing_array"),
+        CheckConstraint("json_valid(missing)", name="missing_json").ddl_if(dialect="sqlite"),
+        CheckConstraint(MISSING_ARRAY_CHECK, name="missing_array").ddl_if(dialect="sqlite"),
         CheckConstraint(MISSING_PARTIAL_CHECK, name="missing_partial"),
     )
 
@@ -331,8 +372,8 @@ class BlockResponse(Base):
     __tablename__ = "block_responses"
     __table_args__ = (
         UniqueConstraint("block_id", "attempt"),
-        CheckConstraint("json_valid(response)", name="response_json"),
-        CheckConstraint("json_valid(details)", name="details_json"),
+        CheckConstraint("json_valid(response)", name="response_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(details)", name="details_json").ddl_if(dialect="sqlite"),
         *_verdict_constraints(),
         CheckConstraint(CONFIDENCE_CHECK, name="confidence"),
     )
@@ -443,9 +484,9 @@ class ChatMessage(Base):
         UniqueConstraint("thread_id", "position"),
         CheckConstraint("role IN ('user', 'assistant')", name="role"),
         CheckConstraint("kind IN ('message', 'check_understanding')", name="kind"),
-        CheckConstraint('json_valid("references")', name="references_json"),
-        CheckConstraint("json_valid(api_content)", name="api_content_json"),
-        CheckConstraint("json_valid(context_blocks)", name="context_blocks_json"),
+        CheckConstraint('json_valid("references")', name="references_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(api_content)", name="api_content_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(context_blocks)", name="context_blocks_json").ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -499,7 +540,7 @@ class ChatBlock(Base):
     __tablename__ = "chat_blocks"
     __table_args__ = (
         UniqueConstraint("message_id", "position"),
-        CheckConstraint("json_valid(content)", name="content_json"),
+        CheckConstraint("json_valid(content)", name="content_json").ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -535,8 +576,8 @@ class ChatBlockResponse(Base):
     __tablename__ = "chat_block_responses"
     __table_args__ = (
         UniqueConstraint("block_id", "attempt"),
-        CheckConstraint("json_valid(response)", name="response_json"),
-        CheckConstraint("json_valid(details)", name="details_json"),
+        CheckConstraint("json_valid(response)", name="response_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(details)", name="details_json").ddl_if(dialect="sqlite"),
         *_verdict_constraints(),
     )
 
@@ -582,7 +623,7 @@ class GlossaryTerm(Base):
         UniqueConstraint("artifact_id", "term"),
         UniqueConstraint("artifact_id", "position"),
         CheckConstraint("kind IN ('acronym', 'term', 'symbol')", name="kind"),
-        CheckConstraint("json_valid(aliases)", name="aliases_json"),
+        CheckConstraint("json_valid(aliases)", name="aliases_json").ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -610,7 +651,7 @@ class LabWorkspace(Base):
     run. `solution_revealed_at` is set the first time the reader asks for the solution."""
 
     __tablename__ = "lab_workspaces"
-    __table_args__ = (CheckConstraint("json_valid(files)", name="files_json"),)
+    __table_args__ = (CheckConstraint("json_valid(files)", name="files_json").ddl_if(dialect="sqlite"),)
 
     artifact_id: Mapped[int] = mapped_column(
         ForeignKey("artifacts.id", ondelete="CASCADE"), primary_key=True
@@ -638,7 +679,7 @@ class LabRunRecord(Base):
         CheckConstraint("kind IN ('run', 'check')", name="kind"),
         CheckConstraint("kind != 'check' OR step_index IS NOT NULL", name="check_step"),
         CheckConstraint("step_index IS NULL OR step_index >= 0", name="step_index"),
-        CheckConstraint("json_valid(files)", name="files_json"),
+        CheckConstraint("json_valid(files)", name="files_json").ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -702,7 +743,10 @@ class Concept(Base):
         back_populates="concept",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        order_by="[ConceptAlias.alias_norm, ConceptAlias.alias]",
+        order_by=lambda: [
+            by_code_point(ConceptAlias.alias_norm),
+            by_code_point(ConceptAlias.alias),
+        ],
     )
     embedding: Mapped[ConceptEmbedding | None] = relationship(
         back_populates="concept", cascade="all, delete-orphan", passive_deletes=True
@@ -752,7 +796,7 @@ class ConceptRelation(Base):
         CheckConstraint("type = 'builds_on' OR from_id < to_id", name="symmetric_order"),
         CheckConstraint(
             "low_id = min(from_id, to_id) AND high_id = max(from_id, to_id)", name="pair"
-        ),
+        ).ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -906,7 +950,7 @@ class ConceptPairJudgement(Base):
         CheckConstraint("(verdict = 'none') = (outcome = 'none')", name="none_outcome"),
         CheckConstraint("(outcome = 'refused') = (refusal IS NOT NULL)", name="refusal"),
         CheckConstraint("relation_id IS NULL OR outcome = 'added'", name="relation_outcome"),
-        CheckConstraint("json_valid(found_by)", name="found_by_json"),
+        CheckConstraint("json_valid(found_by)", name="found_by_json").ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -1046,7 +1090,7 @@ class StudySession(Base):
     last_activity_at: Mapped[datetime] = mapped_column(
         DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
     )
-    backfilled: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("0"))
+    backfilled: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
 
     def __repr__(self) -> str:
         return f"StudySession(id={self.id!r}, backfilled={self.backfilled!r})"
@@ -1066,7 +1110,7 @@ class StudyEvent(Base):
     __tablename__ = "study_events"
     __table_args__ = (
         CheckConstraint(f"kind IN ({_sql_list(STUDY_EVENT_KINDS)})", name="kind"),
-        CheckConstraint("json_valid(payload)", name="payload_json"),
+        CheckConstraint("json_valid(payload)", name="payload_json").ddl_if(dialect="sqlite"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -1177,7 +1221,7 @@ class ReviewVariant(Base):
     __table_args__ = (
         UniqueConstraint("block_id", "position"),
         CheckConstraint(f"type IN ({_sql_list(REVIEW_QUESTION_TYPES)})", name="type"),
-        CheckConstraint("json_valid(content)", name="content_json"),
+        CheckConstraint("json_valid(content)", name="content_json").ddl_if(dialect="sqlite"),
         CheckConstraint("position >= 1", name="position"),
     )
 
@@ -1216,7 +1260,7 @@ class ReviewItem(Base):
         CheckConstraint(REVIEW_LAST_VERDICT_CHECK, name="last_verdict"),
         CheckConstraint(REVIEW_LAST_CONFIDENCE_CHECK, name="last_confidence"),
         CheckConstraint(f"presented_form IN ({_sql_list(REVIEW_FORMS)})", name="presented_form"),
-        CheckConstraint("json_valid(presented_order)", name="presented_order_json"),
+        CheckConstraint("json_valid(presented_order)", name="presented_order_json").ddl_if(dialect="sqlite"),
         CheckConstraint(REVIEW_PRESENTATION_CHECK, name="presentation"),
     )
 
@@ -1257,13 +1301,13 @@ class ReviewAttempt(Base):
     __table_args__ = (
         CheckConstraint(f"form IN ({_sql_list(REVIEW_FORMS)})", name="form"),
         CheckConstraint("(form = 'variant') = (variant_position IS NOT NULL)", name="variant"),
-        CheckConstraint("json_valid(asked)", name="asked_json"),
-        CheckConstraint("json_valid(option_order)", name="option_order_json"),
-        CheckConstraint("json_valid(response)", name="response_json"),
-        CheckConstraint("json_valid(details)", name="details_json"),
+        CheckConstraint("json_valid(asked)", name="asked_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(option_order)", name="option_order_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(response)", name="response_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(details)", name="details_json").ddl_if(dialect="sqlite"),
         CheckConstraint(REVIEW_VERDICT_CHECK, name="verdict"),
-        CheckConstraint("json_valid(missing)", name="missing_json"),
-        CheckConstraint(MISSING_ARRAY_CHECK, name="missing_array"),
+        CheckConstraint("json_valid(missing)", name="missing_json").ddl_if(dialect="sqlite"),
+        CheckConstraint(MISSING_ARRAY_CHECK, name="missing_array").ddl_if(dialect="sqlite"),
         CheckConstraint(MISSING_PARTIAL_CHECK, name="missing_partial"),
         CheckConstraint(CONFIDENCE_CHECK, name="confidence"),
         CheckConstraint("interval_before > 0 AND interval_after > 0", name="intervals"),
@@ -1380,7 +1424,7 @@ class SourceReference(Base):
     __table_args__ = (
         UniqueConstraint("source_id", "position"),
         CheckConstraint("position >= 1", name="position"),
-        CheckConstraint("json_valid(authors)", name="authors_json"),
+        CheckConstraint("json_valid(authors)", name="authors_json").ddl_if(dialect="sqlite"),
         CheckConstraint(
             f"match_method IN ({_sql_list(REFERENCE_MATCH_METHODS)})", name="match_method"
         ),
@@ -1412,7 +1456,106 @@ class SourceReference(Base):
         )
 
 
+# What a recorded API call was for: the job it served (`teacher.costs`).
+API_CALL_PURPOSES: tuple[str, ...] = (
+    "generation",
+    "lab_generation",
+    "review_bank",
+    "glossary",
+    "tutor",
+    "grading",
+    "block_tagging",
+    "concept_extraction",
+    "concept_relating",
+    "metadata",
+    "reference_extraction",
+    "embedding",
+)
+API_CALL_PROVIDERS: tuple[str, ...] = ("anthropic", "openai")
+
+
+class ApiCall(Base):
+    """One model or embedding API call and what it cost: the cost ledger (revision 0016).
+
+    Written by `teacher.costs` right after the API answers, in a transaction of its own, so a
+    call whose reply is then rejected, or whose surrounding work rolls back, keeps its row.
+    `purpose` is the job the call served (`API_CALL_PURPOSES`), `step` what the call did within
+    it (a generation stage such as "analyse", "open-book check", "judge", "embedding", ...).
+    Tokens: `input_tokens` is fresh (uncached) input, `cache_write_tokens` all cache writes, of
+    which `cache_write_1h_tokens` at the 1-hour TTL (NULL: the split is unknown),
+    `cache_read_tokens` input read from the cache. `cost_usd` is the price at the time of the
+    call (`teacher.pricing`, checked on `priced_on`), NULL exactly when the model has no known
+    price. `is_estimate`: a backfilled call of which only the combined input count was kept
+    (then in `input_tokens`, the cache columns 0) or whose cache-write TTL split is unknown;
+    `cost_usd` is then an upper bound. The links say what the call was for; each is set NULL
+    when what it points at is deleted, and the row stays (the money was spent). `backfill_key`
+    names the record a backfilled row was made from (`teacher.cost_backfill`), NULL for a call
+    recorded live.
+    """
+
+    __tablename__ = "api_calls"
+    __table_args__ = (
+        CheckConstraint(f"purpose IN ({_sql_list(API_CALL_PURPOSES)})", name="purpose"),
+        CheckConstraint(f"provider IN ({_sql_list(API_CALL_PROVIDERS)})", name="provider"),
+        CheckConstraint(
+            "input_tokens >= 0 AND cache_write_tokens >= 0 AND cache_read_tokens >= 0 "
+            "AND output_tokens >= 0",
+            name="tokens",
+        ),
+        CheckConstraint(
+            "cache_write_1h_tokens IS NULL "
+            "OR (cache_write_1h_tokens >= 0 AND cache_write_1h_tokens <= cache_write_tokens)",
+            name="cache_write_1h",
+        ),
+        CheckConstraint("cost_usd IS NULL OR cost_usd >= 0", name="cost"),
+        CheckConstraint("(cost_usd IS NULL) = (priced_on IS NULL)", name="priced"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    purpose: Mapped[str] = mapped_column(Text)
+    step: Mapped[str] = mapped_column(Text)
+    provider: Mapped[str] = mapped_column(Text)
+    model: Mapped[str] = mapped_column(Text)
+    response_id: Mapped[str | None] = mapped_column(Text)
+    input_tokens: Mapped[int] = mapped_column(Integer)
+    cache_write_tokens: Mapped[int] = mapped_column(Integer)
+    cache_write_1h_tokens: Mapped[int | None] = mapped_column(Integer)
+    cache_read_tokens: Mapped[int] = mapped_column(Integer)
+    output_tokens: Mapped[int] = mapped_column(Integer)
+    cost_usd: Mapped[float | None] = mapped_column(Float)
+    priced_on: Mapped[str | None] = mapped_column(Text)
+    is_estimate: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    artifact_id: Mapped[int | None] = mapped_column(
+        ForeignKey("artifacts.id", ondelete="SET NULL"), index=True
+    )
+    generation_run_id: Mapped[int | None] = mapped_column(
+        ForeignKey("generation_runs.id", ondelete="SET NULL"), index=True
+    )
+    chat_thread_id: Mapped[int | None] = mapped_column(
+        ForeignKey("chat_threads.id", ondelete="SET NULL"), index=True
+    )
+    chat_message_id: Mapped[int | None] = mapped_column(
+        ForeignKey("chat_messages.id", ondelete="SET NULL"), index=True
+    )
+    knowledge_source_id: Mapped[int | None] = mapped_column(
+        ForeignKey("knowledge_sources.id", ondelete="SET NULL"), index=True
+    )
+    backfill_key: Mapped[str | None] = mapped_column(Text, unique=True)
+
+    def __repr__(self) -> str:
+        return (
+            f"ApiCall(id={self.id!r}, purpose={self.purpose!r}, step={self.step!r}, "
+            f"model={self.model!r}, cost_usd={self.cost_usd!r})"
+        )
+
+
 __all__ = [
+    "API_CALL_PROVIDERS",
+    "API_CALL_PURPOSES",
+    "ApiCall",
     "ATTENTION_SURFACES",
     "BLOCK_CONCEPT_ORIGINS",
     "BLOCK_CONCEPT_ROLES",

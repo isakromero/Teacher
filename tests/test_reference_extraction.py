@@ -36,6 +36,10 @@ from teacher.reference_extraction import (
     run_claimed,
 )
 
+# The components here make their API calls directly: an in-memory cost meter records them
+# (without a meter a component refuses to make a call; see `teacher.costs`).
+pytestmark = pytest.mark.usefixtures("cost_meter")
+
 MODEL = "claude-test-references"
 
 

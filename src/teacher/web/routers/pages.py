@@ -12,6 +12,8 @@ logged by the API) and `/history` log nothing: looking at the history is not stu
 `/?q=<words>` opens home with that search.
 
 Every template gets `nav`, the header link to mark as the current page (`aria-current`).
+`base.html` shows a small "Local SQLite" badge in the header when the app runs on the local
+SQLite database (`database_badge(request)`, a template global; nothing on Supabase).
 Templates are in `teacher/web/templates/`, static files (css, js, vendored libraries) in
 `teacher/web/static/`, served at `/static`.
 """
@@ -25,6 +27,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from teacher.db.providers import create_db_provider
 from teacher.labs import LAB_KIND
 from teacher.managers import (
     ArtifactManager,
@@ -43,6 +46,20 @@ STATIC_URL = "/static"
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 templates.env.globals["static"] = lambda path: f"{STATIC_URL}/{path.lstrip('/')}"
+
+
+def database_badge(request: Request) -> str | None:
+    """What the header's "Local SQLite" badge names: the database's `describe()` when the app
+    runs on the local SQLite file, None on Supabase (no badge there; nothing secret either way)."""
+    settings = getattr(request.app.state, "settings", None)
+    if settings is None:
+        raise RuntimeError("the page templates need app.state.settings (set by create_app)")
+    if settings.db != "sqlite":
+        return None
+    return create_db_provider(settings).describe()
+
+
+templates.env.globals["database_badge"] = database_badge
 
 router = APIRouter(tags=["pages"], include_in_schema=False)
 

@@ -59,7 +59,7 @@ class SourceSegmentManager:
         elif not isinstance(position, int) or isinstance(position, bool):
             raise ValueError("position must be an integer")
         rel_content = (
-            to_relative(Path(content_file), self.settings.root)
+            to_relative(Path(content_file), self.settings.data_root)
             if content_file is not None
             else None
         )

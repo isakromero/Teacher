@@ -347,7 +347,9 @@ def test_another_process_sees_changes_and_this_one_sees_its(
         "from teacher.db.engine import session_scope\n"
         "from teacher.managers import ConceptEmbeddingManager, ConceptManager\n"
         "from teacher.managers.concept_embeddings import text_of\n"
-        "settings = Settings(root=Path(sys.argv[1]))\n"
+        "settings = Settings(\n"
+        "    root=Path(sys.argv[1]), db=sys.argv[2], supabase_db_url=sys.argv[3] or None\n"
+        ")\n"
         "with session_scope(settings) as s:\n"
         "    c = ConceptManager(s, settings).create('pooling', 'About pooling.', 'user')\n"
         "    vector = [0.99, 0.0, 0.1] + [0.0] * 61\n"
@@ -359,7 +361,8 @@ def test_another_process_sees_changes_and_this_one_sees_its(
         encoding="utf-8",
     )
     child = subprocess.run(
-        [sys.executable, str(script), str(settings.root)],
+        [sys.executable, str(script), str(settings.root), settings.db,
+         settings.supabase_db_url or ""],
         capture_output=True, text=True, timeout=120, check=False,
     )
     assert child.returncode == 0, child.stderr

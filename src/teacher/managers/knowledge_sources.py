@@ -16,7 +16,14 @@ from sqlalchemy.orm import Session
 
 from teacher.config import Settings
 from teacher.db.models import ArtifactSource, KnowledgeSource, KnowledgeSourceIdentifier
-from teacher.files import sha256_file, to_absolute, to_relative, validate_slug
+from teacher.files import (
+    sha256_file,
+    sync_dir,
+    sync_file,
+    to_absolute,
+    to_relative,
+    validate_slug,
+)
 from teacher.managers.errors import (
     DuplicateError,
     IntegrityCheckError,
@@ -141,6 +148,11 @@ class KnowledgeSourceManager:
                 shutil.copyfile(extra, folder / extra.name)
             if sha256_file(folder / primary_name) != sha:
                 raise IntegrityCheckError(f"{file} changed while it was being copied")
+            # On disk before the row can be committed (teacher.files.sync_file).
+            for stored in [folder / primary_name, *(folder / extra.name for extra in extras)]:
+                sync_file(stored)
+            sync_dir(folder)
+            sync_dir(self.settings.sources_dir)
             source = KnowledgeSource(
                 slug=slug,
                 kind=kind,
@@ -149,7 +161,7 @@ class KnowledgeSourceManager:
                 originated_on=originated_on,
                 summary=summary,
                 origin_url=origin_url,
-                dir_path=to_relative(folder, self.settings.root),
+                dir_path=to_relative(folder, self.settings.data_root),
                 primary_file=primary_name,
                 media_type=media_type,
                 content_sha256=sha,
@@ -206,7 +218,7 @@ class KnowledgeSourceManager:
 
     def primary_path(self, source: KnowledgeSource) -> Path:
         """Absolute path of the source's primary file."""
-        return to_absolute(f"{source.dir_path}/{source.primary_file}", self.settings.root)
+        return to_absolute(f"{source.dir_path}/{source.primary_file}", self.settings.data_root)
 
     # -- updates --------------------------------------------------------------------------
 
@@ -268,7 +280,7 @@ class KnowledgeSourceManager:
             raise SourceInUseError(
                 f"knowledge source {source.slug!r} is used by {refs} artifact(s)"
             )
-        folder = to_absolute(source.dir_path, self.settings.root)
+        folder = to_absolute(source.dir_path, self.settings.data_root)
         derived = self.settings.derived_dir / source.slug
         try:
             with self.session.begin_nested():
@@ -294,7 +306,7 @@ class KnowledgeSourceManager:
         - 'hash_mismatch': the primary file's SHA-256 differs from `content_sha256`
         """
         issues: builtins.list[Issue] = []
-        root = self.settings.root
+        root = self.settings.data_root
         rows = builtins.list(
             self.session.scalars(select(KnowledgeSource).order_by(KnowledgeSource.slug))
         )

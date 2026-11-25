@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import unicodedata
 from pathlib import Path, PurePosixPath
@@ -25,6 +26,24 @@ def sha256_file(path: Path) -> str:
         while chunk := fh.read(_CHUNK):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def sync_file(path: Path) -> None:
+    """Flush the file at `path` to disk (fsync). The database is on another machine and keeps
+    its commits, so a file a row refers to must be on disk before that row is committed: a
+    server stopped abruptly otherwise loses the file and keeps the row."""
+    with Path(path).open("rb") as fh:
+        os.fsync(fh.fileno())
+
+
+def sync_dir(path: Path) -> None:
+    """Flush the directory at `path` to disk, so the entries of files created in it survive
+    an abrupt stop (see `sync_file`)."""
+    fd = os.open(Path(path), os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
 
 
 def validate_slug(slug: str) -> str:
@@ -54,7 +73,7 @@ def slugify(text: str, *, max_length: int = SLUG_MAX_LENGTH) -> str:
 
 
 def to_relative(path: Path, base: Path) -> str:
-    """Express `path` as a POSIX string relative to `base` (e.g. Settings.root).
+    """Express `path` as a POSIX string relative to `base` (e.g. Settings.data_root).
 
     Relative `path`s are taken as relative to `base`. Raises ValueError if it lies outside `base`.
     """

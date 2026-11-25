@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+import sqlite3
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -22,8 +23,21 @@ DEFAULT_ROLE = "primary"
 SourceSpec = KnowledgeSource | tuple[KnowledgeSource, str]
 
 
+PG_UNIQUE_VIOLATION = "23505"  # Postgres SQLSTATE unique_violation (unique and primary keys)
+
+
 def _is_unique_violation(err: IntegrityError) -> bool:
-    return "UNIQUE constraint failed" in str(err.orig)
+    """Whether `err` broke a unique or primary key, on either database: SQLite says so only in
+    its message, psycopg gives Postgres' SQLSTATE. Any other driver is an error."""
+    orig = err.orig
+    if isinstance(orig, sqlite3.Error):
+        return "UNIQUE constraint failed" in str(orig)
+    sqlstate = getattr(orig, "sqlstate", None)
+    if sqlstate is None:
+        raise TypeError(
+            f"cannot tell what kind of integrity error {type(orig).__name__} is"
+        ) from err
+    return sqlstate == PG_UNIQUE_VIOLATION
 
 
 def _require_persistent(obj: object, what: str) -> None:
@@ -205,7 +219,7 @@ class ArtifactManager:
 
     def dir(self, artifact: Artifact) -> Path:
         """Absolute path of the artifact's folder."""
-        return to_absolute(artifact.dir_path, self.settings.root)
+        return to_absolute(artifact.dir_path, self.settings.data_root)
 
     # -- changes ----------------------------------------------------------------------------
 

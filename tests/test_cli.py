@@ -31,7 +31,11 @@ def test_serve_defaults(uvicorn_calls: list[dict[str, Any]], tmp_path: Path) -> 
     assert call["app"].state.settings.root == (tmp_path / "home").resolve()
 
 
-def test_serve_host_and_port(uvicorn_calls: list[dict[str, Any]]) -> None:
+def test_serve_host_and_port(
+    uvicorn_calls: list[dict[str, Any]], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A host other than loopback needs the password gate (tests/web/test_auth.py).
+    monkeypatch.setenv("TEACHER_PASSWORD", "a test password")
     cli.main(["serve", "--host", "0.0.0.0", "--port", "9123"])
     (call,) = uvicorn_calls
     assert (call["host"], call["port"]) == ("0.0.0.0", 9123)
@@ -48,12 +52,12 @@ def test_command_required() -> None:
 
 
 @pytest.fixture
-def home(settings, monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+def home(settings, settings_env, tmp_path: Path):
     """$TEACHER_HOME at the migrated test `settings`, with one text source `paper`."""
     from teacher.db.engine import session_scope
     from teacher.managers import KnowledgeSourceManager
 
-    monkeypatch.setenv(ENV_HOME, str(settings.root))
+    settings_env(settings)
     path = tmp_path / "paper.md"
     path.write_text("# Paper\n\nWe use attention.\n", encoding="utf-8")
     with session_scope(settings) as session:
@@ -140,7 +144,8 @@ def test_concepts_extract_failures_exit_1(
     assert cli.main(["concepts", "extract", "nope"]) == 1
     assert capsys.readouterr().err == "error: no knowledge source with slug 'nope'\n"
 
-    use_fakes(monkeypatch, fake_anthropic(fake_anthropic.concepts_reply([])), embedder)
+    empty = fake_anthropic.concepts_reply([])  # rejected, asked for once more, rejected again
+    use_fakes(monkeypatch, fake_anthropic(empty, empty), embedder)
     assert cli.main(["concepts", "extract", "paper"]) == 1
     err = capsys.readouterr().err
     assert err.startswith("error: Concepts could not be extracted: Claude listed 0 concepts")

@@ -1,0 +1,9 @@
+{
+  "asset": "figures/figure-4-00b6ea84d5.png",
+  "label": "Figure 4",
+  "source_caption": "(a) Per-section criterion pass rate across the five frontier models on the 75-task held-out set of manipulation tasks. Models are most reliable at structural, syntactically-checkable sections (Formula Correctness, Presentation) and weakest at sections that test computed numeric values (Output Validation) and dynamic behavior under perturbation. (b) Distribution of per-task average scores across the same 75 tasks (averaged across five frontier models). The median task sits at 46.2%; only 44% of tasks clear 50% and not a single task clears 70%. The 17/75 tasks (23%) sitting below 30% are genuinely difficult construction and modification problems where the typical frontier model fails more than two-thirds of rubric criteria.",
+  "page": 8,
+  "width": 794,
+  "height": 303,
+  "caption": "In panel (a), read down each column: green at the top (Formula Correctness), red in the Output Validation and Perturbation rows. The colour pattern repeats for every model, which is what makes the failure 'model-agnostic'. In panel (b), notice the left tail of tasks below 30% and that no task reaches 70%."
+}

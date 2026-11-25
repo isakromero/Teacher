@@ -252,7 +252,7 @@ def test_build_returns_the_visible_glossary_and_records_a_run(
     (run,) = glossary_runs(settings, slug)
     assert run == ("glossary", "succeeded", "claude-test-writer", 1040, 60, None,
                    f"artifacts/{slug}/generation/glossary.json")
-    record = json.loads((settings.root / run[6]).read_text(encoding="utf-8"))
+    record = json.loads((settings.data_root / run[6]).read_text(encoding="utf-8"))
     assert record["trigger"] == "on_demand"
     assert record["dropped"] == [{"term": "ResNet", "reason": "does not occur in the study page text"}]
     assert client.get(f"/api/artifacts/{slug}").json()["tokens"] == {"input": 1040, "output": 60}

@@ -1,0 +1,21 @@
+{
+  "prompt": "Midway through the project, the authors rewrote task prompts so that they describe the desired output and intent rather than prescribing the steps. Explain why this change matters for what the benchmark actually measures.",
+  "min_words": 30,
+  "private": {
+    "model_answer": "A step-by-step prompt hands the agent the plan, so the task would mostly test whether it can follow instructions, much like earlier benchmarks that chain explicit edits. Real finance requests are underspecified, so leaving the path open tests whether the agent can work out a viable plan and meet implicit domain expectations on its own.",
+    "rubric": [
+      {
+        "criterion": "Explains that prescriptive prompts give the agent the plan, so the task would test instruction following rather than planning",
+        "required": true
+      },
+      {
+        "criterion": "Connects the change to real finance requests being underspecified, so the agent must infer the path or meet implicit expectations",
+        "required": true
+      },
+      {
+        "criterion": "Mentions that removing the scaffolding exposed tasks that were too simple, prompting complexity recalibration",
+        "required": false
+      }
+    ]
+  }
+}

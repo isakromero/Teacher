@@ -47,8 +47,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from sqlalchemy import Text, select, type_coerce
+from sqlalchemy import Text, select
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.sql.compiler import SQLCompiler
+from sqlalchemy.sql.functions import FunctionElement
 
 from teacher import vector_index
 from teacher.config import Settings
@@ -76,9 +79,31 @@ _IN_CHUNK = 500  # ids per `IN (...)` when loading vectors
 _CONCEPTS = Concept.__table__
 _ALIASES = ConceptAlias.__table__
 _EMBEDDINGS = ConceptEmbedding.__table__
-# `embedded_at` exactly as stored (text), the version token of an index entry: no datetime
-# parsing per row, and it changes on every `store` even when the text (hash) does not.
-_EMBEDDED_AT = type_coerce(_EMBEDDINGS.c.embedded_at, Text)
+
+
+class _timestamp_text(FunctionElement[str]):
+    """A timestamp column as text, 'YYYY-MM-DD HH:MM:SS.ffffff' on every database: on SQLite
+    the text as stored (SQLAlchemy stores datetimes in that form), on Postgres formatted so."""
+
+    type = Text()
+    inherit_cache = True
+    name = "timestamp_text"
+
+
+@compiles(_timestamp_text)
+def _timestamp_text_as_stored(element: _timestamp_text, compiler: SQLCompiler, **kw: object) -> str:
+    return compiler.process(element.clauses, **kw)
+
+
+@compiles(_timestamp_text, "postgresql")
+def _timestamp_text_postgres(element: _timestamp_text, compiler: SQLCompiler, **kw: object) -> str:
+    return f"to_char({compiler.process(element.clauses, **kw)}, 'YYYY-MM-DD HH24:MI:SS.US')"
+
+
+# `embedded_at` as text, the version token of an index entry: no datetime parsing per row, the
+# same string on SQLite and Postgres, and it changes on every `store` even when the text (hash)
+# does not.
+_EMBEDDED_AT = _timestamp_text(_EMBEDDINGS.c.embedded_at)
 
 
 def encode_vector(vector: list[float]) -> bytes:

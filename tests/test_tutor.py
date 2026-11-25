@@ -21,6 +21,10 @@ from teacher.tutor import (
     neutralise_tags,
 )
 
+# The components here make their API calls directly: an in-memory cost meter records them
+# (without a meter a component refuses to make a call; see `teacher.costs`).
+pytestmark = pytest.mark.usefixtures("cost_meter")
+
 MESSAGES = [{"role": "user", "content": [{"type": "text", "text": "Hello"}]}]
 
 

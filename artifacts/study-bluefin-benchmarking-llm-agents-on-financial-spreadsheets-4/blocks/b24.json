@@ -1,0 +1,19 @@
+{
+  "question": "Imagine a team builds a benchmark for tax-planning spreadsheets that grades each output only by comparing its final displayed numbers to reference values within ±2%. Given BLUEFIN's findings, which kind of faulty build would this grading most likely let through?",
+  "options": [
+    "Builds that read a forecast one column off, so every projected total quietly lands on the neighbouring year.",
+    "Builds that store a 5% spread as 5.0, so every interest line is quietly a hundred times larger than it should be.",
+    "Builds that add a financing outflow instead of subtracting it, so ending cash looks plausible but is too high.",
+    "Builds that type today's computed totals in as constants, so they still match but cannot respond to new inputs."
+  ],
+  "private": {
+    "correct_index": 3,
+    "explanation": "BLUEFIN's central finding is the gap between static correctness and dynamic correctness. Three of these faults are Output Validation errors from the paper's list, and a value comparison detects them because they change the displayed numbers. A hardcode that matches today's reference changes nothing visible. Only the perturbation step (change the input, recalculate, recheck) reveals it, and that is the category where models scored lowest.",
+    "option_explanations": [
+      "A date-axis misalignment changes the displayed numbers, so a comparison against reference values would catch it whenever it pushes an output outside the tolerance.",
+      "A rate entered as an amount distorts the computed outputs, which a check against reference values would detect.",
+      "A sign error on an outflow moves the displayed number away from the reference, which is exactly what a value comparison is built to catch.",
+      "Right. A value-only check is an Output Validation check. A hardcode that matches today's reference passes it, and only a perturbation-style test would expose the missing dynamic behaviour, which is where BLUEFIN's models scored worst."
+    ]
+  }
+}

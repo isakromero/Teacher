@@ -199,13 +199,51 @@ def test_a_broken_reply_is_an_error_and_writes_nothing(
     tag_library, fake_anthropic, label: str, blocks: Any, fragment: str
 ) -> None:
     lib = tag_library
-    fake = fake_anthropic(reply(fake_anthropic, blocks(lib.concepts["attention"])))
+    # A rejected reply is asked for once more; the second rejection is the error.
+    bad = reply(fake_anthropic, blocks(lib.concepts["attention"]))
+    fake = fake_anthropic(bad, bad)
     with pytest.raises(TaggingOutputError) as caught:
         BlockTagger(fake, model=MODEL).tag_page(lib.settings, lib.page)
     message = str(caught.value)
-    assert message.startswith(ERROR_PREFIX) and fragment in message, message
-    assert message.endswith("(the call used 900 input / 120 output tokens)")
+    assert message.startswith(ERROR_PREFIX) and message.count(fragment) == 2, message
+    assert "(second attempt; the first reply was rejected too: " in message
+    assert message.endswith("(the 2 call(s) used 1800 input / 240 output tokens)")
+    first, second = fake.calls
+    assert second["messages"][0]["content"][:-1] == first["messages"][0]["content"]
+    assert fragment in second["messages"][0]["content"][-1]["text"]
     assert stored(lib.settings) == (None, [])
+
+
+def test_a_rejected_reply_is_asked_for_once_more(tag_library, fake_anthropic) -> None:
+    lib = tag_library
+    bad = reply(fake_anthropic, {1: [(999, "main", "x.")], 2: [], 3: [], 4: [], 5: []})
+    fake = fake_anthropic(bad, full_reply(fake_anthropic, lib))
+    run = BlockTagger(fake, model=MODEL).tag_page(lib.settings, lib.page)
+
+    reason = "concept id 999 is not one of the page's concepts"
+    first, second = run.tagging.calls
+    assert reason in first["rejected"] and "rejected" not in second
+    again = fake.calls[1]["messages"][0]["content"]
+    assert again[:-1] == fake.calls[0]["messages"][0]["content"]
+    assert reason in again[-1]["text"] and "Reply again for every block" in again[-1]["text"]
+    assert (run.tagging.input_tokens, run.tagging.output_tokens) == (1800, 240)
+    assert len(stored(lib.settings)[1]) == 7
+
+
+def test_a_retried_tagging_stage_succeeds_with_a_note(tag_library, fake_anthropic) -> None:
+    lib = tag_library
+    slug = _generating_page(lib)
+    empty = {n: [] for n in range(1, 8)}
+    bad = reply(fake_anthropic, {**empty, 1: [(999, "main", "x.")]})
+    fake = fake_anthropic(bad, reply(fake_anthropic, empty))
+    assert run_generation(lib.settings, slug, StubGenerator(block_tagger=BlockTagger(fake))) == "ready"
+    with session_scope(lib.settings) as session:
+        artifact = ArtifactManager(session, lib.settings).get_by_slug(slug)
+        runs = GenerationRunManager(session, lib.settings).list(artifact)
+        (tagging,) = [r for r in runs if r.stage == "block_concepts"]
+        assert tagging.status == "succeeded"
+        assert "The first tagging reply was rejected (" in tagging.note
+        assert "concept id 999" in tagging.note
 
 
 def test_a_schema_invalid_reply_and_service_failures(tag_library, fake_anthropic) -> None:
@@ -221,8 +259,11 @@ def test_a_schema_invalid_reply_and_service_failures(tag_library, fake_anthropic
         (fake_anthropic.status_error(anthropic.OverloadedError, 529, "overloaded_error"),
          TaggingUnavailableError, "the block concepts call to Claude failed"),
     ]:
+        outcomes = [outcome] * (2 if error is TaggingOutputError else 1)  # one more try
+        fake = fake_anthropic(*outcomes)
         with pytest.raises(error, match=fragment):
-            BlockTagger(fake_anthropic(outcome), model=MODEL).tag_page(lib.settings, lib.page)
+            BlockTagger(fake, model=MODEL).tag_page(lib.settings, lib.page)
+        assert len(fake.calls) == len(outcomes)
     assert stored(lib.settings) == (None, [])
 
 
@@ -438,8 +479,8 @@ def test_a_prediction_is_not_counted_as_a_question() -> None:
 def test_a_failed_tagging_stage_fails_the_generation(tag_library, fake_anthropic) -> None:
     lib = tag_library
     slug = _generating_page(lib)
-    fake = fake_anthropic(reply(fake_anthropic, {1: [(999, "main", "x.")], 2: [], 3: [], 4: [], 5: [],
-                                                 6: [], 7: []}))
+    bad = reply(fake_anthropic, {1: [(999, "main", "x.")], 2: [], 3: [], 4: [], 5: [], 6: [], 7: []})
+    fake = fake_anthropic(bad, bad)
     assert run_generation(lib.settings, slug, StubGenerator(block_tagger=BlockTagger(fake))) == "failed"
     with session_scope(lib.settings) as session:
         artifact = ArtifactManager(session, lib.settings).get_by_slug(slug)
