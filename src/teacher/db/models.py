@@ -1,4 +1,4 @@
-"""ORM models for all thirty-four Teacher tables.
+"""ORM models for all thirty-five Teacher tables.
 
 Conventions: naive-UTC timestamps with both a Python default and a CURRENT_TIMESTAMP server default;
 JSON columns carry a named `CHECK (json_valid(col))`; all constraints are named via `Base.metadata`.
@@ -1618,6 +1618,51 @@ class UserSession(Base):
         return f"UserSession(id={self.id!r}, user_id={self.user_id!r})"  # never the token hash
 
 
+DEVICE_GRADER_PREFIX = "device:"
+
+
+class OfflineAttempt(Base):
+    """An attempt made offline on a phone and accepted by `POST
+    /api/offline/artifacts/{slug}/attempts` (revision 0018; `teacher.web.routers.offline`): the
+    idempotency record of the upload. `client_id` is the UUID the phone generated for the
+    attempt (canonical lowercase form, unique: a second upload of it is not recorded again);
+    `response_id` the `block_responses` row it was stored as (deleted with it). `made_at` is
+    when it was made on the phone (naive UTC; also the response's `created_at`),
+    `device_grader` and `device_verdict` the phone's grader and verdict as sent (for a multiple
+    choice or a prediction the response holds the server's re-grade, which may differ),
+    `received_at` when the server accepted it."""
+
+    __tablename__ = "offline_attempts"
+    __table_args__ = (
+        CheckConstraint("length(client_id) = 36", name="client_id"),
+        CheckConstraint(
+            "substr(device_grader, 1, 7) = 'device:' AND length(device_grader) > 7",
+            name="device_grader",
+        ),
+        CheckConstraint(
+            "device_verdict IN ('passed', 'partial', 'failed')", name="device_verdict"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    client_id: Mapped[str] = mapped_column(Text, unique=True)
+    response_id: Mapped[int] = mapped_column(
+        ForeignKey("block_responses.id", ondelete="CASCADE"), unique=True
+    )
+    made_at: Mapped[datetime] = mapped_column(DateTime)
+    device_grader: Mapped[str] = mapped_column(Text)
+    device_verdict: Mapped[str] = mapped_column(Text)
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"OfflineAttempt(id={self.id!r}, client_id={self.client_id!r}, "
+            f"response_id={self.response_id!r})"
+        )
+
+
 __all__ = [
     "API_CALL_PROVIDERS",
     "API_CALL_PURPOSES",
@@ -1642,6 +1687,7 @@ __all__ = [
     "ConceptEmbedding",
     "ConceptPairJudgement",
     "ConceptRelation",
+    "DEVICE_GRADER_PREFIX",
     "GenerationRun",
     "GlossaryTerm",
     "JUDGEMENT_OUTCOMES",
@@ -1650,6 +1696,7 @@ __all__ = [
     "KnowledgeSourceIdentifier",
     "LabRunRecord",
     "LabWorkspace",
+    "OfflineAttempt",
     "REFERENCE_FOUND_IN",
     "REFERENCE_MATCH_METHODS",
     "REFERENCE_RUN_STATUSES",

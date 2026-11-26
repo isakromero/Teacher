@@ -358,7 +358,7 @@ def test_cli_db_flag_overrides_the_variable(
     out = capsys.readouterr().out
     assert f"Database: sqlite:{tmp_path.resolve() / 'teacher.db'}" in out
     assert "Revision: none (not migrated yet)" in out
-    assert "Head revision: 0017" in out
+    assert "Head revision: 0018" in out
     assert f"Data root: {tmp_path.resolve()}" in out
 
 
@@ -380,7 +380,7 @@ def test_cli_db_info_after_migrating(
     assert cli.main(argv) == 0
     out = capsys.readouterr().out
     assert f"Database: {create_db_provider(settings).describe()}" in out
-    assert "Revision: 0017" in out
+    assert "Revision: 0018" in out
     assert f"Data root: {settings.data_root}" in out
     assert PASSWORD not in out and "teacher_test" not in out
 

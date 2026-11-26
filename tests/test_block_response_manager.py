@@ -196,6 +196,27 @@ def test_record_validation(
     assert session.is_active
 
 
+def test_record_at_a_given_time(
+    session: Session, mgr: BlockResponseManager, blocks: ArtifactBlockManager, artifact: Artifact
+) -> None:
+    """`at` (an attempt made earlier on a phone) is the row's created_at and picks the study
+    session open then; an aware datetime is refused."""
+    from datetime import UTC, datetime, timedelta
+
+    from teacher.db.models import StudySession, utcnow
+
+    (gate,) = add_blocks(blocks, artifact, "G")
+    earlier = utcnow() - timedelta(days=1)
+    then = mgr.record(gate, response={"c": 1}, passed=False, grader="g", at=earlier)
+    now = mgr.record(gate, response={"c": 2}, passed=False, grader="g")
+    assert then.created_at == earlier and then.attempt == 1 and now.attempt == 2
+    assert then.session_id != now.session_id
+    assert session.get(StudySession, then.session_id).started_at == earlier
+    with pytest.raises(ValueError, match="naive UTC"):
+        mgr.record(gate, response={"c": 3}, passed=False, grader="g", at=datetime.now(UTC))
+    assert mgr.attempt_count(gate) == 2
+
+
 def test_record_attempt_race_maps_to_duplicate_error(
     mgr: BlockResponseManager, blocks: ArtifactBlockManager, artifact: Artifact,
     session: Session, monkeypatch: pytest.MonkeyPatch,

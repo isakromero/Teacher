@@ -65,8 +65,10 @@ REVIEW_TABLES = {"review_variants", "review_items", "review_attempts"}  # 0013
 CITATION_TABLES = {"source_reference_extractions", "source_references"}  # 0015
 LEDGER_TABLES = {"api_calls"}  # 0016
 USER_TABLES = {"users", "user_sessions"}  # 0017
+OFFLINE_TABLES = {"offline_attempts"}  # 0018
 TABLES = (
     TABLES_0010 | TAG_TABLES | REVIEW_TABLES | CITATION_TABLES | LEDGER_TABLES | USER_TABLES
+    | OFFLINE_TABLES
 )
 # The two FTS5 virtual tables (word and trigram index) and the shadow tables FTS5 keeps for them.
 FTS_TABLES = {
@@ -91,7 +93,7 @@ CHAT_BLOCK_TABLES = {"chat_blocks", "chat_block_responses"}
 LAB_TABLES = {"lab_workspaces", "lab_runs"}
 HISTORY_TABLES = {"study_sessions", "study_events", "attention_spans"}
 ACTIVITY_TABLES = ("block_responses", "chat_block_responses", "chat_messages", "lab_runs")
-HEAD = "0017"
+HEAD = "0018"
 
 # The chain's SQLite side: raw sqlite3, PRAGMAs, the file backup and FTS5. The Postgres side is
 # in test_migrations_postgres.py.
@@ -1506,7 +1508,7 @@ def test_upgrade_0012_to_0013_adds_the_review_queue_and_keeps_data(tmp_path: Pat
     settings = _at_0011_with_answers(tmp_path)
     command.upgrade(alembic_config(settings), "0012")
     command.upgrade(alembic_config(settings), "0013")
-    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         conn.execute("PRAGMA foreign_keys=ON")
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == (2,)
@@ -1569,7 +1571,7 @@ def test_downgrade_0013_to_0012_drops_only_the_review_queue(tmp_path: Path) -> N
     command.downgrade(alembic_config(settings), "0012")
     assert current_revision(settings) == "0012"
     assert _tables(settings) == (
-        (TABLES - REVIEW_TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
+        (TABLES - REVIEW_TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES) | FTS_TABLES | {"alembic_version"}
     )
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == (2,)
@@ -1677,7 +1679,7 @@ def test_downgrade_0015_to_0014_drops_only_the_citations(tmp_path: Path) -> None
         )
     command.downgrade(alembic_config(settings), "0014")
     assert current_revision(settings) == "0014"
-    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         assert conn.execute(
             "SELECT count(*) FROM knowledge_sources WHERE id IN (101, 102)"
@@ -1775,7 +1777,7 @@ def test_downgrade_0016_to_0015_drops_only_the_ledger(tmp_path: Path) -> None:
     command.downgrade(alembic_config(settings), "0015")
     assert current_revision(settings) == "0015"
     assert _tables(settings) == (
-        (TABLES - LEDGER_TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
+        (TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES) | FTS_TABLES | {"alembic_version"}
     )
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT input_tokens FROM chat_messages WHERE id = 401").fetchall() == [
@@ -1864,7 +1866,7 @@ def test_downgrade_0017_to_0016_drops_only_the_accounts(tmp_path: Path) -> None:
         conn.execute("INSERT INTO users (id, email, password_hash) VALUES (1, 'a@b.io', 'h')")
     command.downgrade(alembic_config(settings), "0016")
     assert current_revision(settings) == "0016"
-    assert _tables(settings) == (TABLES - USER_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - USER_TABLES - OFFLINE_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT count(*) FROM api_calls").fetchone() == (1,)
         assert conn.execute("SELECT input_tokens FROM chat_messages WHERE id = 401").fetchall() == [
@@ -1887,3 +1889,89 @@ def test_0017_froze_the_live_checks() -> None:
         }
         frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
         assert live == frozen, table.name
+
+
+# -- 0018: attempts uploaded from a phone ----------------------------------------------------
+
+
+def _at_0017_with_data(tmp_path: Path) -> Settings:
+    """At 0017 with an artifact, its answers, two sources, a chat thread, a ledger row and a
+    user."""
+    settings = _at_0016_with_data(tmp_path)
+    command.upgrade(alembic_config(settings), "0017")
+    with _sqlite(settings) as conn:
+        conn.execute("INSERT INTO users (id, email, password_hash) VALUES (1, 'a@b.io', 'h')")
+    return settings
+
+
+def test_upgrade_0017_to_0018_adds_offline_attempts_and_keeps_data(tmp_path: Path) -> None:
+    settings = _at_0017_with_data(tmp_path)
+    counted = ("artifacts", "block_responses", "chat_messages", "api_calls", "users")
+    with _sqlite(settings) as conn:
+        before = {t: conn.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in counted}
+    backup = upgrade_to_head(settings)
+    assert backup is not None and current_revision(settings) == HEAD
+    assert OFFLINE_TABLES <= _tables(settings)
+    with _sqlite(settings) as conn:
+        conn.execute("PRAGMA foreign_keys=ON")
+        for table, count in before.items():
+            assert conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0] == count
+        assert conn.execute("SELECT count(*) FROM offline_attempts").fetchone() == (0,)
+        responses = [r for (r,) in conn.execute("SELECT id FROM block_responses ORDER BY id")]
+        assert len(responses) >= 2
+        insert = (
+            "INSERT INTO offline_attempts (client_id, response_id, made_at, device_grader, "
+            "device_verdict) VALUES (?, ?, '2026-11-25 12:00:00', ?, ?)"
+        )
+        ok = ["0" * 8 + "-0000-4000-8000-" + "0" * 12, responses[0], "device:phone", "failed"]
+        conn.execute(insert, ok)
+        assert conn.execute("SELECT received_at IS NOT NULL FROM offline_attempts").fetchone() == (1,)
+        other = "1" * 8 + "-0000-4000-8000-" + "0" * 12
+        for change, constraint in [
+            ({1: responses[1]}, "UNIQUE"),  # the same client_id
+            ({0: other}, "UNIQUE"),  # the same response
+            ({0: "short", 1: responses[1]}, "ck_offline_attempts_client_id"),
+            ({0: other, 1: responses[1], 2: "judge"}, "ck_offline_attempts_device_grader"),
+            ({0: other, 1: responses[1], 2: "device:"}, "ck_offline_attempts_device_grader"),
+            ({0: other, 1: responses[1], 3: "maybe"}, "ck_offline_attempts_device_verdict"),
+            ({0: other, 1: 999999}, "FOREIGN KEY"),
+        ]:
+            values = [change.get(i, v) for i, v in enumerate(ok)]
+            with pytest.raises(sqlite3.IntegrityError, match=constraint):
+                conn.execute(insert, values)
+        conn.execute("DELETE FROM block_responses WHERE id = ?", (responses[0],))
+        assert conn.execute("SELECT count(*) FROM offline_attempts").fetchone() == (0,)
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_downgrade_0018_to_0017_drops_only_offline_attempts(tmp_path: Path) -> None:
+    settings = _at_0017_with_data(tmp_path)
+    upgrade_to_head(settings)
+    with _sqlite(settings) as conn:
+        (response,) = conn.execute("SELECT id FROM block_responses ORDER BY id LIMIT 1").fetchone()
+        conn.execute(
+            "INSERT INTO offline_attempts (client_id, response_id, made_at, device_grader, "
+            "device_verdict) VALUES (?, ?, '2026-11-25 12:00:00', 'device:phone', 'failed')",
+            ("0" * 8 + "-0000-4000-8000-" + "0" * 12, response),
+        )
+        responses = conn.execute("SELECT count(*) FROM block_responses").fetchone()
+    command.downgrade(alembic_config(settings), "0017")
+    assert current_revision(settings) == "0017"
+    assert _tables(settings) == (TABLES - OFFLINE_TABLES) | FTS_TABLES | {"alembic_version"}
+    with _sqlite(settings) as conn:
+        assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == responses
+        assert conn.execute("SELECT count(*) FROM users").fetchone() == (1,)
+    upgrade_to_head(settings)  # and up again
+    assert OFFLINE_TABLES <= _tables(settings)
+
+
+def test_0018_froze_the_live_checks() -> None:
+    """The check texts 0018 froze must match the models' (until a later revision changes them)."""
+    from teacher.db.models import OfflineAttempt
+
+    script = ScriptDirectory.from_config(alembic_config(Settings(root=Path("unused"))))
+    module = script.get_revision("0018").module
+    table = OfflineAttempt.__table__
+    live = {c.name: str(c.sqltext) for c in table.constraints if isinstance(c, CheckConstraint)}
+    frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
+    assert live == frozen

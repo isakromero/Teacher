@@ -23,6 +23,7 @@ events include its labs'; callers never pass both. Where each kind is logged:
 | source_file_opened          | the page ("Open original file")             | source            |
 | graph_opened                | GET /graph[?concept=]                       | concept?          |
 | gate_cleared                | POST .../blocks/{key}/responses             | artifact, block   |
+|                             | POST /api/offline/artifacts/{slug}/attempts |                   |
 | glossary_opened             | the page (POST /api/history/events)         | artifact          |
 | glossary_term_viewed        | the page                                    | artifact          |
 | glossary_build_requested    | POST /api/artifacts/{slug}/glossary         | artifact          |

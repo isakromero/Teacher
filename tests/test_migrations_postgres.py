@@ -26,7 +26,7 @@ from teacher.managers import ConceptManager
 
 pytestmark = pytest.mark.postgres_only("the migration chain on PostgreSQL")
 
-HEAD = "0017"
+HEAD = "0018"
 TABLES = set(Base.metadata.tables)
 SEARCH_TABLES = {"concept_search", "concept_search_tokens", "concept_trigram"}
 SEARCH_INDEXES = {
@@ -248,18 +248,21 @@ def test_json_columns_and_boolean_defaults(settings: Settings) -> None:
 
 
 def test_the_account_tables_have_row_level_security(settings: Settings) -> None:
-    """0017 enables RLS (with no policy) on users and user_sessions, so Supabase's Data API roles
-    see none of their rows; the app, connecting as the tables' owner, is not affected."""
+    """0017 enables RLS (with no policy) on users and user_sessions, and 0018 on
+    offline_attempts, so Supabase's Data API roles see none of their rows; the app, connecting
+    as the tables' owner, is not affected."""
     with _connect(settings) as conn:
         rls = dict(
             conn.execute(
                 text(
-                    "SELECT relname, relrowsecurity FROM pg_class "
-                    "WHERE relname IN ('users', 'user_sessions', 'api_calls')"
+                    "SELECT relname, relrowsecurity FROM pg_class WHERE relname IN "
+                    "('users', 'user_sessions', 'offline_attempts', 'api_calls')"
                 )
             ).all()
         )
-        assert rls == {"users": True, "user_sessions": True, "api_calls": False}
+        assert rls == {
+            "users": True, "user_sessions": True, "offline_attempts": True, "api_calls": False
+        }
         # A role like Supabase's `anon`, with SELECT on the table (rolled back with the rest).
         probe = f"rls_probe_{uuid.uuid4().hex[:12]}"
         conn.execute(text(f"CREATE ROLE {probe} NOLOGIN"))

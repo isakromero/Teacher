@@ -47,6 +47,7 @@ from teacher.web.routers import (
     history,
     labs,
     library_search,
+    offline,
     pyodide,
     reading,
     references,
@@ -347,6 +348,7 @@ def create_app(
     app.include_router(sources.router)
     app.include_router(artifacts.router)
     app.include_router(reading.router)
+    app.include_router(offline.router)
     app.include_router(chat.router)
     app.include_router(glossary.router)
     app.include_router(concepts.router)

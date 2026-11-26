@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import case, exists, func, select
@@ -80,9 +81,15 @@ class BlockResponseManager:
         verdict: str | None = None,
         missing: tuple[str, ...] = (),
         confidence: str | None = None,
+        at: datetime | None = None,
     ) -> BlockResponse:
         """Store the next attempt (previous max + 1, starting at 1) for `block`, in the open
-        study session (`StudyHistoryManager.activity_session`).
+        study session (`StudyHistoryManager.activity_session`) at `at`.
+
+        `at` is when the attempt was made, as a naive UTC datetime (ValueError for an aware
+        one); None (the default) is now. It is given only for an attempt made earlier on
+        another device (`teacher.web.routers.offline`): it becomes the row's `created_at` and
+        picks the study session open at that time.
 
         `response` must be a JSON-serialisable dict, list or str (None is rejected: the JSON
         column would store it as JSON null). `details` is the grader's private verdict: a
@@ -109,6 +116,8 @@ class BlockResponseManager:
                 f"confidence must be one of {list(CONFIDENCES)} or None, got {confidence!r}"
             )
         _validate_text(grader, "grader")
+        if at is not None and (not isinstance(at, datetime) or at.tzinfo is not None):
+            raise ValueError("at must be a naive UTC datetime")
         if details is not None:
             if not isinstance(details, dict):
                 raise TypeError(f"details must be a dict or None, got {details.__class__.__name__}")
@@ -132,8 +141,10 @@ class BlockResponseManager:
             verdict=verdict,
             missing=list(missing),
             confidence=confidence,
-            session_id=StudyHistoryManager(self.session, self.settings).activity_session().id,
+            session_id=StudyHistoryManager(self.session, self.settings).activity_session(at).id,
         )
+        if at is not None:
+            row.created_at = at
         try:
             with self.session.begin_nested():
                 self.session.add(row)
