@@ -1,0 +1,5 @@
+Airistotle.xcodeproj/
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/

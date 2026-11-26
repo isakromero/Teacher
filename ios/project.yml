@@ -1,0 +1,105 @@
+# XcodeGen project for the Airistotle iOS app. Generate with:
+#   cd ios && /opt/homebrew/bin/xcodegen generate
+# The generated Airistotle.xcodeproj is not hand-edited.
+name: Airistotle
+options:
+  bundleIdPrefix: dev.airistotle
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    DEVELOPMENT_TEAM: A2U78WN6TR
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+targets:
+  Airistotle:
+    type: application
+    platform: iOS
+    sources:
+      - path: Airistotle
+    info:
+      path: Airistotle/Info.plist
+      properties:
+        CFBundleDisplayName: Airistotle
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        LSRequiresIPhoneOS: true
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # Plain http only to local addresses (a development server); everything else is https.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSLocalNetworkUsageDescription: >-
+          Airistotle connects to a Teacher server on your local network when you enter its
+          address.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.airistotle.reader
+        PRODUCT_NAME: Airistotle
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+  AiristotleTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: AiristotleTests
+    dependencies:
+      - target: Airistotle
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.airistotle.reader.tests
+        GENERATE_INFOPLIST_FILE: YES
+  AiristotleUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: AiristotleUITests
+    dependencies:
+      - target: Airistotle
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.airistotle.reader.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Airistotle
+schemes:
+  Airistotle:
+    build:
+      targets:
+        Airistotle: all
+        AiristotleTests: [test]
+    test:
+      config: Debug
+      targets:
+        - AiristotleTests
+    run:
+      config: Debug
+    archive:
+      config: Release
+  # End-to-end UI tests against a running Teacher server; they skip unless E2E_SERVER is set
+  # (pass it to xcodebuild as TEST_RUNNER_E2E_SERVER=...). See AiristotleUITests/E2ETests.swift.
+  AiristotleE2E:
+    build:
+      targets:
+        Airistotle: all
+        AiristotleUITests: [test]
+    test:
+      config: Debug
+      targets:
+        - AiristotleUITests

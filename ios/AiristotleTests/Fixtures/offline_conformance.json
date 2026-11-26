@@ -1,0 +1,2634 @@
+{
+ "pages": [
+  {
+   "bundle": {
+    "artifact": "study",
+    "artifact_id": 1,
+    "assets": [],
+    "blocks": [
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "markdown": "# Intro\n\nOpening text."
+      },
+      "is_gate": false,
+      "is_question": false,
+      "key": "b01",
+      "passed": false,
+      "position": 1,
+      "private": null,
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": null,
+      "type": "prose",
+      "visible": true
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "options": [
+        "alpha",
+        "beta",
+        "gamma"
+       ],
+       "question": "Which letter?"
+      },
+      "is_gate": true,
+      "is_question": true,
+      "key": "b02",
+      "passed": false,
+      "position": 2,
+      "private": {
+       "correct_index": 1,
+       "explanation": "Beta is right.",
+       "option_explanations": [
+        "Alpha is first.",
+        "Beta is right.",
+        "Gamma is last."
+       ]
+      },
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": "open",
+      "type": "multiple_choice",
+      "visible": true
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "markdown": "Locked prose three."
+      },
+      "is_gate": false,
+      "is_question": false,
+      "key": "b03",
+      "passed": false,
+      "position": 3,
+      "private": null,
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": null,
+      "type": "prose",
+      "visible": false
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "min_words": 5,
+       "prompt": "Summarise the text."
+      },
+      "is_gate": true,
+      "is_question": true,
+      "key": "b04",
+      "passed": false,
+      "position": 4,
+      "private": {
+       "model_answer": "The model answer.",
+       "rubric": [
+        {
+         "criterion": "Names the cause.",
+         "required": true
+        },
+        {
+         "criterion": "Gives an example.",
+         "required": true
+        },
+        {
+         "criterion": "Mentions a limit.",
+         "required": false
+        }
+       ]
+      },
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": "open",
+      "type": "blurb",
+      "visible": false
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "options": [
+        "up",
+        "down"
+       ],
+       "prompt": "Will it rise?"
+      },
+      "is_gate": true,
+      "is_question": false,
+      "key": "b05",
+      "passed": false,
+      "position": 5,
+      "private": {
+       "correct_index": 0,
+       "resolution": "It rises."
+      },
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": "open",
+      "type": "prediction",
+      "visible": false
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "markdown": "Locked prose six."
+      },
+      "is_gate": false,
+      "is_question": false,
+      "key": "b06",
+      "passed": false,
+      "position": 6,
+      "private": null,
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": null,
+      "type": "prose",
+      "visible": false
+     }
+    ],
+    "bundled_at": "2026-11-25T20:28:36.133612+00:00",
+    "complete": false,
+    "default_min_words": 20,
+    "format": "teacher-offline-bundle",
+    "format_version": 1,
+    "gates_cleared": 0,
+    "gates_total": 3,
+    "generated_at": "2026-11-25T20:28:36.098189+00:00",
+    "grading": {
+     "device_grader_prefix": "device:",
+     "multiple_choice_grader": "multiple-choice-v2",
+     "multiple_choice_wrong_prefix": "Not quite. ",
+     "no_option_feedback": "Not quite. Try again. This page was generated before per-option feedback existed, so there is no explanation of why this option is wrong; regenerating the page adds one.",
+     "prediction_feedback": "Your prediction is recorded. Read on: the next part shows what actually happens, and you can check your guess against it.",
+     "prediction_grader": "prediction-v1"
+    },
+    "locked_blocks": 4,
+    "max_attempts": 2,
+    "superseded_by": null,
+    "title": "Study 1",
+    "total_blocks": 6,
+    "version": "baad3344599bd56f4b5f40f7eea76dd4f57f0f6fd08ae6ba372e6bf3e93fd43b"
+   },
+   "initial": {
+    "blocks": {
+     "artifact": "study",
+     "blocks": [
+      {
+       "attempts": 0,
+       "concepts": [],
+       "content": {
+        "markdown": "# Intro\n\nOpening text."
+       },
+       "is_gate": false,
+       "key": "b01",
+       "position": 1,
+       "revealed": null,
+       "segments": [],
+       "state": null,
+       "type": "prose"
+      },
+      {
+       "attempts": 0,
+       "concepts": [],
+       "content": {
+        "options": [
+         "alpha",
+         "beta",
+         "gamma"
+        ],
+        "question": "Which letter?"
+       },
+       "is_gate": true,
+       "key": "b02",
+       "position": 2,
+       "revealed": null,
+       "segments": [],
+       "state": "open",
+       "type": "multiple_choice"
+      }
+     ],
+     "complete": false,
+     "locked_blocks": 4,
+     "total_blocks": 6
+    },
+    "responses": {
+     "b01": [],
+     "b02": []
+    }
+   },
+   "slug": "study",
+   "steps": [
+    {
+     "body": {
+      "response": {
+       "text": "this answer has well over five words in it"
+      }
+     },
+     "detail": "block b03 is locked: clear the gate before it first",
+     "key": "b03",
+     "status": 409
+    },
+    {
+     "body": {
+      "response": {
+       "choice": 0
+      }
+     },
+     "detail": "study: no block 'b09'",
+     "key": "b09",
+     "status": 404
+    },
+    {
+     "body": {
+      "response": {
+       "choice": 0
+      }
+     },
+     "detail": "block b01 is not a gate and takes no responses",
+     "key": "b01",
+     "status": 409
+    },
+    {
+     "body": {
+      "response": {
+       "choice": 3
+      }
+     },
+     "detail": "choice must be between 0 and 2, got 3",
+     "key": "b02",
+     "status": 422
+    },
+    {
+     "body": {
+      "response": {
+       "choice": true
+      }
+     },
+     "detail": "choice must be an integer option index",
+     "key": "b02",
+     "status": 422
+    },
+    {
+     "body": {
+      "response": {
+       "pick": 1
+      }
+     },
+     "detail": "response is missing choice",
+     "key": "b02",
+     "status": 422
+    },
+    {
+     "body": {
+      "response": {
+       "choice": 1,
+       "extra": 2
+      }
+     },
+     "detail": "response has unknown key(s) extra",
+     "key": "b02",
+     "status": 422
+    },
+    {
+     "body": {
+      "confidence": "sure",
+      "response": {
+       "choice": 1
+      }
+     },
+     "detail": "confidence: Input should be 'low', 'medium' or 'high'",
+     "key": "b02",
+     "status": 422
+    },
+    {
+     "body": {
+      "other": 1,
+      "response": {
+       "choice": 1
+      }
+     },
+     "detail": "other: Extra inputs are not permitted",
+     "key": "b02",
+     "status": 422
+    },
+    {
+     "blocks": {
+      "artifact": "study",
+      "blocks": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "# Intro\n\nOpening text."
+        },
+        "is_gate": false,
+        "key": "b01",
+        "position": 1,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 1,
+        "concepts": [],
+        "content": {
+         "options": [
+          "alpha",
+          "beta",
+          "gamma"
+         ],
+         "question": "Which letter?"
+        },
+        "is_gate": true,
+        "key": "b02",
+        "position": 2,
+        "revealed": null,
+        "segments": [],
+        "state": "open",
+        "type": "multiple_choice"
+       }
+      ],
+      "complete": false,
+      "locked_blocks": 4,
+      "total_blocks": 6
+     },
+     "body": {
+      "confidence": "low",
+      "response": {
+       "choice": 0
+      }
+     },
+     "key": "b02",
+     "reply": {
+      "attempt": 1,
+      "complete": false,
+      "confidence": "low",
+      "details": null,
+      "feedback": "Not quite. Alpha is first.",
+      "locked_blocks": 4,
+      "missing": [],
+      "passed": false,
+      "revealed": null,
+      "state": "open",
+      "unlocked": [],
+      "verdict": "failed"
+     },
+     "responses": {
+      "b01": [],
+      "b02": [
+       {
+        "attempt": 1,
+        "confidence": "low",
+        "created_at": "2026-11-25T20:28:36.163646+00:00",
+        "details": null,
+        "feedback": "Not quite. Alpha is first.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "choice": 0
+        },
+        "verdict": "failed"
+       }
+      ]
+     },
+     "status": 201
+    },
+    {
+     "blocks": {
+      "artifact": "study",
+      "blocks": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "# Intro\n\nOpening text."
+        },
+        "is_gate": false,
+        "key": "b01",
+        "position": 1,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 2,
+        "concepts": [],
+        "content": {
+         "options": [
+          "alpha",
+          "beta",
+          "gamma"
+         ],
+         "question": "Which letter?"
+        },
+        "is_gate": true,
+        "key": "b02",
+        "position": 2,
+        "revealed": {
+         "correct_index": 1,
+         "explanation": "Beta is right.",
+         "option_explanations": [
+          "Alpha is first.",
+          "Beta is right.",
+          "Gamma is last."
+         ]
+        },
+        "segments": [],
+        "state": "passed",
+        "type": "multiple_choice"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "Locked prose three."
+        },
+        "is_gate": false,
+        "key": "b03",
+        "position": 3,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "min_words": 5,
+         "prompt": "Summarise the text."
+        },
+        "is_gate": true,
+        "key": "b04",
+        "position": 4,
+        "revealed": null,
+        "segments": [],
+        "state": "open",
+        "type": "blurb"
+       }
+      ],
+      "complete": false,
+      "locked_blocks": 2,
+      "total_blocks": 6
+     },
+     "body": {
+      "confidence": "high",
+      "response": {
+       "choice": 1
+      }
+     },
+     "key": "b02",
+     "reply": {
+      "attempt": 2,
+      "complete": false,
+      "confidence": "high",
+      "details": null,
+      "feedback": "Beta is right.",
+      "locked_blocks": 2,
+      "missing": [],
+      "passed": true,
+      "revealed": {
+       "correct_index": 1,
+       "explanation": "Beta is right.",
+       "option_explanations": [
+        "Alpha is first.",
+        "Beta is right.",
+        "Gamma is last."
+       ]
+      },
+      "state": "passed",
+      "unlocked": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "Locked prose three."
+        },
+        "is_gate": false,
+        "key": "b03",
+        "position": 3,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "min_words": 5,
+         "prompt": "Summarise the text."
+        },
+        "is_gate": true,
+        "key": "b04",
+        "position": 4,
+        "revealed": null,
+        "segments": [],
+        "state": "open",
+        "type": "blurb"
+       }
+      ],
+      "verdict": "passed"
+     },
+     "responses": {
+      "b01": [],
+      "b02": [
+       {
+        "attempt": 1,
+        "confidence": "low",
+        "created_at": "2026-11-25T20:28:36.163646+00:00",
+        "details": null,
+        "feedback": "Not quite. Alpha is first.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "choice": 0
+        },
+        "verdict": "failed"
+       },
+       {
+        "attempt": 2,
+        "confidence": "high",
+        "created_at": "2026-11-25T20:28:36.173405+00:00",
+        "details": null,
+        "feedback": "Beta is right.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": true,
+        "response": {
+         "choice": 1
+        },
+        "verdict": "passed"
+       }
+      ],
+      "b03": [],
+      "b04": []
+     },
+     "status": 201
+    },
+    {
+     "body": {
+      "response": {
+       "choice": 1
+      }
+     },
+     "detail": "block b02 is already passed",
+     "key": "b02",
+     "status": 409
+    },
+    {
+     "body": {
+      "response": {
+       "text": "too short"
+      }
+     },
+     "detail": "Write at least 5 words before submitting (you wrote 2); this was not counted as an attempt.",
+     "key": "b04",
+     "status": 422
+    },
+    {
+     "body": {
+      "response": {
+       "text": "   "
+      }
+     },
+     "detail": "text must not be empty",
+     "key": "b04",
+     "status": 422
+    },
+    {
+     "body": {
+      "response": {
+       "text": 5
+      }
+     },
+     "detail": "text must be a string",
+     "key": "b04",
+     "status": 422
+    },
+    {
+     "blocks": {
+      "artifact": "study",
+      "blocks": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "# Intro\n\nOpening text."
+        },
+        "is_gate": false,
+        "key": "b01",
+        "position": 1,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 2,
+        "concepts": [],
+        "content": {
+         "options": [
+          "alpha",
+          "beta",
+          "gamma"
+         ],
+         "question": "Which letter?"
+        },
+        "is_gate": true,
+        "key": "b02",
+        "position": 2,
+        "revealed": {
+         "correct_index": 1,
+         "explanation": "Beta is right.",
+         "option_explanations": [
+          "Alpha is first.",
+          "Beta is right.",
+          "Gamma is last."
+         ]
+        },
+        "segments": [],
+        "state": "passed",
+        "type": "multiple_choice"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "Locked prose three."
+        },
+        "is_gate": false,
+        "key": "b03",
+        "position": 3,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 1,
+        "concepts": [],
+        "content": {
+         "min_words": 5,
+         "prompt": "Summarise the text."
+        },
+        "is_gate": true,
+        "key": "b04",
+        "position": 4,
+        "revealed": null,
+        "segments": [],
+        "state": "open",
+        "type": "blurb"
+       }
+      ],
+      "complete": false,
+      "locked_blocks": 2,
+      "total_blocks": 6
+     },
+     "body": {
+      "response": {
+       "text": "this answer has well over five words in it"
+      }
+     },
+     "judge": {
+      "criteria": [
+       {
+        "justification": "Criterion 1 was not met.",
+        "met": false,
+        "number": 1
+       },
+       {
+        "justification": "Criterion 2 was not met.",
+        "met": false,
+        "number": 2
+       },
+       {
+        "justification": "Criterion 3 was met.",
+        "met": true,
+        "number": 3
+       }
+      ],
+      "feedback": "Look again."
+     },
+     "key": "b04",
+     "reply": {
+      "attempt": 1,
+      "complete": false,
+      "confidence": null,
+      "details": null,
+      "feedback": "Look again.",
+      "locked_blocks": 2,
+      "missing": [],
+      "passed": false,
+      "revealed": null,
+      "state": "open",
+      "unlocked": [],
+      "verdict": "failed"
+     },
+     "responses": {
+      "b01": [],
+      "b02": [
+       {
+        "attempt": 1,
+        "confidence": "low",
+        "created_at": "2026-11-25T20:28:36.163646+00:00",
+        "details": null,
+        "feedback": "Not quite. Alpha is first.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "choice": 0
+        },
+        "verdict": "failed"
+       },
+       {
+        "attempt": 2,
+        "confidence": "high",
+        "created_at": "2026-11-25T20:28:36.173405+00:00",
+        "details": null,
+        "feedback": "Beta is right.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": true,
+        "response": {
+         "choice": 1
+        },
+        "verdict": "passed"
+       }
+      ],
+      "b03": [],
+      "b04": [
+       {
+        "attempt": 1,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.197115+00:00",
+        "details": null,
+        "feedback": "Look again.",
+        "grader": "device:apple-foundation-models",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "text": "this answer has well over five words in it"
+        },
+        "verdict": "failed"
+       }
+      ]
+     },
+     "status": 201
+    },
+    {
+     "blocks": {
+      "artifact": "study",
+      "blocks": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "# Intro\n\nOpening text."
+        },
+        "is_gate": false,
+        "key": "b01",
+        "position": 1,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 2,
+        "concepts": [],
+        "content": {
+         "options": [
+          "alpha",
+          "beta",
+          "gamma"
+         ],
+         "question": "Which letter?"
+        },
+        "is_gate": true,
+        "key": "b02",
+        "position": 2,
+        "revealed": {
+         "correct_index": 1,
+         "explanation": "Beta is right.",
+         "option_explanations": [
+          "Alpha is first.",
+          "Beta is right.",
+          "Gamma is last."
+         ]
+        },
+        "segments": [],
+        "state": "passed",
+        "type": "multiple_choice"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "Locked prose three."
+        },
+        "is_gate": false,
+        "key": "b03",
+        "position": 3,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 2,
+        "concepts": [],
+        "content": {
+         "min_words": 5,
+         "prompt": "Summarise the text."
+        },
+        "is_gate": true,
+        "key": "b04",
+        "position": 4,
+        "revealed": {
+         "model_answer": "The model answer.",
+         "rubric": [
+          {
+           "criterion": "Names the cause.",
+           "required": true
+          },
+          {
+           "criterion": "Gives an example.",
+           "required": true
+          },
+          {
+           "criterion": "Mentions a limit.",
+           "required": false
+          }
+         ]
+        },
+        "segments": [],
+        "state": "revealed",
+        "type": "blurb"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "options": [
+          "up",
+          "down"
+         ],
+         "prompt": "Will it rise?"
+        },
+        "is_gate": true,
+        "key": "b05",
+        "position": 5,
+        "revealed": null,
+        "segments": [],
+        "state": "open",
+        "type": "prediction"
+       }
+      ],
+      "complete": false,
+      "locked_blocks": 1,
+      "total_blocks": 6
+     },
+     "body": {
+      "confidence": "medium",
+      "response": {
+       "text": "this answer has well over five words in it again"
+      }
+     },
+     "judge": {
+      "criteria": [
+       {
+        "justification": "Criterion 1 was met.",
+        "met": true,
+        "number": 1
+       },
+       {
+        "justification": "Criterion 2 was not met.",
+        "met": false,
+        "number": 2
+       },
+       {
+        "justification": "Criterion 3 was not met.",
+        "met": false,
+        "number": 3
+       }
+      ],
+      "feedback": "Add an example."
+     },
+     "key": "b04",
+     "reply": {
+      "attempt": 2,
+      "complete": false,
+      "confidence": "medium",
+      "details": {
+       "criteria": [
+        {
+         "criterion": "Names the cause.",
+         "justification": "Criterion 1 was met.",
+         "met": true,
+         "required": true
+        },
+        {
+         "criterion": "Gives an example.",
+         "justification": "Criterion 2 was not met.",
+         "met": false,
+         "required": true
+        },
+        {
+         "criterion": "Mentions a limit.",
+         "justification": "Criterion 3 was not met.",
+         "met": false,
+         "required": false
+        }
+       ],
+       "model": "apple-on-device-system-language-model",
+       "score": 0.3333333333333333
+      },
+      "feedback": "Add an example.",
+      "locked_blocks": 1,
+      "missing": [
+       "Gives an example."
+      ],
+      "passed": false,
+      "revealed": {
+       "model_answer": "The model answer.",
+       "rubric": [
+        {
+         "criterion": "Names the cause.",
+         "required": true
+        },
+        {
+         "criterion": "Gives an example.",
+         "required": true
+        },
+        {
+         "criterion": "Mentions a limit.",
+         "required": false
+        }
+       ]
+      },
+      "state": "revealed",
+      "unlocked": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "options": [
+          "up",
+          "down"
+         ],
+         "prompt": "Will it rise?"
+        },
+        "is_gate": true,
+        "key": "b05",
+        "position": 5,
+        "revealed": null,
+        "segments": [],
+        "state": "open",
+        "type": "prediction"
+       }
+      ],
+      "verdict": "partial"
+     },
+     "responses": {
+      "b01": [],
+      "b02": [
+       {
+        "attempt": 1,
+        "confidence": "low",
+        "created_at": "2026-11-25T20:28:36.163646+00:00",
+        "details": null,
+        "feedback": "Not quite. Alpha is first.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "choice": 0
+        },
+        "verdict": "failed"
+       },
+       {
+        "attempt": 2,
+        "confidence": "high",
+        "created_at": "2026-11-25T20:28:36.173405+00:00",
+        "details": null,
+        "feedback": "Beta is right.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": true,
+        "response": {
+         "choice": 1
+        },
+        "verdict": "passed"
+       }
+      ],
+      "b03": [],
+      "b04": [
+       {
+        "attempt": 1,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.197115+00:00",
+        "details": {
+         "criteria": [
+          {
+           "criterion": "Names the cause.",
+           "justification": "Criterion 1 was not met.",
+           "met": false,
+           "required": true
+          },
+          {
+           "criterion": "Gives an example.",
+           "justification": "Criterion 2 was not met.",
+           "met": false,
+           "required": true
+          },
+          {
+           "criterion": "Mentions a limit.",
+           "justification": "Criterion 3 was met.",
+           "met": true,
+           "required": false
+          }
+         ],
+         "model": "apple-on-device-system-language-model",
+         "score": 0.3333333333333333
+        },
+        "feedback": "Look again.",
+        "grader": "device:apple-foundation-models",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "text": "this answer has well over five words in it"
+        },
+        "verdict": "failed"
+       },
+       {
+        "attempt": 2,
+        "confidence": "medium",
+        "created_at": "2026-11-25T20:28:36.211437+00:00",
+        "details": {
+         "criteria": [
+          {
+           "criterion": "Names the cause.",
+           "justification": "Criterion 1 was met.",
+           "met": true,
+           "required": true
+          },
+          {
+           "criterion": "Gives an example.",
+           "justification": "Criterion 2 was not met.",
+           "met": false,
+           "required": true
+          },
+          {
+           "criterion": "Mentions a limit.",
+           "justification": "Criterion 3 was not met.",
+           "met": false,
+           "required": false
+          }
+         ],
+         "model": "apple-on-device-system-language-model",
+         "score": 0.3333333333333333
+        },
+        "feedback": "Add an example.",
+        "grader": "device:apple-foundation-models",
+        "missing": [
+         "Gives an example."
+        ],
+        "passed": false,
+        "response": {
+         "text": "this answer has well over five words in it again"
+        },
+        "verdict": "partial"
+       }
+      ],
+      "b05": []
+     },
+     "status": 201
+    },
+    {
+     "body": {
+      "confidence": "low",
+      "response": {
+       "choice": 1
+      }
+     },
+     "detail": "block b05 is a prediction, not a question, and takes no confidence",
+     "key": "b05",
+     "status": 422
+    },
+    {
+     "blocks": {
+      "artifact": "study",
+      "blocks": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "# Intro\n\nOpening text."
+        },
+        "is_gate": false,
+        "key": "b01",
+        "position": 1,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 2,
+        "concepts": [],
+        "content": {
+         "options": [
+          "alpha",
+          "beta",
+          "gamma"
+         ],
+         "question": "Which letter?"
+        },
+        "is_gate": true,
+        "key": "b02",
+        "position": 2,
+        "revealed": {
+         "correct_index": 1,
+         "explanation": "Beta is right.",
+         "option_explanations": [
+          "Alpha is first.",
+          "Beta is right.",
+          "Gamma is last."
+         ]
+        },
+        "segments": [],
+        "state": "passed",
+        "type": "multiple_choice"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "Locked prose three."
+        },
+        "is_gate": false,
+        "key": "b03",
+        "position": 3,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       },
+       {
+        "attempts": 2,
+        "concepts": [],
+        "content": {
+         "min_words": 5,
+         "prompt": "Summarise the text."
+        },
+        "is_gate": true,
+        "key": "b04",
+        "position": 4,
+        "revealed": {
+         "model_answer": "The model answer.",
+         "rubric": [
+          {
+           "criterion": "Names the cause.",
+           "required": true
+          },
+          {
+           "criterion": "Gives an example.",
+           "required": true
+          },
+          {
+           "criterion": "Mentions a limit.",
+           "required": false
+          }
+         ]
+        },
+        "segments": [],
+        "state": "revealed",
+        "type": "blurb"
+       },
+       {
+        "attempts": 1,
+        "concepts": [],
+        "content": {
+         "options": [
+          "up",
+          "down"
+         ],
+         "prompt": "Will it rise?"
+        },
+        "is_gate": true,
+        "key": "b05",
+        "position": 5,
+        "revealed": {
+         "correct_index": 0,
+         "resolution": "It rises."
+        },
+        "segments": [],
+        "state": "passed",
+        "type": "prediction"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "Locked prose six."
+        },
+        "is_gate": false,
+        "key": "b06",
+        "position": 6,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       }
+      ],
+      "complete": true,
+      "locked_blocks": 0,
+      "total_blocks": 6
+     },
+     "body": {
+      "response": {
+       "choice": 1
+      }
+     },
+     "key": "b05",
+     "reply": {
+      "attempt": 1,
+      "complete": true,
+      "confidence": null,
+      "details": {
+       "correct": false
+      },
+      "feedback": "Your prediction is recorded. Read on: the next part shows what actually happens, and you can check your guess against it.",
+      "locked_blocks": 0,
+      "missing": [],
+      "passed": true,
+      "revealed": {
+       "correct_index": 0,
+       "resolution": "It rises."
+      },
+      "state": "passed",
+      "unlocked": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "Locked prose six."
+        },
+        "is_gate": false,
+        "key": "b06",
+        "position": 6,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       }
+      ],
+      "verdict": "passed"
+     },
+     "responses": {
+      "b01": [],
+      "b02": [
+       {
+        "attempt": 1,
+        "confidence": "low",
+        "created_at": "2026-11-25T20:28:36.163646+00:00",
+        "details": null,
+        "feedback": "Not quite. Alpha is first.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "choice": 0
+        },
+        "verdict": "failed"
+       },
+       {
+        "attempt": 2,
+        "confidence": "high",
+        "created_at": "2026-11-25T20:28:36.173405+00:00",
+        "details": null,
+        "feedback": "Beta is right.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": true,
+        "response": {
+         "choice": 1
+        },
+        "verdict": "passed"
+       }
+      ],
+      "b03": [],
+      "b04": [
+       {
+        "attempt": 1,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.197115+00:00",
+        "details": {
+         "criteria": [
+          {
+           "criterion": "Names the cause.",
+           "justification": "Criterion 1 was not met.",
+           "met": false,
+           "required": true
+          },
+          {
+           "criterion": "Gives an example.",
+           "justification": "Criterion 2 was not met.",
+           "met": false,
+           "required": true
+          },
+          {
+           "criterion": "Mentions a limit.",
+           "justification": "Criterion 3 was met.",
+           "met": true,
+           "required": false
+          }
+         ],
+         "model": "apple-on-device-system-language-model",
+         "score": 0.3333333333333333
+        },
+        "feedback": "Look again.",
+        "grader": "device:apple-foundation-models",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "text": "this answer has well over five words in it"
+        },
+        "verdict": "failed"
+       },
+       {
+        "attempt": 2,
+        "confidence": "medium",
+        "created_at": "2026-11-25T20:28:36.211437+00:00",
+        "details": {
+         "criteria": [
+          {
+           "criterion": "Names the cause.",
+           "justification": "Criterion 1 was met.",
+           "met": true,
+           "required": true
+          },
+          {
+           "criterion": "Gives an example.",
+           "justification": "Criterion 2 was not met.",
+           "met": false,
+           "required": true
+          },
+          {
+           "criterion": "Mentions a limit.",
+           "justification": "Criterion 3 was not met.",
+           "met": false,
+           "required": false
+          }
+         ],
+         "model": "apple-on-device-system-language-model",
+         "score": 0.3333333333333333
+        },
+        "feedback": "Add an example.",
+        "grader": "device:apple-foundation-models",
+        "missing": [
+         "Gives an example."
+        ],
+        "passed": false,
+        "response": {
+         "text": "this answer has well over five words in it again"
+        },
+        "verdict": "partial"
+       }
+      ],
+      "b05": [
+       {
+        "attempt": 1,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.230541+00:00",
+        "details": {
+         "correct": false
+        },
+        "feedback": "Your prediction is recorded. Read on: the next part shows what actually happens, and you can check your guess against it.",
+        "grader": "prediction-v1",
+        "missing": [],
+        "passed": true,
+        "response": {
+         "choice": 1
+        },
+        "verdict": "passed"
+       }
+      ],
+      "b06": []
+     },
+     "status": 201
+    }
+   ]
+  },
+  {
+   "bundle": {
+    "artifact": "old",
+    "artifact_id": 2,
+    "assets": [],
+    "blocks": [
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "options": [
+        "one",
+        "two"
+       ],
+       "question": "Pick one."
+      },
+      "is_gate": true,
+      "is_question": true,
+      "key": "b01",
+      "passed": false,
+      "position": 1,
+      "private": {
+       "correct_index": 0,
+       "explanation": "One it is."
+      },
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": "open",
+      "type": "multiple_choice",
+      "visible": true
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "min_words": 20,
+       "prompt": "Explain."
+      },
+      "is_gate": true,
+      "is_question": true,
+      "key": "b02",
+      "passed": false,
+      "position": 2,
+      "private": {
+       "model_answer": "Because.",
+       "rubric": [
+        {
+         "criterion": "Names the cause.",
+         "required": true
+        },
+        {
+         "criterion": "Gives an example.",
+         "required": true
+        }
+       ]
+      },
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": "open",
+      "type": "blurb",
+      "visible": false
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "markdown": "The end."
+      },
+      "is_gate": false,
+      "is_question": false,
+      "key": "b03",
+      "passed": false,
+      "position": 3,
+      "private": null,
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": null,
+      "type": "prose",
+      "visible": false
+     }
+    ],
+    "bundled_at": "2026-11-25T20:28:36.251289+00:00",
+    "complete": false,
+    "default_min_words": 20,
+    "format": "teacher-offline-bundle",
+    "format_version": 1,
+    "gates_cleared": 0,
+    "gates_total": 2,
+    "generated_at": "2026-11-25T20:28:36.105318+00:00",
+    "grading": {
+     "device_grader_prefix": "device:",
+     "multiple_choice_grader": "multiple-choice-v2",
+     "multiple_choice_wrong_prefix": "Not quite. ",
+     "no_option_feedback": "Not quite. Try again. This page was generated before per-option feedback existed, so there is no explanation of why this option is wrong; regenerating the page adds one.",
+     "prediction_feedback": "Your prediction is recorded. Read on: the next part shows what actually happens, and you can check your guess against it.",
+     "prediction_grader": "prediction-v1"
+    },
+    "locked_blocks": 2,
+    "max_attempts": 2,
+    "superseded_by": null,
+    "title": "Study 2",
+    "total_blocks": 3,
+    "version": "138a5bea050c138e0744cfcb7a35fbc278d2b529f248534612f25e89982f3237"
+   },
+   "initial": {
+    "blocks": {
+     "artifact": "old",
+     "blocks": [
+      {
+       "attempts": 0,
+       "concepts": [],
+       "content": {
+        "options": [
+         "one",
+         "two"
+        ],
+        "question": "Pick one."
+       },
+       "is_gate": true,
+       "key": "b01",
+       "position": 1,
+       "revealed": null,
+       "segments": [],
+       "state": "open",
+       "type": "multiple_choice"
+      }
+     ],
+     "complete": false,
+     "locked_blocks": 2,
+     "total_blocks": 3
+    },
+    "responses": {
+     "b01": []
+    }
+   },
+   "slug": "old",
+   "steps": [
+    {
+     "blocks": {
+      "artifact": "old",
+      "blocks": [
+       {
+        "attempts": 1,
+        "concepts": [],
+        "content": {
+         "options": [
+          "one",
+          "two"
+         ],
+         "question": "Pick one."
+        },
+        "is_gate": true,
+        "key": "b01",
+        "position": 1,
+        "revealed": null,
+        "segments": [],
+        "state": "open",
+        "type": "multiple_choice"
+       }
+      ],
+      "complete": false,
+      "locked_blocks": 2,
+      "total_blocks": 3
+     },
+     "body": {
+      "response": {
+       "choice": 1
+      }
+     },
+     "key": "b01",
+     "reply": {
+      "attempt": 1,
+      "complete": false,
+      "confidence": null,
+      "details": null,
+      "feedback": "Not quite. Try again. This page was generated before per-option feedback existed, so there is no explanation of why this option is wrong; regenerating the page adds one.",
+      "locked_blocks": 2,
+      "missing": [],
+      "passed": false,
+      "revealed": null,
+      "state": "open",
+      "unlocked": [],
+      "verdict": "failed"
+     },
+     "responses": {
+      "b01": [
+       {
+        "attempt": 1,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.258484+00:00",
+        "details": null,
+        "feedback": "Not quite. Try again. This page was generated before per-option feedback existed, so there is no explanation of why this option is wrong; regenerating the page adds one.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "choice": 1
+        },
+        "verdict": "failed"
+       }
+      ]
+     },
+     "status": 201
+    },
+    {
+     "blocks": {
+      "artifact": "old",
+      "blocks": [
+       {
+        "attempts": 2,
+        "concepts": [],
+        "content": {
+         "options": [
+          "one",
+          "two"
+         ],
+         "question": "Pick one."
+        },
+        "is_gate": true,
+        "key": "b01",
+        "position": 1,
+        "revealed": {
+         "correct_index": 0,
+         "explanation": "One it is."
+        },
+        "segments": [],
+        "state": "passed",
+        "type": "multiple_choice"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "min_words": 20,
+         "prompt": "Explain."
+        },
+        "is_gate": true,
+        "key": "b02",
+        "position": 2,
+        "revealed": null,
+        "segments": [],
+        "state": "open",
+        "type": "blurb"
+       }
+      ],
+      "complete": false,
+      "locked_blocks": 1,
+      "total_blocks": 3
+     },
+     "body": {
+      "response": {
+       "choice": 0
+      }
+     },
+     "key": "b01",
+     "reply": {
+      "attempt": 2,
+      "complete": false,
+      "confidence": null,
+      "details": null,
+      "feedback": "One it is.",
+      "locked_blocks": 1,
+      "missing": [],
+      "passed": true,
+      "revealed": {
+       "correct_index": 0,
+       "explanation": "One it is."
+      },
+      "state": "passed",
+      "unlocked": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "min_words": 20,
+         "prompt": "Explain."
+        },
+        "is_gate": true,
+        "key": "b02",
+        "position": 2,
+        "revealed": null,
+        "segments": [],
+        "state": "open",
+        "type": "blurb"
+       }
+      ],
+      "verdict": "passed"
+     },
+     "responses": {
+      "b01": [
+       {
+        "attempt": 1,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.258484+00:00",
+        "details": null,
+        "feedback": "Not quite. Try again. This page was generated before per-option feedback existed, so there is no explanation of why this option is wrong; regenerating the page adds one.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "choice": 1
+        },
+        "verdict": "failed"
+       },
+       {
+        "attempt": 2,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.265517+00:00",
+        "details": null,
+        "feedback": "One it is.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": true,
+        "response": {
+         "choice": 0
+        },
+        "verdict": "passed"
+       }
+      ],
+      "b02": []
+     },
+     "status": 201
+    },
+    {
+     "body": {
+      "response": {
+       "text": "one two three four five six"
+      }
+     },
+     "detail": "Write at least 20 words before submitting (you wrote 6); this was not counted as an attempt.",
+     "key": "b02",
+     "status": 422
+    },
+    {
+     "blocks": {
+      "artifact": "old",
+      "blocks": [
+       {
+        "attempts": 2,
+        "concepts": [],
+        "content": {
+         "options": [
+          "one",
+          "two"
+         ],
+         "question": "Pick one."
+        },
+        "is_gate": true,
+        "key": "b01",
+        "position": 1,
+        "revealed": {
+         "correct_index": 0,
+         "explanation": "One it is."
+        },
+        "segments": [],
+        "state": "passed",
+        "type": "multiple_choice"
+       },
+       {
+        "attempts": 1,
+        "concepts": [],
+        "content": {
+         "min_words": 20,
+         "prompt": "Explain."
+        },
+        "is_gate": true,
+        "key": "b02",
+        "position": 2,
+        "revealed": {
+         "model_answer": "Because.",
+         "rubric": [
+          {
+           "criterion": "Names the cause.",
+           "required": true
+          },
+          {
+           "criterion": "Gives an example.",
+           "required": true
+          }
+         ]
+        },
+        "segments": [],
+        "state": "passed",
+        "type": "blurb"
+       },
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "The end."
+        },
+        "is_gate": false,
+        "key": "b03",
+        "position": 3,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       }
+      ],
+      "complete": true,
+      "locked_blocks": 0,
+      "total_blocks": 3
+     },
+     "body": {
+      "response": {
+       "text": "word word word word word word word word word word word word word word word word word word word word"
+      }
+     },
+     "judge": {
+      "criteria": [
+       {
+        "justification": "Criterion 1 was met.",
+        "met": true,
+        "number": 1
+       },
+       {
+        "justification": "Criterion 2 was met.",
+        "met": true,
+        "number": 2
+       }
+      ],
+      "feedback": "Well done."
+     },
+     "key": "b02",
+     "reply": {
+      "attempt": 1,
+      "complete": true,
+      "confidence": null,
+      "details": {
+       "criteria": [
+        {
+         "criterion": "Names the cause.",
+         "justification": "Criterion 1 was met.",
+         "met": true,
+         "required": true
+        },
+        {
+         "criterion": "Gives an example.",
+         "justification": "Criterion 2 was met.",
+         "met": true,
+         "required": true
+        }
+       ],
+       "model": "apple-on-device-system-language-model",
+       "score": 1.0
+      },
+      "feedback": "Well done.",
+      "locked_blocks": 0,
+      "missing": [],
+      "passed": true,
+      "revealed": {
+       "model_answer": "Because.",
+       "rubric": [
+        {
+         "criterion": "Names the cause.",
+         "required": true
+        },
+        {
+         "criterion": "Gives an example.",
+         "required": true
+        }
+       ]
+      },
+      "state": "passed",
+      "unlocked": [
+       {
+        "attempts": 0,
+        "concepts": [],
+        "content": {
+         "markdown": "The end."
+        },
+        "is_gate": false,
+        "key": "b03",
+        "position": 3,
+        "revealed": null,
+        "segments": [],
+        "state": null,
+        "type": "prose"
+       }
+      ],
+      "verdict": "passed"
+     },
+     "responses": {
+      "b01": [
+       {
+        "attempt": 1,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.258484+00:00",
+        "details": null,
+        "feedback": "Not quite. Try again. This page was generated before per-option feedback existed, so there is no explanation of why this option is wrong; regenerating the page adds one.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": false,
+        "response": {
+         "choice": 1
+        },
+        "verdict": "failed"
+       },
+       {
+        "attempt": 2,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.265517+00:00",
+        "details": null,
+        "feedback": "One it is.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": true,
+        "response": {
+         "choice": 0
+        },
+        "verdict": "passed"
+       }
+      ],
+      "b02": [
+       {
+        "attempt": 1,
+        "confidence": null,
+        "created_at": "2026-11-25T20:28:36.278505+00:00",
+        "details": {
+         "criteria": [
+          {
+           "criterion": "Names the cause.",
+           "justification": "Criterion 1 was met.",
+           "met": true,
+           "required": true
+          },
+          {
+           "criterion": "Gives an example.",
+           "justification": "Criterion 2 was met.",
+           "met": true,
+           "required": true
+          }
+         ],
+         "model": "apple-on-device-system-language-model",
+         "score": 1.0
+        },
+        "feedback": "Well done.",
+        "grader": "device:apple-foundation-models",
+        "missing": [],
+        "passed": true,
+        "response": {
+         "text": "word word word word word word word word word word word word word word word word word word word word"
+        },
+        "verdict": "passed"
+       }
+      ],
+      "b03": []
+     },
+     "status": 201
+    }
+   ]
+  }
+ ],
+ "upload": {
+  "after": {
+   "blocks": {
+    "artifact": "uploaded",
+    "blocks": [
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "markdown": "# Intro\n\nOpening text."
+      },
+      "is_gate": false,
+      "key": "b01",
+      "position": 1,
+      "revealed": null,
+      "segments": [],
+      "state": null,
+      "type": "prose"
+     },
+     {
+      "attempts": 1,
+      "concepts": [],
+      "content": {
+       "options": [
+        "alpha",
+        "beta",
+        "gamma"
+       ],
+       "question": "Which letter?"
+      },
+      "is_gate": true,
+      "key": "b02",
+      "position": 2,
+      "revealed": {
+       "correct_index": 1,
+       "explanation": "Beta is right.",
+       "option_explanations": [
+        "Alpha is first.",
+        "Beta is right.",
+        "Gamma is last."
+       ]
+      },
+      "segments": [],
+      "state": "passed",
+      "type": "multiple_choice"
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "markdown": "Locked prose three."
+      },
+      "is_gate": false,
+      "key": "b03",
+      "position": 3,
+      "revealed": null,
+      "segments": [],
+      "state": null,
+      "type": "prose"
+     },
+     {
+      "attempts": 1,
+      "concepts": [],
+      "content": {
+       "min_words": 5,
+       "prompt": "Summarise the text."
+      },
+      "is_gate": true,
+      "key": "b04",
+      "position": 4,
+      "revealed": null,
+      "segments": [],
+      "state": "open",
+      "type": "blurb"
+     }
+    ],
+    "complete": false,
+    "locked_blocks": 2,
+    "total_blocks": 6
+   },
+   "responses": {
+    "b01": [],
+    "b02": [
+     {
+      "attempt": 1,
+      "confidence": "high",
+      "created_at": "2026-11-25T19:58:36.123456+00:00",
+      "details": null,
+      "feedback": "Beta is right.",
+      "grader": "multiple-choice-v2",
+      "missing": [],
+      "passed": true,
+      "response": {
+       "choice": 1
+      },
+      "verdict": "passed"
+     }
+    ],
+    "b03": [],
+    "b04": [
+     {
+      "attempt": 1,
+      "confidence": null,
+      "created_at": "2026-11-25T19:59:36.123456+00:00",
+      "details": null,
+      "feedback": "Add an example.",
+      "grader": "device:apple-foundation-models",
+      "missing": [
+       "Gives an example."
+      ],
+      "passed": false,
+      "response": {
+       "text": "this answer has well over five words in it"
+      },
+      "verdict": "partial"
+     }
+    ]
+   }
+  },
+  "answer": {
+   "accepted": 2,
+   "already_accepted": 0,
+   "artifact": "uploaded",
+   "bundle": {
+    "artifact": "uploaded",
+    "artifact_id": 3,
+    "assets": [],
+    "blocks": [
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "markdown": "# Intro\n\nOpening text."
+      },
+      "is_gate": false,
+      "is_question": false,
+      "key": "b01",
+      "passed": false,
+      "position": 1,
+      "private": null,
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": null,
+      "type": "prose",
+      "visible": true
+     },
+     {
+      "attempts": 1,
+      "concepts": [],
+      "content": {
+       "options": [
+        "alpha",
+        "beta",
+        "gamma"
+       ],
+       "question": "Which letter?"
+      },
+      "is_gate": true,
+      "is_question": true,
+      "key": "b02",
+      "passed": true,
+      "position": 2,
+      "private": {
+       "correct_index": 1,
+       "explanation": "Beta is right.",
+       "option_explanations": [
+        "Alpha is first.",
+        "Beta is right.",
+        "Gamma is last."
+       ]
+      },
+      "responses": [
+       {
+        "attempt": 1,
+        "confidence": "high",
+        "created_at": "2026-11-25T19:58:36.123456+00:00",
+        "details": null,
+        "feedback": "Beta is right.",
+        "grader": "multiple-choice-v2",
+        "missing": [],
+        "passed": true,
+        "response": {
+         "choice": 1
+        },
+        "verdict": "passed"
+       }
+      ],
+      "revealed": {
+       "correct_index": 1,
+       "explanation": "Beta is right.",
+       "option_explanations": [
+        "Alpha is first.",
+        "Beta is right.",
+        "Gamma is last."
+       ]
+      },
+      "segments": [],
+      "state": "passed",
+      "type": "multiple_choice",
+      "visible": true
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "markdown": "Locked prose three."
+      },
+      "is_gate": false,
+      "is_question": false,
+      "key": "b03",
+      "passed": false,
+      "position": 3,
+      "private": null,
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": null,
+      "type": "prose",
+      "visible": true
+     },
+     {
+      "attempts": 1,
+      "concepts": [],
+      "content": {
+       "min_words": 5,
+       "prompt": "Summarise the text."
+      },
+      "is_gate": true,
+      "is_question": true,
+      "key": "b04",
+      "passed": false,
+      "position": 4,
+      "private": {
+       "model_answer": "The model answer.",
+       "rubric": [
+        {
+         "criterion": "Names the cause.",
+         "required": true
+        },
+        {
+         "criterion": "Gives an example.",
+         "required": true
+        },
+        {
+         "criterion": "Mentions a limit.",
+         "required": false
+        }
+       ]
+      },
+      "responses": [
+       {
+        "attempt": 1,
+        "confidence": null,
+        "created_at": "2026-11-25T19:59:36.123456+00:00",
+        "details": {
+         "criteria": [],
+         "model": "apple-on-device-system-language-model",
+         "score": 0.6666666666666666
+        },
+        "feedback": "Add an example.",
+        "grader": "device:apple-foundation-models",
+        "missing": [
+         "Gives an example."
+        ],
+        "passed": false,
+        "response": {
+         "text": "this answer has well over five words in it"
+        },
+        "verdict": "partial"
+       }
+      ],
+      "revealed": null,
+      "segments": [],
+      "state": "open",
+      "type": "blurb",
+      "visible": true
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "options": [
+        "up",
+        "down"
+       ],
+       "prompt": "Will it rise?"
+      },
+      "is_gate": true,
+      "is_question": false,
+      "key": "b05",
+      "passed": false,
+      "position": 5,
+      "private": {
+       "correct_index": 0,
+       "resolution": "It rises."
+      },
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": "open",
+      "type": "prediction",
+      "visible": false
+     },
+     {
+      "attempts": 0,
+      "concepts": [],
+      "content": {
+       "markdown": "Locked prose six."
+      },
+      "is_gate": false,
+      "is_question": false,
+      "key": "b06",
+      "passed": false,
+      "position": 6,
+      "private": null,
+      "responses": [],
+      "revealed": null,
+      "segments": [],
+      "state": null,
+      "type": "prose",
+      "visible": false
+     }
+    ],
+    "bundled_at": "2026-11-25T20:28:36.305567+00:00",
+    "complete": false,
+    "default_min_words": 20,
+    "format": "teacher-offline-bundle",
+    "format_version": 1,
+    "gates_cleared": 1,
+    "gates_total": 3,
+    "generated_at": "2026-11-25T20:28:36.109710+00:00",
+    "grading": {
+     "device_grader_prefix": "device:",
+     "multiple_choice_grader": "multiple-choice-v2",
+     "multiple_choice_wrong_prefix": "Not quite. ",
+     "no_option_feedback": "Not quite. Try again. This page was generated before per-option feedback existed, so there is no explanation of why this option is wrong; regenerating the page adds one.",
+     "prediction_feedback": "Your prediction is recorded. Read on: the next part shows what actually happens, and you can check your guess against it.",
+     "prediction_grader": "prediction-v1"
+    },
+    "locked_blocks": 2,
+    "max_attempts": 2,
+    "superseded_by": null,
+    "title": "Study 3",
+    "total_blocks": 6,
+    "version": "251719cd1369c5f99300de7435cfb91ef81fc341f1912bfab157f528b60d2ea0"
+   },
+   "rejected": 0,
+   "results": [
+    {
+     "attempt": 1,
+     "client_id": "d439200b-8e35-4364-87f7-4c62865d06ea",
+     "detail": null,
+     "device_verdict": "passed",
+     "gate_cleared": true,
+     "key": "b02",
+     "reason": null,
+     "recorded": {
+      "attempt": 1,
+      "confidence": "high",
+      "created_at": "2026-11-25T19:58:36.123456+00:00",
+      "details": null,
+      "feedback": "Beta is right.",
+      "grader": "multiple-choice-v2",
+      "missing": [],
+      "passed": true,
+      "response": {
+       "choice": 1
+      },
+      "verdict": "passed"
+     },
+     "regraded": true,
+     "state": "passed",
+     "status": "accepted",
+     "unlocked": [
+      "b03",
+      "b04"
+     ],
+     "verdict_mismatch": false
+    },
+    {
+     "attempt": 1,
+     "client_id": "a10ec845-e816-41e9-a9d3-ffa696fabcb1",
+     "detail": null,
+     "device_verdict": "partial",
+     "gate_cleared": false,
+     "key": "b04",
+     "reason": null,
+     "recorded": {
+      "attempt": 1,
+      "confidence": null,
+      "created_at": "2026-11-25T19:59:36.123456+00:00",
+      "details": {
+       "criteria": [],
+       "model": "apple-on-device-system-language-model",
+       "score": 0.6666666666666666
+      },
+      "feedback": "Add an example.",
+      "grader": "device:apple-foundation-models",
+      "missing": [
+       "Gives an example."
+      ],
+      "passed": false,
+      "response": {
+       "text": "this answer has well over five words in it"
+      },
+      "verdict": "partial"
+     },
+     "regraded": false,
+     "state": "open",
+     "status": "accepted",
+     "unlocked": [],
+     "verdict_mismatch": false
+    }
+   ],
+   "version": "251719cd1369c5f99300de7435cfb91ef81fc341f1912bfab157f528b60d2ea0",
+   "version_matched": true
+  },
+  "bundle_before": {
+   "artifact": "uploaded",
+   "artifact_id": 3,
+   "assets": [],
+   "blocks": [
+    {
+     "attempts": 0,
+     "concepts": [],
+     "content": {
+      "markdown": "# Intro\n\nOpening text."
+     },
+     "is_gate": false,
+     "is_question": false,
+     "key": "b01",
+     "passed": false,
+     "position": 1,
+     "private": null,
+     "responses": [],
+     "revealed": null,
+     "segments": [],
+     "state": null,
+     "type": "prose",
+     "visible": true
+    },
+    {
+     "attempts": 0,
+     "concepts": [],
+     "content": {
+      "options": [
+       "alpha",
+       "beta",
+       "gamma"
+      ],
+      "question": "Which letter?"
+     },
+     "is_gate": true,
+     "is_question": true,
+     "key": "b02",
+     "passed": false,
+     "position": 2,
+     "private": {
+      "correct_index": 1,
+      "explanation": "Beta is right.",
+      "option_explanations": [
+       "Alpha is first.",
+       "Beta is right.",
+       "Gamma is last."
+      ]
+     },
+     "responses": [],
+     "revealed": null,
+     "segments": [],
+     "state": "open",
+     "type": "multiple_choice",
+     "visible": true
+    },
+    {
+     "attempts": 0,
+     "concepts": [],
+     "content": {
+      "markdown": "Locked prose three."
+     },
+     "is_gate": false,
+     "is_question": false,
+     "key": "b03",
+     "passed": false,
+     "position": 3,
+     "private": null,
+     "responses": [],
+     "revealed": null,
+     "segments": [],
+     "state": null,
+     "type": "prose",
+     "visible": false
+    },
+    {
+     "attempts": 0,
+     "concepts": [],
+     "content": {
+      "min_words": 5,
+      "prompt": "Summarise the text."
+     },
+     "is_gate": true,
+     "is_question": true,
+     "key": "b04",
+     "passed": false,
+     "position": 4,
+     "private": {
+      "model_answer": "The model answer.",
+      "rubric": [
+       {
+        "criterion": "Names the cause.",
+        "required": true
+       },
+       {
+        "criterion": "Gives an example.",
+        "required": true
+       },
+       {
+        "criterion": "Mentions a limit.",
+        "required": false
+       }
+      ]
+     },
+     "responses": [],
+     "revealed": null,
+     "segments": [],
+     "state": "open",
+     "type": "blurb",
+     "visible": false
+    },
+    {
+     "attempts": 0,
+     "concepts": [],
+     "content": {
+      "options": [
+       "up",
+       "down"
+      ],
+      "prompt": "Will it rise?"
+     },
+     "is_gate": true,
+     "is_question": false,
+     "key": "b05",
+     "passed": false,
+     "position": 5,
+     "private": {
+      "correct_index": 0,
+      "resolution": "It rises."
+     },
+     "responses": [],
+     "revealed": null,
+     "segments": [],
+     "state": "open",
+     "type": "prediction",
+     "visible": false
+    },
+    {
+     "attempts": 0,
+     "concepts": [],
+     "content": {
+      "markdown": "Locked prose six."
+     },
+     "is_gate": false,
+     "is_question": false,
+     "key": "b06",
+     "passed": false,
+     "position": 6,
+     "private": null,
+     "responses": [],
+     "revealed": null,
+     "segments": [],
+     "state": null,
+     "type": "prose",
+     "visible": false
+    }
+   ],
+   "bundled_at": "2026-11-25T20:28:36.294246+00:00",
+   "complete": false,
+   "default_min_words": 20,
+   "format": "teacher-offline-bundle",
+   "format_version": 1,
+   "gates_cleared": 0,
+   "gates_total": 3,
+   "generated_at": "2026-11-25T20:28:36.109710+00:00",
+   "grading": {
+    "device_grader_prefix": "device:",
+    "multiple_choice_grader": "multiple-choice-v2",
+    "multiple_choice_wrong_prefix": "Not quite. ",
+    "no_option_feedback": "Not quite. Try again. This page was generated before per-option feedback existed, so there is no explanation of why this option is wrong; regenerating the page adds one.",
+    "prediction_feedback": "Your prediction is recorded. Read on: the next part shows what actually happens, and you can check your guess against it.",
+    "prediction_grader": "prediction-v1"
+   },
+   "locked_blocks": 4,
+   "max_attempts": 2,
+   "superseded_by": null,
+   "title": "Study 3",
+   "total_blocks": 6,
+   "version": "251719cd1369c5f99300de7435cfb91ef81fc341f1912bfab157f528b60d2ea0"
+  },
+  "items": [
+   {
+    "client_id": "d439200b-8e35-4364-87f7-4c62865d06ea",
+    "confidence": "high",
+    "details": null,
+    "feedback": "Beta is right.",
+    "grader": "device:airistotle-rules",
+    "key": "b02",
+    "made_at": "2026-11-25T19:58:36.123456+00:00",
+    "missing": [],
+    "response": {
+     "choice": 1
+    },
+    "verdict": "passed"
+   },
+   {
+    "client_id": "a10ec845-e816-41e9-a9d3-ffa696fabcb1",
+    "confidence": null,
+    "details": {
+     "criteria": [],
+     "model": "apple-on-device-system-language-model",
+     "score": 0.6666666666666666
+    },
+    "feedback": "Add an example.",
+    "grader": "device:apple-foundation-models",
+    "key": "b04",
+    "made_at": "2026-11-25T19:59:36.123456+00:00",
+    "missing": [
+     "Gives an example."
+    ],
+    "response": {
+     "text": "this answer has well over five words in it"
+    },
+    "verdict": "partial"
+   }
+  ],
+  "slug": "uploaded"
+ }
+}
