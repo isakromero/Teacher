@@ -74,7 +74,7 @@ with lab content in place of the study page (`Tutor.build_turn` dispatches on th
 - The block tools are the same, with the chart tool's description allowing numbers the reader's
   program printed (`LAB_TOOLS`).
 
-No `thinking` parameter (adaptive thinking is always on for this model), no sampling
+No `thinking` parameter (adaptive thinking is on by default for the tutor model), no sampling
 parameters, no prefill, no `tool_choice` (the model decides when a block helps), strict tool
 schemas, effort set explicitly, and no refusal fallback: a refusal is surfaced as an error.
 

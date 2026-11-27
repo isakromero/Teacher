@@ -38,7 +38,7 @@ def stream_events(text_parts: list[str], stop_reason: str = "end_turn") -> list[
     """A Messages API event stream: a thinking block (empty, signed), then a text block."""
     return [
         {"type": "message_start", "message": {
-            "id": "msg_1", "type": "message", "role": "assistant", "model": "claude-opus-5-5",
+            "id": "msg_1", "type": "message", "role": "assistant", "model": "claude-sonnet-5-5",
             "content": [], "stop_reason": None, "stop_sequence": None,
             "usage": {"input_tokens": 12, "output_tokens": 1,
                       "cache_creation_input_tokens": 300, "cache_read_input_tokens": 40}}},
@@ -86,7 +86,7 @@ def test_stream_through_the_real_sdk() -> None:
     reply = items[-1]
     assert isinstance(reply, TutorReply)
     assert reply.text == "Attention is $QK^T$."
-    assert reply.model == "claude-opus-5-5"
+    assert reply.model == "claude-sonnet-5-5"
     assert (reply.input_tokens, reply.output_tokens) == (12 + 300 + 40, 77)
     # The content as the SDK serialises it: replayable unchanged, thinking block included.
     assert reply.api_content == [
@@ -98,7 +98,7 @@ def test_stream_through_the_real_sdk() -> None:
     assert request.url.path == "/v1/messages"
     body = json.loads(request.content)
     assert body == {
-        "model": "claude-opus-5-5",
+        "model": "claude-sonnet-5-5",
         "max_tokens": MAX_TOKENS,
         "system": SYSTEM_PROMPT,
         "messages": MESSAGES,

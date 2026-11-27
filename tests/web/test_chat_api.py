@@ -275,7 +275,7 @@ def test_first_turn_request_and_stream(
     reply = fake.reply(text="Attention mixes **values** by $softmax(QK^T)$.",
                        input_tokens=100, output_tokens=20,
                        cache_creation_input_tokens=1000, cache_read_input_tokens=5,
-                       model="claude-opus-5-5")
+                       model="claude-sonnet-5-5")
     fake.outcomes.append(reply)
 
     events = send_ok(client, thread, text="What is attention?")
@@ -297,7 +297,7 @@ def test_first_turn_request_and_stream(
     assert set(call) == {"model", "max_tokens", "system", "messages", "tools", "output_config",
                          "cache_control", "timeout"}
     assert call["tools"] == TOOLS
-    assert call["model"] == "claude-opus-5-5"
+    assert call["model"] == "claude-sonnet-5-5"
     assert call["max_tokens"] == MAX_TOKENS == 16000
     assert call["system"] == SYSTEM_PROMPT
     assert call["output_config"] == {"effort": "medium"}
@@ -332,7 +332,7 @@ def test_first_turn_request_and_stream(
     assert assistant_row.api_content == [b.to_dict(mode="json") for b in reply.content]
     assert assistant_row.api_content[0]["type"] == "thinking"  # thinking kept for replay
     assert (assistant_row.model, assistant_row.input_tokens, assistant_row.output_tokens) == (
-        "claude-opus-5-5", 1105, 20)
+        "claude-sonnet-5-5", 1105, 20)
     assert fake.streams[0].closed
 
 
@@ -742,7 +742,7 @@ def test_reply_slot_released_when_stream_is_closed_or_dropped() -> None:
 def test_tutor_model_from_env(settings: Settings, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("TEACHER_TUTOR_MODEL", raising=False)
     tutor = create_app(settings).state.tutor
-    assert isinstance(tutor, Tutor) and tutor.model == "claude-opus-5-5"
+    assert isinstance(tutor, Tutor) and tutor.model == "claude-sonnet-5-5"
     assert tutor._client is None  # nothing created until the first message
 
     monkeypatch.setenv("TEACHER_TUTOR_MODEL", "claude-test-tutor")
@@ -799,7 +799,7 @@ def tool_reply(*content: str | tuple[str, dict[str, Any]], stop_reason: str = "t
             )
     return Message.model_validate(
         {
-            "id": "msg_fake", "type": "message", "role": "assistant", "model": "claude-opus-5-5",
+            "id": "msg_fake", "type": "message", "role": "assistant", "model": "claude-sonnet-5-5",
             "content": blocks, "stop_reason": stop_reason, "stop_sequence": None,
             "usage": {"input_tokens": 100, "output_tokens": 10},
         }

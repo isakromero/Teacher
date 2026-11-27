@@ -192,7 +192,7 @@ GENERATION_MODEL_CHOICES: tuple[tuple[str, str], ...] = (
 )
 DEFAULT_JUDGE_MODEL = "claude-haiku-5-5"
 DEFAULT_METADATA_MODEL = "claude-haiku-5-5"
-DEFAULT_TUTOR_MODEL = "claude-opus-5-5"
+DEFAULT_TUTOR_MODEL = "claude-sonnet-5-5"
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
 # The same default as the generation model: the concept stage of a page generation can then
 # read the document from the prompt cache the page's other stages wrote (caches are per model).
@@ -206,7 +206,7 @@ class ModelSettings:
     Claude models: `$TEACHER_GENERATION_MODEL` (default `claude-sonnet-5-5`) writes study pages;
     `$TEACHER_JUDGE_MODEL` (default `claude-haiku-5-5`) grades blurb answers;
     `$TEACHER_METADATA_MODEL` (default `claude-haiku-5-5`) detects an uploaded paper's title,
-    authors and other details; `$TEACHER_TUTOR_MODEL` (default `claude-opus-5-5`) answers the
+    authors and other details; `$TEACHER_TUTOR_MODEL` (default `claude-sonnet-5-5`) answers the
     reader in the study page's side chat; `$TEACHER_CONCEPT_MODEL` (default: the generation
     model's default, `claude-sonnet-5-5`) extracts a source's concepts and judges whether each is
     one already in the concept graph. OpenAI model: `$TEACHER_EMBEDDING_MODEL` (default
