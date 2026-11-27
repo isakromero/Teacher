@@ -14,6 +14,7 @@ struct BrowserView: View {
     @State private var host: WebViewHost?
     @State private var showingSettings = false
     @State private var showingSaved = false
+    @State private var showingProgress = false
     @State private var saveProblem: String?
     @State private var barHeight: CGFloat = 0
     @State private var bottomSafeArea: CGFloat = 0
@@ -43,6 +44,7 @@ struct BrowserView: View {
             }
         }
         .overlay { barLayer }
+        .overlay { mascotLayer }
         // The status bar area and the space around the page in the page's own colours.
         .background(Color.pageSurface.ignoresSafeArea())
         .sheet(isPresented: $showingSettings) {
@@ -50,6 +52,24 @@ struct BrowserView: View {
         }
         .sheet(isPresented: $showingSaved) {
             SavedPagesView { slug in host?.load(target: "/artifacts/\(StudyPageRequests.segment(slug))") }
+        }
+        .sheet(isPresented: $showingProgress) {
+            StudyProgressView()
+        }
+        .fullScreenCover(item: reviewBinding, onDismiss: { model.reviewSessionEnded() }, content: { request in
+            ReviewSessionView(
+                session: ReviewSession(request: request, review: model.offline.review, offline: isOffline),
+                assets: RendererAssets(review: model.offline.review),
+                server: session.server.host,
+                habits: model.habits,
+                mascot: model.mascot,
+                close: { model.reviewRequest = nil }
+            )
+            .goalAcknowledgement(model.habits)
+        })
+        .goalAcknowledgement(model.habits)
+        .onChange(of: model.routedLink) { _, link in
+            if let link { carryOut(link) }
         }
         .alert("Not saved", isPresented: Binding(get: { saveProblem != nil }, set: { if !$0 { saveProblem = nil } })) {
             Button("OK", role: .cancel) {}
@@ -73,12 +93,7 @@ struct BrowserView: View {
             Text(problem.message)
         }
         .sensoryFeedback(trigger: model.lastGrade) { _, grade in
-            switch grade?.outcome {
-            case .passed: .success
-            case .partial: .warning
-            case .failed: .error
-            case nil: nil
-            }
+            grade.map { ReviewSessionView.haptic($0.outcome) }
         }
         .onChange(of: host?.target) { _, target in
             if let target { model.rememberPage(target) }
@@ -90,11 +105,39 @@ struct BrowserView: View {
             UIApplication.shared.isIdleTimerDisabled = awake
         }
         .onChange(of: barHeight + bottomSafeArea) { _, _ in reserveBottom() }
+        .onChange(of: mascotFree, initial: true) { _, free in model.mascot.setAvailable(.browser, free) }
         .onAppear(perform: start)
         .onDisappear {
             // Signed out (or a new session's web view): the screen may sleep again.
             UIApplication.shared.isIdleTimerDisabled = false
+            model.mascot.setAvailable(.browser, false)
         }
+    }
+
+    // MARK: Aristotle
+
+    /// Aristotle may speak over the page: nothing covers it, the keyboard is down, the app is
+    /// in front and the page has finished loading.
+    private var mascotFree: Bool {
+        guard let host, scenePhase == .active else { return false }
+        return !host.keyboardShown && !host.isLoading && host.problem == nil && host.sharedFile == nil
+            && !showingSettings && !showingSaved && !showingProgress && model.reviewRequest == nil
+            && saveProblem == nil && model.linkProblem == nil
+    }
+
+    /// Above the bar and, on a study page or lab, above the page's Tutor button (`.tutor-fab`:
+    /// 1rem from the bottom, about 3rem tall, scaled with the text size).
+    private var mascotLayer: some View {
+        let path = String((host?.target ?? "").prefix { $0 != "?" && $0 != "#" })
+        let tutor = path.hasPrefix("/artifacts/") || path.hasPrefix("/labs/")
+            ? 4 * 16 * CGFloat(model.reader.textSizePercent) / 100 : 0
+        return MascotOverlay(center: model.mascot, place: .browser, bottomInset: barHeight + Self.barGap + tutor + 8) { action in
+            switch action {
+            case .startReview: model.reviewRequest = ReviewRequest(kind: .all)
+            case .continueStudying: model.open(.continueStudying)
+            }
+        }
+        .ignoresSafeArea(.keyboard)
     }
 
     // MARK: The bottom bar
@@ -133,6 +176,7 @@ struct BrowserView: View {
             .accessibilityLabel("Saved")
             .accessibilityValue(pendingText)
             .accessibilityIdentifier("browser.saved")
+            reviewMenu
             Menu {
                 Button("Reload", systemImage: "arrow.clockwise") { host?.reload() }
                     .accessibilityIdentifier("browser.reload")
@@ -150,6 +194,57 @@ struct BrowserView: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
         .glassEffect(.regular.interactive(), in: .capsule)
+    }
+
+    // MARK: Review
+
+    /// The review entry point: everything due, a quick time-boxed review, or the web page.
+    private var reviewMenu: some View {
+        let due = model.offline.reviewDue()
+        let minutes = model.offline.quickReviewMinutes
+        return Menu {
+            Button(due > 0 ? "Review now (\(due) due)" : "Review now", systemImage: "rectangle.stack") {
+                model.reviewRequest = ReviewRequest(kind: .all)
+            }
+            .accessibilityIdentifier("browser.reviewAll")
+            Button("Quick review (\(minutes) min)", systemImage: "timer") {
+                model.reviewRequest = ReviewRequest(kind: .quick(minutes: minutes))
+            }
+            .accessibilityIdentifier("browser.reviewQuick")
+            Button("Open the review page", systemImage: "safari") { host?.load(target: ReviewRequest.webPath) }
+                .accessibilityIdentifier("browser.reviewWeb")
+            Divider()
+            Button(HabitText.menuLine(model.habits.goalStatus), systemImage: "chart.bar") { showingProgress = true }
+                .accessibilityIdentifier("browser.progress")
+        } label: {
+            barIcon("rectangle.stack")
+                .overlay(alignment: .topTrailing) { badge(due, color: .pageAccent, identifier: "browser.reviewBadge") }
+        }
+        .accessibilityLabel("Review")
+        .accessibilityValue(due == 0 ? "" : "\(due) due")
+        .accessibilityIdentifier("browser.review")
+    }
+
+    private var reviewBinding: Binding<ReviewRequest?> {
+        Binding(get: { model.reviewRequest }, set: { model.reviewRequest = $0 })
+    }
+
+    private var isOffline: Bool {
+        if case .offline = model.connectivity { true } else { false }
+    }
+
+    @ViewBuilder private func badge(_ count: Int, color: Color, identifier: String) -> some View {
+        if count > 0 {
+            Text(count > 99 ? "99+" : "\(count)")
+                .font(.caption2.weight(.bold).monospacedDigit())
+                .foregroundStyle(Color.pageAccentForeground)
+                .padding(.horizontal, 5)
+                .frame(minWidth: 18, minHeight: 18)
+                .background(Capsule().fill(color))
+                .offset(x: -2, y: 2)
+                .accessibilityHidden(true)
+                .accessibilityIdentifier(identifier)
+        }
     }
 
     private func barIcon(_ systemImage: String) -> some View {
@@ -247,7 +342,40 @@ struct BrowserView: View {
         )
         self.host = host
         reserveBottom()
-        host.load(target: model.startTarget, scrollY: model.startScroll)
+        if let link = model.routedLink, case .load(let target) = link.action {
+            // Opened from a link: its page, not the one last open.
+            model.routedLink = nil
+            host.load(target: target)
+        } else {
+            host.load(target: model.startTarget, scrollY: model.startScroll)
+            if let link = model.routedLink { carryOut(link) }
+        }
+    }
+
+    // MARK: Links
+
+    /// A link from the widget, a reminder, a Shortcut or Spotlight: close what covers the page,
+    /// then open the review or load the page.
+    private func carryOut(_ link: RoutedLink) {
+        model.routedLink = nil
+        let covered = showingSettings || showingSaved || showingProgress
+        showingSettings = false
+        showingSaved = false
+        showingProgress = false
+        Task {
+            // A sheet that is closing cannot be replaced at once.
+            if covered { try? await Task.sleep(for: .milliseconds(700)) }
+            switch link.action {
+            case .review(let kind):
+                model.reviewRequest = ReviewRequest(kind: kind)
+            case .load(let target):
+                if model.reviewRequest != nil {
+                    model.reviewRequest = nil
+                    try? await Task.sleep(for: .milliseconds(700))
+                }
+                host?.load(target: target)
+            }
+        }
     }
 
     private var problemBinding: Binding<Bool> {

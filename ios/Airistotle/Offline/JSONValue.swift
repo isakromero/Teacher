@@ -85,6 +85,14 @@ enum JSONValue: Sendable, Equatable, Hashable {
     var bool: Bool? { if case .bool(let value) = self { value } else { nil } }
     var array: [JSONValue]? { if case .array(let values) = self { values } else { nil } }
     var object: [String: JSONValue]? { if case .object(let values) = self { values } else { nil } }
+    /// A number, whether JSON wrote it as an integer or not (`3.0` may arrive as either).
+    var number: Double? {
+        switch self {
+        case .int(let value): Double(value)
+        case .double(let value): value
+        default: nil
+        }
+    }
 
     /// The name Python gives this value's type (`int`, `str`, ...), as in the server's messages.
     var pythonTypeName: String {
@@ -191,6 +199,38 @@ struct Instant: Sendable, Equatable, Hashable, Codable, Comparable {
 
     static func < (lhs: Instant, rhs: Instant) -> Bool { lhs.micros < rhs.micros }
 
+    /// A server time (`2026-11-25T10:00:00[.ffffff]+00:00`; any `±HH:MM` offset or `Z`); nil for
+    /// anything else.
+    init?(isoString text: String) {
+        let pattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|[+-]\d{2}:\d{2})$/
+        guard let match = text.wholeMatch(of: pattern) else { return nil }
+        var parts = DateComponents()
+        parts.year = Int(match.output.1)
+        parts.month = Int(match.output.2)
+        parts.day = Int(match.output.3)
+        parts.hour = Int(match.output.4)
+        parts.minute = Int(match.output.5)
+        parts.second = Int(match.output.6)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? .gmt
+        guard let date = calendar.date(from: parts) else { return nil }
+        let fraction = match.output.7.map { Int64(String($0).padding(toLength: 6, withPad: "0", startingAt: 0)) ?? 0 } ?? 0
+        var offsetSeconds: Int64 = 0
+        let zone = String(match.output.8)
+        if zone != "Z" {
+            let sign: Int64 = zone.hasPrefix("-") ? -1 : 1
+            let hours = Int64(zone.dropFirst().prefix(2)) ?? 0
+            let minutes = Int64(zone.suffix(2)) ?? 0
+            offsetSeconds = sign * (hours * 3600 + minutes * 60)
+        }
+        self.init(micros: (Int64(date.timeIntervalSince1970) - offsetSeconds) * 1_000_000 + fraction)
+    }
+
+    /// This moment plus `days` (fractional) days, to the microsecond.
+    func adding(days: Double) -> Instant {
+        Instant(micros: micros + Int64((days * 86_400 * 1_000_000).rounded()))
+    }
+
     /// Python's `isoformat()` of this moment in UTC.
     var iso: String {
         let seconds = micros >= 0 ? micros / 1_000_000 : (micros - 999_999) / 1_000_000
@@ -207,4 +247,10 @@ struct Instant: Sendable, Equatable, Hashable, Codable, Comparable {
         if fraction != 0 { text += String(format: ".%06lld", fraction) }
         return text + "+00:00"
     }
+}
+
+extension JSONValue: ExpressibleByStringLiteral, ExpressibleByIntegerLiteral, ExpressibleByBooleanLiteral {
+    init(stringLiteral value: String) { self = .string(value) }
+    init(integerLiteral value: Int) { self = .int(value) }
+    init(booleanLiteral value: Bool) { self = .bool(value) }
 }

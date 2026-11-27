@@ -46,6 +46,8 @@ enum GatewayEvent: Sendable, Equatable {
     /// A checkpoint answer was graded (by the server or on the phone), read from the reply
     /// the page received (`GradedAnswer`).
     case answerGraded(AnswerOutcome)
+    /// A study page's progress or title, read from a reply the page received (`ReadingProgress`).
+    case readingProgress(ReadingReport)
 }
 
 /// The web client's own sign-in pages (`/login`, `/register`, `/logout`) are replaced by the

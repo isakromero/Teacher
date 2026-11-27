@@ -28,6 +28,8 @@ final class WebViewHost: NSObject {
     var problem: Problem?
     /// Whether the bottom bar shows (it hides while the reader scrolls down, `BarVisibility`).
     private(set) var barVisible = true
+    /// Whether the keyboard is up (the page's text field has it).
+    private(set) var keyboardShown = false
 
     @ObservationIgnored let webView: WKWebView
     @ObservationIgnored private let server: ServerAddress
@@ -44,7 +46,6 @@ final class WebViewHost: NSObject {
     @ObservationIgnored private var pendingScroll: (target: String, scrollY: Double)?
     /// The height at the bottom of the web view the bottom bar may cover (`reserveBottom`).
     @ObservationIgnored private var bottomReserve: CGFloat = 0
-    @ObservationIgnored private var keyboardShown = false
 
     init(
         gateway: Gateway,

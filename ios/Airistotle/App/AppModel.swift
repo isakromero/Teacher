@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WidgetKit
 
 /// The app's state: who it is connected to, whether the server can be reached, and where the
 /// page on screen came from. Owns the gateway and turns its events into state.
@@ -43,6 +44,15 @@ final class AppModel {
     private(set) var startScroll: Double?
     /// The latest graded checkpoint answer, for the haptic (a new value for each grade).
     private(set) var lastGrade: GradeFeedback?
+    /// A review session to open over the page (the reader chose one, or the web review page
+    /// was opened while the server cannot be reached).
+    var reviewRequest: ReviewRequest?
+    /// A link (widget, reminder, Shortcut, Spotlight) for the browser to carry out.
+    var routedLink: RoutedLink?
+    /// Why a link could not be opened (shown until dismissed).
+    var linkProblem: String?
+    /// A link that came before the app was signed in; it is carried out after signing in.
+    var pendingLink: DeepLink?
     /// The last server typed in (not secret; prefilled on the sign-in screen).
     var lastServerText: String {
         didSet { defaults.set(lastServerText, forKey: Self.lastServerKey) }
@@ -54,7 +64,13 @@ final class AppModel {
     let reader: ReaderSettings
     /// The page each server and account was last on.
     let lastPages: LastPageStore
+    /// The phone summary: widget, reminders, daily goal and streak.
+    let habits: HabitCenter
+    /// Aristotle's messages: a finished page, today's goal, welcome back.
+    let mascot: MascotCenter
     private let auth: AuthClient
+    /// The network path (Wi-Fi or not, Low Data Mode) for automatic saving.
+    let network: NetworkWatcher
     private let store: any SessionStore
     private let defaults: UserDefaults
     private var pendingReturn: String?
@@ -68,31 +84,59 @@ final class AppModel {
         cache: ResponseCache,
         defaults: UserDefaults = .standard,
         savedRoot: URL? = nil,
-        judge: any BlurbJudge = FoundationModelsJudge()
+        judge: any BlurbJudge = FoundationModelsJudge(),
+        network: NetworkWatcher? = nil,
+        sharedContainer: Result<SharedContainer, SharedContainer.Failure>? = nil,
+        notifier: any ReminderNotifier = SystemReminderNotifier(),
+        spotlight: any SpotlightIndexing = SystemSpotlightIndex()
     ) {
         let (events, continuation) = AsyncStream.makeStream(of: GatewayEvent.self)
         let gateway = Gateway(transport: transport, cache: cache, events: { continuation.yield($0) })
         self.gateway = gateway
         let (changes, changed) = AsyncStream.makeStream(of: Void.self, bufferingPolicy: .bufferingNewest(1))
+        let root = savedRoot ?? cache.root.deletingLastPathComponent().appending(path: "SavedPages")
+        let preferences = OfflinePreferences(defaults: defaults)
         let service = OfflineService(
             gateway: gateway,
-            store: SavedStore(root: savedRoot ?? cache.root.deletingLastPathComponent().appending(path: "SavedPages")),
+            store: SavedStore(root: root),
             judge: judge,
-            preferences: OfflinePreferences(defaults: defaults),
+            preferences: preferences,
             changed: { changed.yield() }
         )
         service.install()
-        self.offline = OfflineCenter(service: service, changes: changes)
+        let review = ReviewService(gateway: gateway, store: ReviewStore(root: root), pages: service.store, grader: service.grader,
+                                   changed: { changed.yield() })
+        let watcher = network ?? NetworkWatcher()
+        let autoSaver = AutoSaver(service: service, preferences: preferences, network: { watcher.conditions })
+        self.network = watcher
+        let offline = OfflineCenter(service: service, review: review, autoSaver: autoSaver, changes: changes)
+        self.offline = offline
+        let habitPreferences = HabitPreferences(defaults: defaults)
+        self.habits = HabitCenter(
+            gateway: gateway, summaryRoot: root, container: sharedContainer ?? SharedContainer.live(), notifier: notifier,
+            spotlight: SpotlightBook(index: spotlight, defaults: defaults), preferences: habitPreferences,
+            local: { namespace in try await Self.localHabitData(namespace, pages: service.store, review: review.store) },
+            reloadWidgets: { WidgetCenter.shared.reloadAllTimelines() })
         self.auth = AuthClient(transport: transport)
         self.store = store
         self.defaults = defaults
         self.reader = ReaderSettings(defaults: defaults)
         self.lastPages = LastPageStore(defaults: defaults)
+        self.mascot = MascotCenter(store: MascotStore(defaults: defaults))
         self.lastServerText = defaults.string(forKey: Self.lastServerKey) ?? ServerAddress.defaultAddress.description
         eventTask = Task { [weak self] in
             for await event in events {
                 self?.handle(event)
             }
+        }
+        habits.isOnline = { [weak self] in
+            if case .offline = self?.connectivity { false } else { true }
+        }
+        habits.announceGoal = { [weak self] status in self?.mascot.goalMet(answers: status.answersToday) ?? false }
+        offline.onReload = { [weak self] in self?.offlineChanged() }
+        offline.onSynced = { [weak self] summary in
+            // What was uploaded now counts on the server: read its summary again.
+            if summary.uploaded > 0 { self?.habits.refreshSoon(fetch: true) }
         }
     }
 
@@ -114,10 +158,13 @@ final class AppModel {
             try? cache.clear()
             if let saved = try? SavedStore.defaultRoot() { try? FileManager.default.removeItem(at: saved) }
             UserDefaults.standard.removeObject(forKey: lastServerKey)
-            UserDefaults.standard.removeObject(forKey: OfflinePreferences.gradingKey)
+            for key in OfflinePreferences.allKeys { UserDefaults.standard.removeObject(forKey: key) }
             UserDefaults.standard.removeObject(forKey: TextSize.key)
             UserDefaults.standard.removeObject(forKey: ReaderSettings.keepAwakeKey)
+            for key in HabitPreferences.allKeys { UserDefaults.standard.removeObject(forKey: key) }
             LastPageStore(defaults: .standard).forgetAll()
+            MascotStore(defaults: .standard).forgetAll()
+            if case .success(let shared) = SharedContainer.live() { try? shared.removeSnapshot() }
         }
         #endif
         return AppModel(transport: URLSessionTransport(), store: store, cache: cache)
@@ -135,7 +182,39 @@ final class AppModel {
             return
         }
         guard let saved else {
+            #if DEBUG
+            // The UI tests and screenshots connect to a throwaway server without an account,
+            // past the sign-in screen: -AiristotleConnectForUITests <address> [-AiristotleReview all|quick]
+            // [-AiristotleOpen <target>].
+            let arguments = CommandLine.arguments
+            if let index = arguments.firstIndex(of: "-AiristotleConnectForUITests"), index + 1 < arguments.count {
+                do {
+                    if let open = arguments.firstIndex(of: "-AiristotleOpen"), open + 1 < arguments.count {
+                        let server = try ServerAddress(parsing: arguments[index + 1])
+                        lastPages.remember(target: arguments[open + 1],
+                                           for: StoredSession(server: server, kind: .open).connection.cacheNamespace)
+                    }
+                    try await connectWithoutAccount(server: arguments[index + 1])
+                    await verify(StoredSession(server: try ServerAddress(parsing: arguments[index + 1]), kind: .open))
+                    welcomeBackForUITests(arguments)
+                    if let review = arguments.firstIndex(of: "-AiristotleReview"), review + 1 < arguments.count {
+                        let quick = arguments[review + 1] == "quick"
+                        reviewRequest = ReviewRequest(kind: quick ? .quick(minutes: offline.quickReviewMinutes) : .all)
+                    }
+                    if let reminder = arguments.firstIndex(of: "-AiristotleReminderInSeconds"), reminder + 1 < arguments.count,
+                       let seconds = Double(arguments[reminder + 1]) {
+                        await habits.setReminders(true)
+                        await habits.scheduleTestReminder(in: seconds)
+                    }
+                } catch {
+                    phase = .signedOut(notice: "The UI test server could not be connected: \(error.localizedDescription)")
+                }
+                return
+            }
+            #endif
             phase = .signedOut(notice: nil)
+            await habits.signedOut()
+            notePendingLinkWhileSignedOut()
             return
         }
         // Reopen the page that was on screen; if it cannot be loaded now, the page or the
@@ -143,6 +222,8 @@ final class AppModel {
         let last = lastPages.page(for: saved.connection.cacheNamespace)
         connect(saved, startAt: last?.target ?? "/", scrollY: last?.scrollY)
         await verify(saved)
+        // Launched after being away: welcome back (once the summary has been read).
+        welcomeBack(lastActive: mascot.noteActive())
     }
 
     /// Ask the server whether the session still holds. Unreachable: keep it (saved pages can
@@ -157,10 +238,15 @@ final class AppModel {
             }
             connectivity = .online
             await offline.syncNow()
+            await offline.refreshReview()
+            await habits.refresh(fetch: true)
+            await offline.autoSave(current: currentStudyPage)
         } catch .server(status: 401, _) {
             endSession(notice: "Your session on \(session.server.host) has ended. Sign in again.")
         } catch .unreachable(let reason) {
             connectivity = .offline(reason: reason, since: Date())
+            // The widget's count comes from the questions saved on the phone.
+            await habits.refresh(fetch: false)
         } catch .accountsOff {
             endSession(notice: "\(session.server.host) no longer has accounts. Connect without an account.")
         } catch {
@@ -195,6 +281,7 @@ final class AppModel {
         try store.save(session)
         lastServerText = server.description
         connectivity = .online
+        mascot.store.setLastActive(Date()) // no welcome right after signing in
         connectAfterSignIn(session)
     }
 
@@ -203,6 +290,7 @@ final class AppModel {
         try store.save(session)
         lastServerText = server.description
         connectivity = .online
+        mascot.store.setLastActive(Date()) // no welcome right after signing in
         connectAfterSignIn(session)
     }
 
@@ -231,13 +319,58 @@ final class AppModel {
         pageOrigin = .none
         webSession = UUID()
         phase = .signedIn(session)
+        if let link = pendingLink {
+            pendingLink = nil
+            open(link)
+        }
         Task { await offline.reload() }
     }
 
     /// The app came to the foreground: upload what waits, if the server can be reached.
     func becameActive() {
         guard case .signedIn = phase else { return }
-        Task { await offline.syncNow() }
+        let lastActive = mascot.noteActive()
+        Task {
+            await habits.refreshAuthorization()
+            await offline.syncNow()
+            await offline.refreshReview()
+            await habits.refresh(fetch: true)
+            // Back after a while: welcome back, with what is due as just read.
+            welcomeBack(lastActive: lastActive)
+            await offline.autoSave(current: currentStudyPage)
+        }
+    }
+
+    /// The app went to the background: ask iOS for a background refresh of the widget's data.
+    func wentToBackground() {
+        guard case .signedIn = phase else { return }
+        _ = mascot.noteActive() // the time away counts from now
+        habits.scheduleBackgroundRefresh()
+    }
+
+    /// iOS woke the app to refresh (`BGAppRefreshTask`): read the summary and pass it on. The
+    /// session is read from the Keychain if the app was launched for this alone.
+    func backgroundRefresh() async {
+        if case .launching = phase {
+            guard let saved = try? store.load() else { return }
+            gateway.connection = saved.connection
+        }
+        guard gateway.connection != nil else { return }
+        await offline.syncNow()
+        await offline.refreshReview()
+        await habits.refresh(fetch: true)
+        habits.scheduleBackgroundRefresh()
+    }
+
+    /// The study page on screen (from the last page shown), for automatic saving.
+    private(set) var currentStudyPage: String?
+
+    /// A review session finished: fetch the review queue again for offline use.
+    func reviewSessionEnded() {
+        Task {
+            await offline.refreshReview()
+            await habits.refresh(fetch: true)
+        }
     }
 
     // MARK: The page on screen
@@ -264,6 +397,7 @@ final class AppModel {
         gateway.connection = nil
         // Signing out forgets where this account was: the next sign-in starts at Home.
         lastPages.forget(session.connection.cacheNamespace)
+        await offline.forgetReview(namespace: session.connection.cacheNamespace)
         var notice: String?
         if let token = session.token {
             do {
@@ -281,6 +415,8 @@ final class AppModel {
         }
         pendingReturn = nil
         phase = .signedOut(notice: notice)
+        mascot.clear()
+        await habits.signedOut()
         await offline.reload()
         return notice
     }
@@ -297,6 +433,8 @@ final class AppModel {
         }
         pendingReturn = returnTo
         phase = .signedOut(notice: message)
+        mascot.clear()
+        Task { await habits.signedOut() }
     }
 
     // MARK: Gateway events
@@ -307,7 +445,7 @@ final class AppModel {
             let wasOffline = if case .offline = connectivity { true } else { false }
             connectivity = .online
             // Back online: upload what was answered meanwhile.
-            if wasOffline, offline.pendingCount > 0 { Task { await offline.syncNow() } }
+            if wasOffline, offline.hasPendingWork { Task { await offline.syncNow() } }
         case .serverUnreachable(let reason):
             if case .offline(_, let since) = connectivity {
                 connectivity = .offline(reason: reason, since: since)
@@ -322,7 +460,8 @@ final class AppModel {
             endSession(notice: notice, returnTo: returnTo)
         case .signOutRequested:
             Task { await signOut() }
-        case .pageShown(_, let source):
+        case .pageShown(let target, let source):
+            pageShown(target, source: source)
             switch source {
             case .server: pageOrigin = .server
             case .cache(let storedAt): pageOrigin = .savedCopy(storedAt: storedAt)
@@ -331,9 +470,35 @@ final class AppModel {
             }
         case .answerGraded(let outcome):
             lastGrade = GradeFeedback(outcome: outcome)
+            // The answer counts towards today's goal: read the summary again shortly.
+            habits.refreshSoon(fetch: true)
+        case .readingProgress(let report):
+            mascot.readingProgress(report)
         }
     }
 
+    /// What follows from the page on screen: a study page from the server may be saved
+    /// automatically; the web review page shown without the server (a saved copy that could
+    /// not send an answer) gives way to the native review of the questions saved on the phone.
+    private func pageShown(_ target: String, source: ReplySource) {
+        let path = String(target.prefix { $0 != "?" && $0 != "#" })
+        let slug = OfflineService.pageSlug(path)
+        if slug != nil || source == .server { currentStudyPage = slug }
+        if let slug, source == .server {
+            Task { await offline.autoSave(current: slug) }
+        }
+        let offlineCopy = switch source {
+        case .cache, .gatewayError: true
+        case .server, .local: false
+        }
+        if path == ReviewRequest.webPath, offlineCopy {
+            let concept = URLComponents(string: "x://y\(target)")?.queryItems?.first { $0.name == "concept" }?.value
+            reviewRequest = ReviewRequest(kind: .all, concept: concept, reason: .webPageOffline)
+        }
+    }
+}
+
+extension AppModel {
     struct GradeFeedback: Equatable {
         let id = UUID()
         let outcome: AnswerOutcome

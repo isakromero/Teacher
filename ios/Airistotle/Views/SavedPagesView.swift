@@ -9,7 +9,9 @@ struct SavedPagesView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingRemoval: SavedPageSummary?
+    @State private var confirmingRemoveAll = false
     @State private var problem: String?
+    @State private var usage: (pages: [String: Int64], review: Int64)?
 
     private var offline: OfflineCenter { model.offline }
 
@@ -38,6 +40,8 @@ struct SavedPagesView: View {
 
                 syncSection
 
+                autoSaveSection
+
                 if !offline.log.isEmpty {
                     Section {
                         ForEach(offline.log) { entry in
@@ -53,6 +57,8 @@ struct SavedPagesView: View {
                         }
                     }
                 }
+
+                storageSection
             }
             .navigationTitle("Saved for offline")
             .navigationBarTitleDisplayMode(.inline)
@@ -62,7 +68,26 @@ struct SavedPagesView: View {
                 }
             }
             .refreshable { await offline.syncNow() }
-            .task { await offline.reload() }
+            .task {
+                await offline.reload()
+                usage = await offline.diskUsage()
+            }
+            .onChange(of: offline.pages) { _, _ in Task { usage = await offline.diskUsage() } }
+            .confirmationDialog("Remove all saved pages?", isPresented: $confirmingRemoveAll, titleVisibility: .visible) {
+                Button(waitingWork > 0 ? "Remove all and lose \(waitingWork) change(s)" : "Remove all", role: .destructive) {
+                    Task {
+                        do { try await offline.removeAll() } catch { problem = error.localizedDescription }
+                    }
+                }
+                .accessibilityIdentifier("saved.confirmRemoveAll")
+            } message: {
+                if waitingWork > 0 {
+                    Text("\(waitingWork) answer(s) or highlight change(s) made offline on these pages have not been uploaded yet. "
+                        + "Removing the pages deletes them for good. Sync first to keep them.")
+                } else {
+                    Text("\(offline.pages.count) page(s) will no longer open offline. Review questions saved for offline use stay.")
+                }
+            }
             .confirmationDialog(
                 "Remove “\(confirmingRemoval?.title ?? "")”?",
                 isPresented: Binding(get: { confirmingRemoval != nil }, set: { if !$0 { confirmingRemoval = nil } }),
@@ -103,8 +128,17 @@ struct SavedPagesView: View {
                     .font(.footnote).foregroundStyle(.secondary)
                 Text(page.gatesTotal == 0 ? "No checkpoints" : "\(page.gatesCleared) of \(page.gatesTotal) checkpoints cleared")
                     .font(.footnote).foregroundStyle(.secondary)
+                if page.automatic {
+                    Label("Saved automatically: you are studying it", systemImage: "clock.arrow.circlepath")
+                        .font(.footnote).foregroundStyle(.secondary)
+                        .accessibilityIdentifier("saved.automatic.\(page.slug)")
+                }
                 if page.pending > 0 {
                     Label("\(page.pending) answer(s) waiting to sync", systemImage: "arrow.triangle.2.circlepath")
+                        .font(.footnote).foregroundStyle(.orange)
+                }
+                if page.highlightChanges > 0 {
+                    Label("\(page.highlightChanges) highlight change(s) waiting to sync", systemImage: "highlighter")
                         .font(.footnote).foregroundStyle(.orange)
                 }
                 if page.deletedOnServer {
@@ -139,8 +173,16 @@ struct SavedPagesView: View {
         Section {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(offline.pendingCount == 0 ? "Nothing waiting to sync" : "\(offline.pendingCount) answer(s) waiting to sync")
+                    Text(offline.pendingCount > 0 ? "\(offline.pendingCount) answer(s) waiting to sync"
+                         : offline.pendingHighlightChanges > 0 ? "No answers waiting to sync" : "Nothing waiting to sync")
                         .accessibilityIdentifier("saved.pending")
+                    if offline.reviewPending > 0 {
+                        Text("of which \(offline.reviewPending) review answer(s)").font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if offline.pendingHighlightChanges > 0 {
+                        Text("\(offline.pendingHighlightChanges) highlight change(s) waiting to sync").font(.footnote)
+                            .accessibilityIdentifier("saved.pendingHighlights")
+                    }
                     if let last = offline.lastSync {
                         Text(syncText(last)).font(.footnote).foregroundStyle(.secondary)
                     }
@@ -151,7 +193,7 @@ struct SavedPagesView: View {
                 } else {
                     Button("Sync now") { Task { await offline.syncNow() } }
                         .buttonStyle(.bordered)
-                        .disabled(offline.pendingCount == 0)
+                        .disabled(!offline.hasPendingWork)
                         .accessibilityIdentifier("saved.syncNow")
                 }
             }
@@ -159,6 +201,73 @@ struct SavedPagesView: View {
             Text("Answers made offline are graded on this phone and uploaded when the server can be reached: when the app "
                 + "opens, when it comes back to the front, when a request gets through again, or now.")
         }
+    }
+
+    private var waitingWork: Int {
+        offline.pages.reduce(0) { $0 + $1.pending + $1.highlightChanges }
+    }
+
+    /// Automatic saving: whether it runs, and every save that failed (never an alert while reading).
+    @ViewBuilder private var autoSaveSection: some View {
+        Section {
+            if !offline.autoSave {
+                Text("Off. Turn on “Keep pages I'm studying available offline” in Settings.")
+                    .foregroundStyle(.secondary)
+            } else if let status = offline.autoSaveStatus {
+                Label(status, systemImage: "pause.circle").accessibilityIdentifier("saved.autoSaveStatus")
+            } else {
+                Label("On: the pages you are studying are saved when you open them\(offline.autoSaveWiFiOnly ? ", on Wi-Fi" : "").",
+                      systemImage: "checkmark.circle")
+            }
+            ForEach(offline.autoSaveNotes) { note in
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("Not saved automatically: \(note.title)", systemImage: "exclamationmark.triangle")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.orange)
+                    Text(note.message).font(.footnote)
+                    Text(note.date.formatted(date: .abbreviated, time: .shortened)).font(.caption2).foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("saved.autoSaveNote")
+            }
+            if !offline.autoSaveNotes.isEmpty {
+                Button("Dismiss these notes") { Task { await offline.dismissAutoSaveNotes() } }
+                    .font(.footnote)
+                    .accessibilityIdentifier("saved.dismissAutoSaveNotes")
+            }
+        } header: {
+            Text("Automatic saving")
+        } footer: {
+            Text("Up to 5 pages saved automatically; the oldest goes first. Pages you saved yourself are never removed or counted. "
+                + "Nothing is saved automatically in Low Data Mode.")
+        }
+    }
+
+    /// Size on disk of each page and of the review questions; remove everything.
+    @ViewBuilder private var storageSection: some View {
+        Section {
+            ForEach(offline.pages) { page in
+                LabeledContent(page.title, value: usage?.pages[page.slug].map(Self.size) ?? "Counting…")
+                    .accessibilityIdentifier("saved.size.\(page.slug)")
+            }
+            LabeledContent("Review questions", value: usage.map { Self.size($0.review) } ?? "Counting…")
+                .accessibilityIdentifier("saved.size.review")
+            if let usage {
+                LabeledContent("Total", value: Self.size(usage.pages.values.reduce(0, +) + usage.review))
+                    .fontWeight(.semibold)
+            }
+            Button("Remove all saved pages", role: .destructive) { confirmingRemoveAll = true }
+                .disabled(offline.pages.isEmpty)
+                .accessibilityIdentifier("saved.removeAll")
+        } header: {
+            Text("Storage")
+        } footer: {
+            Text("Size on disk. Review questions are kept for offline review and replaced each time they are fetched.")
+        }
+    }
+
+    private static func size(_ bytes: Int64) -> String {
+        ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
     }
 
     private func syncText(_ summary: OfflineService.SyncSummary) -> String {

@@ -25,6 +25,42 @@ struct SavedPageRecord: Codable, Sendable, Equatable {
     var bytes: Int64
     /// Saved responses by target (`/static/js/api.js`, `/api/artifacts/x/glossary`, ...).
     var files: [String: SavedFile]
+    /// Saved by the app because the reader is studying it ("Keep pages I'm studying available
+    /// offline"), not by hand: such pages are counted against a limit and evicted oldest first.
+    var automatic = false
+
+    init(slug: String, title: String, savedAt: Date, version: String, serverVersion: String?, supersededBy: String?,
+         deletedOnServer: Bool, bytes: Int64, files: [String: SavedFile], automatic: Bool = false) {
+        self.slug = slug
+        self.title = title
+        self.savedAt = savedAt
+        self.version = version
+        self.serverVersion = serverVersion
+        self.supersededBy = supersededBy
+        self.deletedOnServer = deletedOnServer
+        self.bytes = bytes
+        self.files = files
+        self.automatic = automatic
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case slug, title, savedAt, version, serverVersion, supersededBy, deletedOnServer, bytes, files, automatic
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        slug = try container.decode(String.self, forKey: .slug)
+        title = try container.decode(String.self, forKey: .title)
+        savedAt = try container.decode(Date.self, forKey: .savedAt)
+        version = try container.decode(String.self, forKey: .version)
+        serverVersion = try container.decodeIfPresent(String.self, forKey: .serverVersion)
+        supersededBy = try container.decodeIfPresent(String.self, forKey: .supersededBy)
+        deletedOnServer = try container.decode(Bool.self, forKey: .deletedOnServer)
+        bytes = try container.decode(Int64.self, forKey: .bytes)
+        files = try container.decode([String: SavedFile].self, forKey: .files)
+        // Pages saved before automatic saving existed were all saved by hand.
+        automatic = try container.decodeIfPresent(Bool.self, forKey: .automatic) ?? false
+    }
 }
 
 /// An attempt made on the phone and not yet uploaded.
@@ -65,6 +101,12 @@ struct SavedPage: Sendable, Equatable {
     var record: SavedPageRecord
     var bundle: OfflineBundle
     var pending: [PendingAttempt]
+    var highlights: SavedHighlights
+
+    /// The highlight endpoints of this page, answered on the phone.
+    var highlightEngine: HighlightEngine {
+        HighlightEngine(slug: record.slug, blocks: bundle.blocks, saved: highlights)
+    }
 
     /// The reading engine: the bundle plus the attempts made on the phone.
     var engine: ReadingEngine {
@@ -87,8 +129,12 @@ struct StagedPage: Sendable {
 ///     <root>/<namespace>/pages/<slug>/page.json      SavedPageRecord
 ///                                     bundle.json    the bundle as the server sent it
 ///                                     pending.json   [PendingAttempt], written before a reply
+///                                     highlights.json SavedHighlights (the list, removed ids and
+///                                                    the changes waiting to upload)
 ///                                     files/<sha>    the saved responses
 ///     <root>/<namespace>/synclog.json                [SyncLogEntry]
+///     <root>/<namespace>/autosave.json               [AutoSaveNote] (failed automatic saves)
+///     <root>/<namespace>/review/                     the review queue (`ReviewStore`)
 actor SavedStore {
     nonisolated let root: URL
     private var index: [String: [String: (slug: String, file: SavedFile)]] = [:] // namespace -> target -> page
@@ -167,7 +213,12 @@ actor SavedStore {
         let pendingURL = folder.appending(path: "pending.json")
         let pending = FileManager.default.fileExists(atPath: pendingURL.path(percentEncoded: false))
             ? try Self.decoder.decode([PendingAttempt].self, from: Data(contentsOf: pendingURL)) : []
-        return SavedPage(record: record, bundle: bundle, pending: pending)
+        let highlightsURL = folder.appending(path: "highlights.json")
+        // A page saved before highlights were kept apart has them in its bundle (or none).
+        let highlights = FileManager.default.fileExists(atPath: highlightsURL.path(percentEncoded: false))
+            ? try Self.decoder.decode(SavedHighlights.self, from: Data(contentsOf: highlightsURL))
+            : SavedHighlights(list: bundle.raw["highlights"].array)
+        return SavedPage(record: record, bundle: bundle, pending: pending, highlights: highlights)
     }
 
     /// A saved response for `target` from any saved page of the namespace, and its file.
@@ -198,7 +249,7 @@ actor SavedStore {
     /// Move a staged page into place in one step. An existing copy is replaced; its pending
     /// attempts are kept only when they were made on the same version (the caller refuses to
     /// refresh a page with pending attempts, this is a second guard).
-    func commit(_ namespace: String, _ staged: StagedPage, title: String) throws -> SavedPage {
+    func commit(_ namespace: String, _ staged: StagedPage, title: String, automatic: Bool = false) throws -> SavedPage {
         let manager = FileManager.default
         let slug = staged.bundle.slug
         let destination = pageFolder(namespace, slug)
@@ -207,14 +258,20 @@ actor SavedStore {
             throw StoreError(message: "This page has answers waiting to sync that were made on another version; sync them first.")
         }
         let bytes = staged.files.values.reduce(Int64(0)) { $0 + $1.bytes }
+        // Saved by hand once, a page stays saved by hand (an automatic refresh does not change that).
         let record = SavedPageRecord(
             slug: slug, title: title, savedAt: Date(), version: staged.bundle.version, serverVersion: nil,
-            supersededBy: staged.bundle.supersededBy, deletedOnServer: false, bytes: bytes, files: staged.files
+            supersededBy: staged.bundle.supersededBy, deletedOnServer: false, bytes: bytes, files: staged.files,
+            automatic: automatic && (existing?.record.automatic ?? true)
         )
         try staged.bundle.raw.data().write(to: staged.folder.appending(path: "bundle.json"), options: .atomic)
         if let existing, !existing.pending.isEmpty {
             try Self.encoder.encode(existing.pending).write(to: staged.folder.appending(path: "pending.json"), options: .atomic)
         }
+        // Highlight changes waiting to upload keep the phone's list; otherwise the server's.
+        let highlights = existing.flatMap { $0.highlights.changes.isEmpty ? nil : $0.highlights }
+            ?? SavedHighlights(list: staged.bundle.raw["highlights"].array)
+        try Self.encoder.encode(highlights).write(to: staged.folder.appending(path: "highlights.json"), options: .atomic)
         try Self.encoder.encode(record).write(to: staged.folder.appending(path: "page.json"), options: .atomic)
         try manager.createDirectory(at: pagesFolder(namespace), withIntermediateDirectories: true)
         if manager.fileExists(atPath: destination.path(percentEncoded: false)) {
@@ -251,6 +308,7 @@ actor SavedStore {
         try Self.encoder.encode(page.pending).write(to: folder.appending(path: "pending.json"), options: [.atomic])
         if let bundle {
             try bundle.raw.data().write(to: folder.appending(path: "bundle.json"), options: .atomic)
+            try adoptServerHighlights(page, bundle, folder: folder)
             page.record.version = bundle.version
             page.record.serverVersion = nil
             page.record.supersededBy = bundle.supersededBy
@@ -266,6 +324,7 @@ actor SavedStore {
         guard var page = try? load(folder) else { return }
         page.record.deletedOnServer = false
         page.record.supersededBy = bundle.supersededBy
+        try adoptServerHighlights(page, bundle, folder: folder)
         if bundle.version == page.record.version {
             page.record.serverVersion = nil
             if page.pending.isEmpty {
@@ -277,11 +336,88 @@ actor SavedStore {
         try Self.encoder.encode(page.record).write(to: folder.appending(path: "page.json"), options: .atomic)
     }
 
+    /// The server's highlights for the page, when the phone has no changes of its own waiting.
+    private func adoptServerHighlights(_ page: SavedPage, _ bundle: OfflineBundle, folder: URL) throws {
+        guard page.highlights.changes.isEmpty, let list = bundle.raw["highlights"].array else { return }
+        let fresh = SavedHighlights(list: list, removed: page.highlights.removed, changes: [])
+        try Self.encoder.encode(fresh).write(to: folder.appending(path: "highlights.json"), options: .atomic)
+    }
+
+    /// Store the page's highlights as the phone now has them (written before a reply).
+    func saveHighlights(_ namespace: String, _ slug: String, _ highlights: SavedHighlights) throws {
+        let folder = pageFolder(namespace, slug)
+        guard FileManager.default.fileExists(atPath: folder.appending(path: "page.json").path(percentEncoded: false)) else {
+            throw StoreError(message: "The page \(slug) is not saved on this phone.")
+        }
+        try Self.encoder.encode(highlights).write(to: folder.appending(path: "highlights.json"), options: .atomic)
+    }
+
+    /// After a highlight upload: the server's list, with the changes still waiting (made
+    /// during the upload) applied on top; the sent changes leave the queue.
+    func finishHighlightUpload(_ namespace: String, _ slug: String, sent: Set<UUID>, serverList: [JSONValue]?) throws {
+        let folder = pageFolder(namespace, slug)
+        let page = try load(folder)
+        let left = page.highlights.changes.filter { !sent.contains($0.changeID) }
+        var saved = SavedHighlights(list: page.highlights.list, removed: page.highlights.removed, changes: left)
+        if let serverList {
+            saved.list = HighlightEngine.replay(left, onto: serverList, slug: slug, blocks: page.bundle.blocks)
+        }
+        try Self.encoder.encode(saved).write(to: folder.appending(path: "highlights.json"), options: .atomic)
+    }
+
+    /// Mark a page as saved by hand (the reader saved or refreshed an automatic save).
+    func markManual(_ namespace: String, _ slug: String) throws {
+        let folder = pageFolder(namespace, slug)
+        var page = try load(folder)
+        guard page.record.automatic else { return }
+        page.record.automatic = false
+        try Self.encoder.encode(page.record).write(to: folder.appending(path: "page.json"), options: .atomic)
+    }
+
+    /// Bytes the page takes on disk (allocated, every file of its folder).
+    func diskUsage(_ namespace: String, _ slug: String) -> Int64 {
+        Self.allocatedSize(of: pageFolder(namespace, slug))
+    }
+
+    nonisolated static func allocatedSize(of folder: URL) -> Int64 {
+        let keys: [URLResourceKey] = [.totalFileAllocatedSizeKey, .fileAllocatedSizeKey, .isRegularFileKey]
+        guard let walker = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: keys) else { return 0 }
+        var total: Int64 = 0
+        for case let url as URL in walker {
+            guard let values = try? url.resourceValues(forKeys: Set(keys)), values.isRegularFile == true else { continue }
+            total += Int64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? 0)
+        }
+        return total
+    }
+
     func markDeletedOnServer(_ namespace: String, _ slug: String) throws {
         let folder = pageFolder(namespace, slug)
         guard var page = try? load(folder) else { return }
         page.record.deletedOnServer = true
         try Self.encoder.encode(page.record).write(to: folder.appending(path: "page.json"), options: .atomic)
+    }
+
+    // MARK: Automatic saving notes
+
+    func autoSaveNotes(_ namespace: String) -> [AutoSaveNote] {
+        let url = namespaceFolder(namespace).appending(path: "autosave.json")
+        guard let data = try? Data(contentsOf: url) else { return [] }
+        return (try? Self.decoder.decode([AutoSaveNote].self, from: data)) ?? []
+    }
+
+    /// Keep a failure note (the newest per page replaces older ones of the same page).
+    func appendAutoSaveNote(_ namespace: String, _ note: AutoSaveNote) throws {
+        let kept = autoSaveNotes(namespace).filter { $0.slug != note.slug }
+        try writeAutoSaveNotes(namespace, kept + [note])
+    }
+
+    func removeAutoSaveNotes(_ namespace: String, slug: String? = nil) throws {
+        try writeAutoSaveNotes(namespace, slug.map { slug in autoSaveNotes(namespace).filter { $0.slug != slug } } ?? [])
+    }
+
+    private func writeAutoSaveNotes(_ namespace: String, _ notes: [AutoSaveNote]) throws {
+        try FileManager.default.createDirectory(at: namespaceFolder(namespace), withIntermediateDirectories: true)
+        try Self.encoder.encode(notes).write(to: namespaceFolder(namespace).appending(path: "autosave.json"), options: .atomic)
     }
 
     // MARK: Sync log
@@ -306,16 +442,31 @@ actor SavedStore {
         try Self.encoder.encode(entries).write(to: namespaceFolder(namespace).appending(path: "synclog.json"), options: .atomic)
     }
 
+    /// Dates to the millisecond (automatic saves made within one second are evicted in the
+    /// order they were made); dates written before, to the second, still read.
     static let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(date.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: true)
+                .timeZone(separator: .omitted)))
+        }
         encoder.outputFormatting = [.sortedKeys]
         return encoder
     }()
 
     static let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let text = try container.decode(String.self)
+            if let date = try? Date(text, strategy: .iso8601.year().month().day().time(includingFractionalSeconds: true)
+                .timeZone(separator: .omitted)) {
+                return date
+            }
+            if let date = try? Date(text, strategy: .iso8601) { return date }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "not an ISO 8601 date: \(text)")
+        }
         return decoder
     }()
 }

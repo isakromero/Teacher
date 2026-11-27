@@ -1,6 +1,8 @@
 # SwiftLint for the Airistotle app: /opt/homebrew/bin/swiftlint lint (from ios/).
 included:
   - Airistotle
+  - AiristotleWidget
+  - Shared
   - AiristotleTests
 excluded:
   - Airistotle.xcodeproj

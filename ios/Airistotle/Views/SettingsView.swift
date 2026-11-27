@@ -42,6 +42,14 @@ struct SettingsView: View {
 
                 readingSection
 
+                reviewSection
+
+                DailyGoalSection()
+
+                MascotSection()
+
+                RemindersSection()
+
                 Section {
                     @Bindable var offline = model.offline
                     LabeledContent("Saved pages", value: savedText)
@@ -55,7 +63,7 @@ struct SettingsView: View {
                             ProgressView()
                         } else {
                             Button("Sync now") { Task { await model.offline.syncNow() } }
-                                .disabled(model.offline.pendingCount == 0)
+                                .disabled(!model.offline.hasPendingWork)
                                 .accessibilityIdentifier("settings.syncNow")
                         }
                     }
@@ -135,6 +143,30 @@ struct SettingsView: View {
                 await refreshUsage()
                 await model.offline.reload()
             }
+        }
+    }
+
+    private var reviewSection: some View {
+        @Bindable var offline = model.offline
+        return Section {
+            Toggle("Keep pages I'm studying available offline", isOn: $offline.autoSave)
+                .accessibilityIdentifier("settings.autoSave")
+            Toggle("Only on Wi-Fi", isOn: $offline.autoSaveWiFiOnly)
+                .disabled(!offline.autoSave)
+                .accessibilityIdentifier("settings.autoSaveWiFiOnly")
+            Picker("Quick review length", selection: $offline.quickReviewMinutes) {
+                ForEach(OfflinePreferences.quickReviewChoices, id: \.self) { Text("\($0) min").tag($0) }
+            }
+            .accessibilityIdentifier("settings.quickReview")
+            if let problem = offline.reviewProblem {
+                Label(problem, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.footnote)
+            }
+        } header: {
+            Text("Studying offline")
+        } footer: {
+            Text("The page you are studying, and the ones you studied recently and have not finished, are saved as you open them "
+                + "(up to 5; never in Low Data Mode; with Only on Wi-Fi, not over cellular). Failures are listed in Saved pages. "
+                + "The review questions due in the next week are saved whenever the server can be reached.")
         }
     }
 

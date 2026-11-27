@@ -25,10 +25,30 @@ targets:
     platform: iOS
     sources:
       - path: Airistotle
+      - path: Shared
+    dependencies:
+      # The review-due widget (home and lock screen), embedded in the app.
+      - target: AiristotleWidget
+    # The App Group is the only data shared with the widget: a small snapshot (Shared/SharedContainer.swift).
+    entitlements:
+      path: Airistotle/Airistotle.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.dev.airistotle.reader
     info:
       path: Airistotle/Info.plist
       properties:
         CFBundleDisplayName: Airistotle
+        # Deep links (widget, reminders, Shortcuts, Spotlight): Shared/DeepLink.swift.
+        CFBundleURLTypes:
+          - CFBundleURLName: dev.airistotle.reader
+            CFBundleURLSchemes:
+              - airistotle
+        # The widget's data is refreshed in the background when iOS allows it (BGAppRefreshTask).
+        BGTaskSchedulerPermittedIdentifiers:
+          - dev.airistotle.reader.refresh
+        UIBackgroundModes:
+          - fetch
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         ITSAppUsesNonExemptEncryption: false
@@ -55,6 +75,34 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: NO
+  AiristotleWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: AiristotleWidget
+      - path: Shared
+      - path: Airistotle/Web/PageColors.swift
+    entitlements:
+      path: AiristotleWidget/AiristotleWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.dev.airistotle.reader
+    info:
+      path: AiristotleWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Airistotle
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.airistotle.reader.widget
+        PRODUCT_NAME: AiristotleWidget
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
   AiristotleTests:
     type: bundle.unit-test
     platform: iOS

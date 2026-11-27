@@ -27,6 +27,33 @@ struct OfflinePreferences: @unchecked Sendable {
         get { WrittenAnswerGrading(rawValue: defaults.string(forKey: Self.gradingKey) ?? "") ?? .offlineOnly }
         nonmutating set { defaults.set(newValue.rawValue, forKey: Self.gradingKey) }
     }
+
+    static let autoSaveKey = "autoSaveStudyPages"
+    static let autoSaveWiFiOnlyKey = "autoSaveWiFiOnly"
+    static let quickReviewKey = "quickReviewMinutes"
+    static let quickReviewChoices = [3, 5, 10]
+    static var allKeys: [String] { [gradingKey, autoSaveKey, autoSaveWiFiOnlyKey, quickReviewKey] }
+
+    /// "Keep pages I'm studying available offline" (default on).
+    var autoSave: Bool {
+        get { defaults.object(forKey: Self.autoSaveKey) as? Bool ?? true }
+        nonmutating set { defaults.set(newValue, forKey: Self.autoSaveKey) }
+    }
+
+    /// Automatic saving only on Wi-Fi, never on cellular or a hotspot (default on).
+    var autoSaveWiFiOnly: Bool {
+        get { defaults.object(forKey: Self.autoSaveWiFiOnlyKey) as? Bool ?? true }
+        nonmutating set { defaults.set(newValue, forKey: Self.autoSaveWiFiOnlyKey) }
+    }
+
+    /// The length of a quick review, in minutes (3, 5 or 10; default 5).
+    var quickReviewMinutes: Int {
+        get {
+            let stored = defaults.object(forKey: Self.quickReviewKey) as? Int
+            return stored.flatMap { Self.quickReviewChoices.contains($0) ? $0 : nil } ?? 5
+        }
+        nonmutating set { defaults.set(newValue, forKey: Self.quickReviewKey) }
+    }
 }
 
 /// The phone's side of offline reading (`teacher.web.routers.offline`): saving pages, answering
@@ -49,10 +76,13 @@ final class OfflineService: GatewayRoute, OfflineRoute, GatewayObserver, Sendabl
     let gateway: Gateway
     let grader: BlurbGrader
     let preferences: OfflinePreferences
-    private let changed: @Sendable () -> Void
+    let changed: @Sendable () -> Void
     private let submitLock = AsyncLock()
     private let syncLock = AsyncLock()
-    private let clock: @Sendable () -> Instant
+    /// Highlight changes on the phone and their upload, one at a time (a change made while an
+    /// upload is under way waits for its answer).
+    let highlightLock = AsyncLock()
+    let clock: @Sendable () -> Instant
 
     init(
         gateway: Gateway,
@@ -110,6 +140,9 @@ final class OfflineService: GatewayRoute, OfflineRoute, GatewayObserver, Sendabl
     // MARK: GatewayRoute: before the network
 
     func reply(to request: GatewayRequest, context: GatewayContext) async -> GatewayReply? {
+        if let route = HighlightEngine.route(request) {
+            return await highlightReplyBeforeNetwork(route, request: request, namespace: context.connection.cacheNamespace)
+        }
         guard let route = Self.readingRoute(request) else { return nil }
         let namespace = context.connection.cacheNamespace
         if case .submit(let slug, let key) = route, preferences.grading == .always,
@@ -132,6 +165,10 @@ final class OfflineService: GatewayRoute, OfflineRoute, GatewayObserver, Sendabl
             guard await store.isSaved(namespace, route.slug) else { return nil }
             return await answerLocally(route, request: request, namespace: namespace)
         }
+        if let route = HighlightEngine.route(request) {
+            guard await store.isSaved(namespace, route.slug) else { return nil }
+            return await answerHighlightLocally(route, request: request, namespace: namespace)
+        }
         guard request.isReadOnly, let (file, url) = await store.file(namespace, target: request.target) else { return nil }
         var headers = file.headers
         headers[Gateway.sourceHeader] = "saved-page"
@@ -149,6 +186,8 @@ final class OfflineService: GatewayRoute, OfflineRoute, GatewayObserver, Sendabl
             slug = page
         } else if case .submit(let page, _) = Self.readingRoute(request), status == 201 {
             slug = page
+        } else if let route = HighlightEngine.route(request), request.method != "GET", (200...204).contains(status) {
+            slug = route.slug // a highlight changed on the server: the saved list follows
         }
         guard let slug, await store.isSaved(namespace, slug) else { return }
         // After the reply is on its way: refreshing must not hold up the page.
@@ -313,24 +352,10 @@ final class OfflineService: GatewayRoute, OfflineRoute, GatewayObserver, Sendabl
         )
     }
 
-    static func parseBody(_ body: Data?) -> JSONValue {
-        guard let body, let value = try? JSONValue(data: body) else { return .null }
-        return value
-    }
-
-    static func json(_ status: Int, _ value: JSONValue) -> GatewayReply {
-        GatewayReply(status: status, headers: ["Content-Type": "application/json", Gateway.sourceHeader: "saved-page"],
-                     data: value.data(), source: .local(ReadingEngine.sourceName))
-    }
-
-    static func notSaved(_ slug: String) -> GatewayReply {
-        .jsonError(503, "The page \(slug) is not saved on this phone, so it cannot be read offline.",
-                   source: .local(ReadingEngine.sourceName))
-    }
-
     // MARK: Saving
 
-    func save(slug: String, progress: @escaping @Sendable (Int, Int) -> Void = { _, _ in }) async throws -> SavedPage {
+    func save(slug: String, automatic: Bool = false, progress: @escaping @Sendable (Int, Int) -> Void = { _, _ in }) async throws
+        -> SavedPage {
         guard let namespace else { throw PageSaver.Failure(message: "Sign in first.") }
         if let existing = await store.page(namespace, slug), !existing.pending.isEmpty {
             _ = await sync(slugs: [slug])
@@ -339,10 +364,13 @@ final class OfflineService: GatewayRoute, OfflineRoute, GatewayObserver, Sendabl
                     + "Refreshing would mix them with a new copy; sync first (the server must be reachable).")
             }
         }
+        if let existing = await store.page(namespace, slug), !existing.highlights.changes.isEmpty {
+            _ = await syncHighlights(slugs: [slug])
+        }
         let saver = PageSaver(gateway: gateway, store: store)
         let staged = try await saver.stage(slug: slug, progress: progress)
         do {
-            let page = try await store.commit(namespace, staged, title: staged.bundle.title)
+            let page = try await store.commit(namespace, staged, title: staged.bundle.title, automatic: automatic)
             changed()
             return page
         } catch {
@@ -378,7 +406,13 @@ final class OfflineService: GatewayRoute, OfflineRoute, GatewayObserver, Sendabl
                 if summary.unreachable { break }
                 await syncPage(page, namespace: namespace, summary: &summary)
             }
-            summary.waiting = await store.pages(namespace).reduce(0) { $0 + $1.pending.count }
+            if !summary.unreachable {
+                let highlights = await syncHighlights(slugs: slugs)
+                summary.uploaded += highlights.uploaded
+                summary.logged += highlights.logged
+                summary.unreachable = highlights.unreachable
+            }
+            summary.waiting = await store.pages(namespace).reduce(0) { $0 + $1.pending.count + $1.highlights.changes.count }
             changed()
             return summary
         }
@@ -482,6 +516,23 @@ final class OfflineService: GatewayRoute, OfflineRoute, GatewayObserver, Sendabl
             answer = String(bytes: response.data(), encoding: .utf8) ?? "(unreadable)"
         }
         return "Checkpoint \(attempt.key), answered \(attempt.madeAt.date.formatted(date: .abbreviated, time: .shortened)): \(answer)"
+    }
+}
+
+extension OfflineService {
+    static func parseBody(_ body: Data?) -> JSONValue {
+        guard let body, let value = try? JSONValue(data: body) else { return .null }
+        return value
+    }
+
+    static func json(_ status: Int, _ value: JSONValue) -> GatewayReply {
+        GatewayReply(status: status, headers: ["Content-Type": "application/json", Gateway.sourceHeader: "saved-page"],
+                     data: value.data(), source: .local(ReadingEngine.sourceName))
+    }
+
+    static func notSaved(_ slug: String) -> GatewayReply {
+        .jsonError(503, "The page \(slug) is not saved on this phone, so it cannot be read offline.",
+                   source: .local(ReadingEngine.sourceName))
     }
 }
 

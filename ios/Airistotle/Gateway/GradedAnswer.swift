@@ -49,9 +49,21 @@ enum GradedAnswer {
     /// the end gives nothing.
     static func watch(_ reply: GatewayReply, graded: @escaping @Sendable (AnswerOutcome) -> Void) -> GatewayReply {
         guard reply.status == 201 else { return reply }
-        let body = reply.body
         let status = reply.status
-        var watched = reply
+        return reply.watchingBody(maxBody: maxBody) { body in
+            if let outcome = outcome(status: status, body: body) { graded(outcome) }
+        }
+    }
+}
+
+extension GatewayReply {
+    /// This reply with its body passed through unchanged; once the page has read it to the end,
+    /// the whole body is given to `read` (before the stream ends, so whoever read the reply to
+    /// its end sees what `read` reported). A body that broke off, was not read to the end, or
+    /// grew past `maxBody` gives nothing.
+    func watchingBody(maxBody: Int, _ read: @escaping @Sendable (Data) -> Void) -> GatewayReply {
+        let body = self.body
+        var watched = self
         watched.body = AsyncThrowingStream { continuation in
             let task = Task {
                 do {
@@ -68,9 +80,7 @@ enum GradedAnswer {
                         }
                         continuation.yield(chunk)
                     }
-                    // The whole reply has been handed on; reported before the stream ends, so
-                    // whoever read the reply to its end sees the grade reported.
-                    if !tooLarge, let outcome = outcome(status: status, body: collected) { graded(outcome) }
+                    if !tooLarge { read(collected) }
                     continuation.finish()
                 } catch {
                     continuation.finish(throwing: error)

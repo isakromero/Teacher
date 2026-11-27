@@ -85,13 +85,18 @@ final class Gateway: Sendable {
     // MARK: Answering a request
 
     func reply(to request: GatewayRequest) async -> GatewayReply {
-        let reply = await answer(request)
+        let namespace = connection?.cacheNamespace
+        var reply = await answer(request)
         if request.isMainFrame { events(.pageShown(target: request.target, source: reply.source)) }
+        let events = events
+        if let namespace, let watched = ReadingProgress.watched(request) {
+            // A study page's progress, read from what the page receives (whoever answered).
+            reply = ReadingProgress.watch(reply, watched, namespace: namespace) { events(.readingProgress($0)) }
+        }
         if GradedAnswer.isSubmission(request) {
             // Whoever answered (the server, or the phone's reading engine): the grade is read
             // from what the page receives.
-            let events = events
-            return GradedAnswer.watch(reply) { events(.answerGraded($0)) }
+            reply = GradedAnswer.watch(reply) { events(.answerGraded($0)) }
         }
         return reply
     }
