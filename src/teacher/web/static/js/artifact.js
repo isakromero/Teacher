@@ -1,11 +1,14 @@
 // Artifact page: one page, three states driven by GET /api/artifacts/{slug}:
 // `generating` (stages, polled every 2 s), `failed` (error + Regenerate), `ready` (the reader,
 // plus a Regenerate button in the header and, after the reader, the page's hands-on labs).
-// The generating and failed states are shared with the lab page (generation_view.js).
+// The generating and failed states are shared with the lab page (generation_view.js). A ready
+// page also has the reader's highlights and notes (highlights.js), whose "Ask the tutor"
+// attaches the selected passage to the tutor's composer (chat.js).
 
 import { api, describeError, seg } from "./api.js";
 import { byId, setError, showPageError } from "./dom.js";
 import { mountChat } from "./chat.js";
+import { mountHighlights } from "./highlights.js";
 import { pollGeneration, regenerate, renderMeta, renderNotices, showFailure } from "./generation_view.js";
 import { mountLabs } from "./study_labs.js";
 import { mountModelChoice } from "./model_choice.js";
@@ -106,7 +109,8 @@ async function showReady(artifact) {
   await showStageNotes();
   await mountReader(artifact);
   mountLabs(artifact);
-  mountChat(artifact);
+  const chat = mountChat(artifact, { selectionButton: false });
+  mountHighlights(artifact, { askTutor: (ref) => chat.attachReference(ref) });
 }
 
 // -- dispatch --------------------------------------------------------------------------------

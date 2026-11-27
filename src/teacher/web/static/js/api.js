@@ -89,6 +89,7 @@ export const api = {
   get: (path) => request("GET", path),
   post: (path, json = {}) => request("POST", path, { json }),
   put: (path, json = {}, { keepalive = false } = {}) => request("PUT", path, { json, keepalive }),
+  patch: (path, json = {}) => request("PATCH", path, { json }),
   postForm: (path, form) => request("POST", path, { form }),
   delete: (path) => request("DELETE", path),
 };

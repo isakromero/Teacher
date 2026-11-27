@@ -473,8 +473,9 @@ def test_artifact_page_tutor_chat(client: TestClient, settings: Settings, source
         tag, button = by_id(html, button_id)
         assert tag == "button" and button["type"] == "button", button_id
     assert by_id(html, "tutor-open")[1]["aria-controls"] == "tutor"
-    for text in ("Check my understanding", "New conversation", "Ask about this", "Send"):
+    for text in ("Check my understanding", "New conversation", "Ask the tutor", "Send"):
         assert text in html, text
+    assert "Ask about this" not in html  # the highlight popover asks the tutor (highlights.js)
     # The page script loads the chat, which loads the SSE parser and the reference helpers.
     seen = _crawl(client, static_refs(html))
     for expected in ("/static/js/chat.js", "/static/js/sse.js", "/static/js/references.js"):
@@ -518,6 +519,41 @@ def test_artifact_page_glossary(client: TestClient, settings: Settings, source: 
     assert "glossary.refresh()" in (JS_DIR / "reader.js").read_text(encoding="utf-8")
     css = (STATIC_DIR / "css" / "app.css").read_text(encoding="utf-8")
     for selector in (".gloss-term", ".gloss-popover", ".glossary-list"):
+        assert selector in css, selector
+
+
+def test_artifact_page_highlights(client: TestClient, settings: Settings, source: Json) -> None:
+    """The "Highlights and notes" panel highlights.js fills in, and the script's hooks: the
+    popover follows the selection (selectionchange), asks the tutor through the chat's
+    controller, and every failure is shown."""
+    make_artifact(settings, source["slug"], "study-highlights", "ready")
+    html = get_html(client, "/artifacts/study-highlights")
+    tag, panel = by_id(html, "highlights")
+    assert tag == "details" and "hidden" in panel  # shown once the highlights have loaded
+    assert by_id(html, "highlights-count")[0] == "span"
+    _, error = by_id(html, "highlights-error")
+    assert error["role"] == "alert" and "hidden" in error
+    assert by_id(html, "highlights-list")[0] == "ol"
+    assert by_id(html, "highlights-status")[1]["aria-live"] == "polite"
+    by_id(html, "highlights-empty")
+    assert "Highlights and notes" in html
+    # Outside the blocks, so its text is never part of a selection in a block.
+    assert html.index('id="glossary"') < html.index('id="highlights"') < html.index('id="blocks"')
+    seen = _crawl(client, static_refs(html))
+    for expected in ("/static/js/highlights.js", "/static/js/highlight_model.js"):
+        assert expected in seen, expected
+    script = (JS_DIR / "highlights.js").read_text(encoding="utf-8")
+    for fragment in ('"selectionchange"', "MutationObserver", "/highlights", "Ask the tutor",
+                     "Add note", "Edit note", "Remove", "Not found on the page",
+                     "Could not save the highlight", "Could not load your highlights",
+                     "teacher:highlights", "teacher:highlight-popover", "window.teacherHighlights"):
+        assert fragment in script, fragment
+    for sink in ("innerHTML", "outerHTML", "insertAdjacentHTML", "document.write", "contextmenu"):
+        assert sink not in script, sink
+    artifact = (JS_DIR / "artifact.js").read_text(encoding="utf-8")
+    assert "selectionButton: false" in artifact and "chat.attachReference(ref)" in artifact
+    css = (STATIC_DIR / "css" / "app.css").read_text(encoding="utf-8")
+    for selector in ("mark.hl", ".hl-atom", ".hl-popover", ".highlights-list", ".hl-entry.is-missing"):
         assert selector in css, selector
 
 
@@ -706,7 +742,7 @@ def test_lab_page_scripts() -> None:
         assert fragment in code, fragment
     chat = (JS_DIR / "chat.js").read_text(encoding="utf-8")
     assert "if (beforeSend) await beforeSend();" in chat
-    assert "if (blocksRoot) setupSelectionButton(blocksRoot, attach);" in chat
+    assert "if (blocksRoot && selectionButton) setupSelectionButton(blocksRoot, attach);" in chat
     for name in ("lab.js", "lab_editor.js", "lab_model.js", "generation_view.js", "artifact_list.js",
                  "study_labs.js"):
         text = (JS_DIR / name).read_text(encoding="utf-8")
@@ -947,6 +983,7 @@ def test_markdown_keeps_latex_intact() -> None:
         ("graph_search_test.mjs", "graph search ok"),
         ("lab_test.mjs", "lab ok"),
         ("home_test.mjs", "home ok"),
+        ("highlight_test.mjs", "highlight ok"),
     ],
 )
 def test_tutor_chat_helpers(script: str, marker: str) -> None:

@@ -215,6 +215,18 @@ class BlockResponseManager:
         }
         return [BlockProgress(block, *stats.get(block.id, (0, False))) for block in blocks]
 
+    def answer_times(self, since: datetime) -> list[datetime]:
+        """When every study-page answer (an attempt at any gate, on any page) from `since`
+        (naive UTC) on was made (`created_at`: for an attempt uploaded from a phone, when it
+        was made there), oldest first."""
+        return [
+            *self.session.scalars(
+                select(BlockResponse.created_at)
+                .where(BlockResponse.created_at >= since)
+                .order_by(BlockResponse.created_at)
+            )
+        ]
+
     def next_gate(self, artifact: Artifact) -> ArtifactBlock | None:
         """The first gate block, in reading order, with no passed attempt; None if all passed."""
         passed = exists().where(

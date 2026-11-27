@@ -435,8 +435,9 @@ def test_bundle_shape(client: TestClient, study: str, settings: Settings) -> Non
         "format", "format_version", "artifact", "artifact_id", "title", "generated_at",
         "version", "superseded_by", "bundled_at", "max_attempts", "default_min_words",
         "grading", "total_blocks", "gates_total", "gates_cleared", "locked_blocks",
-        "complete", "blocks", "assets",
+        "complete", "blocks", "assets", "highlights",
     }
+    assert bundle["highlights"] == []
     assert bundle["format"] == "teacher-offline-bundle" and bundle["format_version"] == 1
     assert bundle["artifact"] == study and bundle["title"] == "Study"
     assert bundle["max_attempts"] == 2 and bundle["default_min_words"] == 20

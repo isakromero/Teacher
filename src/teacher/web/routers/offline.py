@@ -2,10 +2,14 @@
 
 Two endpoints, both under the account gate like every /api route (with the gate on, a request
 without a valid session, cookie or `Authorization: Bearer <token>`, is a 401
-`{"detail": ...}`). Data is shared by every account, as everywhere else. Every error body is
-`{"detail": "<message>"}`. Timestamps are ISO 8601 strings in UTC with an explicit `+00:00`
-offset (Python's `isoformat()`: `2026-11-25T10:00:00+00:00`, with `.ffffff` microseconds
-only when they are not zero).
+`{"detail": ...}`). Pages, answers and history are shared by every account, as everywhere
+else; the bundle's `highlights` are the signed-in account's own. Two more offline endpoints
+live with what they serve: `POST /api/offline/artifacts/{slug}/highlights` (highlight changes
+made offline, `routers/highlights.py`) and `GET /api/offline/review` with `POST
+/api/offline/review/answers` (the review queue offline, `routers/offline_review.py`). Every
+error body is `{"detail": "<message>"}`. Timestamps are ISO 8601 strings in UTC with an
+explicit `+00:00` offset (Python's `isoformat()`: `2026-11-25T10:00:00+00:00`, with `.ffffff`
+microseconds only when they are not zero).
 
 Unlike `routers/reading.py`, the bundle carries every block (locked ones too) WITH its private
 part (the correct option, the explanations, the model answer and rubric) and every response
@@ -44,7 +48,11 @@ same checks, in that order, as `GET /api/artifacts/{slug}/blocks`. 200 body
       "total_blocks": 5, "gates_total": 2, "gates_cleared": 0, "locked_blocks": 3,
       "complete": false,          # the server's reading state now, as GET .../blocks has it
       "blocks": [ <block>, ... ], # EVERY block, by position (1, 2, ...)
-      "assets": [ <asset>, ... ]  # every file under the page's assets/ folder, by path
+      "assets": [ <asset>, ... ], # every file under the page's assets/ folder, by path
+      "highlights": [ <highlight>, ... ]   # the signed-in account's highlights and notes on
+                                  # the page, as GET /api/artifacts/{slug}/highlights lists them
+                                  # (routers/highlights.py documents <highlight>); a key added
+                                  # within format_version 1 (older readers ignore it)
     }
 
 `<block>` (`OfflineBlockOut`) has every field of the reading API's `BlockOut`, with the values
@@ -251,7 +259,7 @@ upload order, whatever the `made_at` times.
       "bundle": <OfflineBundleOut>       # the page as it is after this upload
     }
 
-After an upload, replace the saved blocks and responses with `bundle` (when `version_matched`
+After an upload, replace the saved blocks, responses and highlights with `bundle` (when `version_matched`
 is false the bundle is the page now behind the slug: the saved one is gone). A rejected item
 stays rejected if sent again (except one rejected for the server's state, which may change):
 show its reason to the reader rather than retrying it forever.
@@ -316,7 +324,8 @@ from teacher.reading import (
     require_ready,
 )
 from teacher.web.common import to_iso
-from teacher.web.deps import SessionDep, SettingsDep
+from teacher.web.deps import CurrentUserDep, SessionDep, SettingsDep
+from teacher.web.routers.highlights import HighlightOut, list_highlights
 from teacher.web.routers.reading import (
     ASSETS_DIR,
     BlockOut,
@@ -408,6 +417,7 @@ class OfflineBundleOut(BaseModel):
     complete: bool
     blocks: list[OfflineBlockOut]
     assets: list[OfflineAssetOut]
+    highlights: list[HighlightOut]
 
 
 class OfflineAttemptIn(BaseModel):
@@ -523,9 +533,15 @@ def _assets(folder: Path, slug: str) -> list[OfflineAssetOut]:
 
 
 def build_bundle(
-    session: Session, settings: Settings, artifact: Artifact, *, max_attempts: int
+    session: Session,
+    settings: Settings,
+    artifact: Artifact,
+    *,
+    max_attempts: int,
+    owner: int | None,
 ) -> OfflineBundleOut:
-    """The offline bundle of a ready study page (the caller checks kind and status)."""
+    """The offline bundle of a ready study page (the caller checks kind and status), with the
+    highlights of `owner` (a user id, or None without accounts)."""
     blocks_manager = ArtifactBlockManager(session, settings)
     responses = BlockResponseManager(session, settings)
     state = reading_state(session, settings, artifact, max_attempts=max_attempts)
@@ -572,6 +588,7 @@ def build_bundle(
         complete=state.complete,
         blocks=blocks,
         assets=_assets(ArtifactManager(session, settings).dir(artifact) / ASSETS_DIR, artifact.slug),
+        highlights=list_highlights(session, settings, artifact, owner),
     )
 
 
@@ -816,11 +833,17 @@ def _apply(
 
 @router.get("/artifacts/{slug}")
 def get_bundle(
-    slug: str, session: SessionDep, settings: SettingsDep, max_attempts: MaxAttemptsDep
+    slug: str,
+    session: SessionDep,
+    settings: SettingsDep,
+    max_attempts: MaxAttemptsDep,
+    user: CurrentUserDep,
 ) -> OfflineBundleOut:
     """The offline bundle of a ready study page (see the module docstring)."""
     artifact = _study_page(session, settings, slug)
-    return build_bundle(session, settings, artifact, max_attempts=max_attempts)
+    return build_bundle(
+        session, settings, artifact, max_attempts=max_attempts, owner=user.id if user else None
+    )
 
 
 @router.post("/artifacts/{slug}/attempts")
@@ -830,6 +853,7 @@ def upload_attempts(
     session: SessionDep,
     settings: SettingsDep,
     max_attempts: MaxAttemptsDep,
+    user: CurrentUserDep,
 ) -> OfflineUploadOut:
     """Apply attempts made offline, in order; one result per item (see the module docstring)."""
     artifact = _study_page(session, settings, slug)
@@ -879,7 +903,9 @@ def upload_attempts(
         already_accepted=counts["already_accepted"],
         rejected=counts["rejected"],
         results=results,
-        bundle=build_bundle(session, settings, artifact, max_attempts=max_attempts),
+        bundle=build_bundle(
+            session, settings, artifact, max_attempts=max_attempts, owner=user.id if user else None
+        ),
     )
 
 

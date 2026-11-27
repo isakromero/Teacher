@@ -39,6 +39,7 @@ from teacher.managers.errors import (
 )
 from teacher.managers.generation_runs import GenerationRunManager
 from teacher.managers.glossary import GlossaryManager
+from teacher.managers.highlights import HighlightManager
 from teacher.managers.knowledge_sources import KnowledgeSourceManager
 from teacher.managers.labs import LabManager, StepStatus
 from teacher.managers.source_concepts import LinkSpec, SourceConceptManager
@@ -72,6 +73,7 @@ __all__ = [
     "EmbeddingIndexError",
     "GenerationRunManager",
     "GlossaryManager",
+    "HighlightManager",
     "IntegrityCheckError",
     "Issue",
     "KnowledgeSourceManager",

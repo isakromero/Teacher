@@ -10,10 +10,14 @@
 //
 // The page supplies the panel's markup (the same ids on both pages, its own empty-state text)
 // and, through mountChat's options, what differs: the layout element, the element holding the
-// blocks a selection can be attached from (none on a lab, whose tutor refuses references), and
-// `beforeSend`, awaited before every message (the lab saves the reader's code there, since the
-// tutor reads the saved workspace). If `beforeSend` throws, the message is not sent and the
-// error is shown like any other failure to send.
+// blocks a selection can be attached from (none on a lab, whose tutor refuses references),
+// whether the chat shows its own "Ask about this" button there (`selectionButton`; the study
+// page has its highlight popover, highlights.js, whose "Ask the tutor" attaches the passage
+// through the returned `attachReference` instead), and `beforeSend`, awaited before every
+// message (the lab saves the reader's code there, since the tutor reads the saved workspace).
+// If `beforeSend` throws, the message is not sent and the error is shown like any other failure
+// to send. Attaching a passage only puts it in the composer and opens the panel: nothing is
+// sent until the reader sends.
 //
 // A reply is a sequence of parts: text, and blocks the tutor showed (an exercise, a chart, an
 // interactable), drawn by the same renderers as the study page. Answering an exercise is graded
@@ -238,8 +242,11 @@ function setupSelectionButton(blocksRoot, onAsk) {
 /**
  * Mount the chat for `artifact`. Options: `layout` (the element holding the page and the panel;
  * `#artifact-layout` by default), `blocksRoot` (the blocks a selection can be attached from;
- * `#blocks` by default, null to turn "Ask about this" off), `beforeSend` (async, awaited before
- * each message is sent).
+ * `#blocks` by default, null to turn references off), `selectionButton` (default true: the
+ * chat's own "Ask about this" button follows a selection in `blocksRoot`; false: the page
+ * attaches passages itself through the returned controller), `beforeSend` (async, awaited
+ * before each message is sent). Returns `{attachReference(ref)}`: attach a passage
+ * `{block_key, text, truncated}` to the next message and open the panel (no request is made).
  */
 export function mountChat(artifact, options = {}) {
   const slug = artifact.slug;
@@ -261,6 +268,7 @@ export function mountChat(artifact, options = {}) {
   const toggleButton = byId("tutor-toggle");
   const openButton = byId("tutor-open");
   const blocksRoot = options.blocksRoot === undefined ? byId("blocks") : options.blocksRoot;
+  const selectionButton = options.selectionButton !== false;
   const beforeSend = options.beforeSend || null;
 
   const wide = window.matchMedia(WIDE_QUERY);
@@ -1092,7 +1100,7 @@ export function mountChat(artifact, options = {}) {
     paintWidth();
   });
 
-  if (blocksRoot) setupSelectionButton(blocksRoot, attach);
+  if (blocksRoot && selectionButton) setupSelectionButton(blocksRoot, attach);
   mountScrollHints(list);
 
   layout.classList.add("has-tutor");
@@ -1102,4 +1110,10 @@ export function mountChat(artifact, options = {}) {
   paintWidth();
   autoGrow();
   loadThread();
+  return {
+    attachReference(ref) {
+      if (!blocksRoot) throw new Error("this page's tutor takes no quoted passages");
+      attach(ref);
+    },
+  };
 }

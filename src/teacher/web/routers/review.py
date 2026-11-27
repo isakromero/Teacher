@@ -56,6 +56,7 @@ from teacher.managers.review import (
     DEFAULT_DAILY_CAP,
     MAX_DAILY_CAP,
     ItemView,
+    Presentation,
     ReviewConflict,
     ReviewManager,
 )
@@ -232,8 +233,15 @@ def _conflicts_as_409() -> Iterator[None]:
 def _item_out(
     session: Session, settings: Settings, view: ItemView, rng: random.Random, now: datetime
 ) -> ReviewItemOut:
+    shown = ReviewManager(session, settings).present(view, rng, now=now)
+    return item_out(session, settings, view, shown, now)
+
+
+def item_out(
+    session: Session, settings: Settings, view: ItemView, shown: Presentation, now: datetime
+) -> ReviewItemOut:
+    """An item as the queue serves it, in its presentation `shown` (`ReviewManager.present`)."""
     manager = ReviewManager(session, settings)
-    shown = manager.present(view, rng, now=now)
     concepts = [
         ConceptRefOut(slug=c.slug, name=c.name)
         for tag, c in BlockConceptManager(session, settings).for_blocks([view.block.id]).get(
@@ -468,4 +476,18 @@ def review_page(
     )
 
 
-__all__ = ["BankStatusOut", "QueueOut", "ReviewAnswerIn", "ReviewAnswerOut", "day_start", "page_router", "router"]
+__all__ = [
+    "BankStatusOut",
+    "ClockDep",
+    "ConceptRefOut",
+    "QueueOut",
+    "RefOut",
+    "ReviewAnswerIn",
+    "ReviewAnswerOut",
+    "ReviewBlockOut",
+    "ReviewItemOut",
+    "day_start",
+    "item_out",
+    "page_router",
+    "router",
+]

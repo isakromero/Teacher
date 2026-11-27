@@ -1,4 +1,4 @@
-"""ORM models for all thirty-five Teacher tables.
+"""ORM models for all thirty-seven Teacher tables.
 
 Conventions: naive-UTC timestamps with both a Python default and a CURRENT_TIMESTAMP server default;
 JSON columns carry a named `CHECK (json_valid(col))`; all constraints are named via `Base.metadata`.
@@ -1663,6 +1663,111 @@ class OfflineAttempt(Base):
         )
 
 
+class OfflineReviewAnswer(Base):
+    """A review answer made offline on a phone and accepted by `POST
+    /api/offline/review/answers` (revision 0019; `teacher.web.routers.offline_review`): the
+    idempotency record of the upload, as `OfflineAttempt` is for a study page's attempts.
+    `client_id` is the UUID the phone generated for the answer (canonical lowercase form,
+    unique); `attempt_id` the `review_attempts` row it was stored as (deleted with it);
+    `made_at` when it was made on the phone (naive UTC; also the attempt's `created_at`);
+    `device_grader` and `device_verdict` the phone's grader and verdict as sent (a multiple
+    choice is graded again on the server, whose verdict the attempt holds); `received_at` when
+    the server accepted it."""
+
+    __tablename__ = "offline_review_answers"
+    __table_args__ = (
+        CheckConstraint("length(client_id) = 36", name="client_id"),
+        CheckConstraint(
+            "substr(device_grader, 1, 7) = 'device:' AND length(device_grader) > 7",
+            name="device_grader",
+        ),
+        CheckConstraint(
+            "device_verdict IN ('passed', 'partial', 'failed')", name="device_verdict"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    client_id: Mapped[str] = mapped_column(Text, unique=True)
+    attempt_id: Mapped[int] = mapped_column(
+        ForeignKey("review_attempts.id", ondelete="CASCADE"), unique=True
+    )
+    made_at: Mapped[datetime] = mapped_column(DateTime)
+    device_grader: Mapped[str] = mapped_column(Text)
+    device_verdict: Mapped[str] = mapped_column(Text)
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"OfflineReviewAnswer(id={self.id!r}, client_id={self.client_id!r}, "
+            f"attempt_id={self.attempt_id!r})"
+        )
+
+
+# -- highlights and notes on study pages (revision 0019, `teacher.managers.highlights`) ----------
+
+#: Longest quote, context and note a highlight keeps (characters); checked by the manager.
+HIGHLIGHT_MAX_QUOTE = 4000
+HIGHLIGHT_MAX_CONTEXT = 64
+HIGHLIGHT_MAX_NOTE = 10000
+
+
+class Highlight(Base):
+    """A passage of a study page the reader highlighted, with an optional note (revision 0019;
+    `teacher.managers.highlights`). It belongs to one account (`user_id`; NULL when the app
+    runs without accounts, `teacher.web.auth`) and one page (`artifact_id`); both cascade.
+
+    Anchor: `block_key` (the block's stable key) and the passage itself, `quote`, with up to
+    `HIGHLIGHT_MAX_CONTEXT` characters of text before (`prefix`) and after (`suffix`) it, and
+    its offsets in the block's text (`start_offset`, `end_offset`; a hint, see
+    `static/js/highlight_model.js` for the text they count in). `uid` is the public id, a UUID
+    in canonical lowercase form, made by the server or by a phone (the idempotency key of an
+    offline upload). `note` is NULL for a plain highlight. `updated_at` is when the note last
+    changed (or the highlight was made); `deleted_at` marks a removed highlight, kept as a
+    tombstone so that an offline upload made before the removal cannot bring it back (its note
+    is cleared)."""
+
+    __tablename__ = "highlights"
+    __table_args__ = (
+        CheckConstraint("length(uid) = 36", name="uid"),
+        CheckConstraint("length(block_key) > 0", name="block_key"),
+        CheckConstraint("length(quote) > 0", name="quote"),
+        CheckConstraint("start_offset >= 0 AND end_offset > start_offset", name="offsets"),
+        CheckConstraint("note IS NULL OR length(note) > 0", name="note"),
+        CheckConstraint("deleted_at IS NULL OR note IS NULL", name="deleted_note"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    uid: Mapped[str] = mapped_column(Text, unique=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    artifact_id: Mapped[int] = mapped_column(
+        ForeignKey("artifacts.id", ondelete="CASCADE"), index=True
+    )
+    block_key: Mapped[str] = mapped_column(Text)
+    quote: Mapped[str] = mapped_column(Text)
+    prefix: Mapped[str] = mapped_column(Text, default="")
+    suffix: Mapped[str] = mapped_column(Text, default="")
+    start_offset: Mapped[int] = mapped_column(Integer)
+    end_offset: Mapped[int] = mapped_column(Integer)
+    note: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+    def __repr__(self) -> str:
+        return (
+            f"Highlight(id={self.id!r}, uid={self.uid!r}, artifact_id={self.artifact_id!r}, "
+            f"block_key={self.block_key!r})"
+        )
+
+
 __all__ = [
     "API_CALL_PROVIDERS",
     "API_CALL_PURPOSES",
@@ -1690,6 +1795,10 @@ __all__ = [
     "DEVICE_GRADER_PREFIX",
     "GenerationRun",
     "GlossaryTerm",
+    "HIGHLIGHT_MAX_CONTEXT",
+    "HIGHLIGHT_MAX_NOTE",
+    "HIGHLIGHT_MAX_QUOTE",
+    "Highlight",
     "JUDGEMENT_OUTCOMES",
     "JUDGEMENT_VERDICTS",
     "KnowledgeSource",
@@ -1697,6 +1806,7 @@ __all__ = [
     "LabRunRecord",
     "LabWorkspace",
     "OfflineAttempt",
+    "OfflineReviewAnswer",
     "REFERENCE_FOUND_IN",
     "REFERENCE_MATCH_METHODS",
     "REFERENCE_RUN_STATUSES",

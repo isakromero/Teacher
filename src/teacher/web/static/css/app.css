@@ -2671,6 +2671,235 @@ p.filter-status {
   }
 }
 
+/* -- highlights and notes (highlights.js) ---------------------------------------------- */
+
+/* A highlighted run of text; several marks make up one highlight that crosses elements. */
+mark.hl {
+  background: var(--mark);
+  color: inherit;
+  padding: 0;
+  border-radius: 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  cursor: pointer;
+}
+/* One with a note: underlined in the accent colour, so it reads as more than a highlight. */
+mark.hl.has-note {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+/* Rendered maths in a highlight: a class on its KaTeX element, never a change to its markup. */
+.katex.hl-atom {
+  background: var(--mark);
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px var(--mark);
+  cursor: pointer;
+}
+.katex.hl-atom.has-note {
+  box-shadow: 0 0 0 2px var(--mark), 0 3px 0 0 var(--accent);
+}
+mark.hl.is-flash,
+.katex.hl-atom.is-flash {
+  animation: hl-flash 1.8s ease-out;
+}
+mark.hl:focus {
+  outline: none;
+}
+mark.hl:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+@keyframes hl-flash {
+  0%,
+  35% {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+  100% {
+    outline: 3px solid transparent;
+    outline-offset: 2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  mark.hl.is-flash,
+  .katex.hl-atom.is-flash {
+    animation: none;
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+/* The menu next to a selection or a highlight (one at a time, positioned by highlights.js,
+   below the selection so the system's own selection menu above it stays free). */
+.hl-popover {
+  position: fixed;
+  z-index: 35;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(24rem, calc(100vw - 16px));
+  padding: var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: var(--shadow);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  animation: gloss-fade 0.12s ease-out;
+}
+.hl-popover[data-mode="note"] {
+  width: min(28rem, calc(100vw - 16px));
+}
+.hl-popover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.hl-popover-message,
+.hl-popover-note,
+.hl-popover-quote {
+  margin: 0 0 var(--space-2);
+  max-width: 22rem;
+}
+.hl-popover-quote {
+  color: var(--muted);
+  font-family: var(--font-read);
+}
+.hl-popover-note {
+  white-space: pre-wrap;
+  max-height: 10rem;
+  overflow-y: auto;
+}
+.hl-popover-error {
+  margin: var(--space-2) 0 0;
+}
+.hl-note-editor {
+  display: grid;
+  gap: var(--space-2);
+}
+.hl-note-label {
+  font-weight: 600;
+}
+.hl-note-input {
+  width: 100%;
+  min-height: 5rem;
+  resize: vertical;
+  font: inherit;
+  font-size: 1rem; /* 16px or more: iOS does not zoom in when it is focused */
+  line-height: 1.45;
+  padding: var(--space-2);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--fg);
+}
+.hl-note-input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hl-popover {
+    animation: none;
+  }
+}
+@media (pointer: coarse) {
+  .hl-popover {
+    font-size: 1rem;
+  }
+}
+
+/* The collapsible list above the blocks (like the glossary's). */
+.highlights {
+  margin: 0 0 var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+}
+.highlights-summary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+.highlights-summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+.highlights-title {
+  font-weight: 600;
+}
+.highlights-count {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.highlights-body {
+  padding: 0 var(--space-3) var(--space-3);
+  border-top: 1px solid var(--border);
+}
+.highlights-hint {
+  font-size: 0.85rem;
+  margin: var(--space-2) 0;
+}
+.highlights-list {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  max-height: 28rem;
+  overflow-y: auto;
+}
+.hl-entry {
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--border);
+}
+.hl-entry:first-child {
+  border-top: 0;
+}
+.hl-entry-quote {
+  margin: 0;
+  padding-left: var(--space-2);
+  border-left: 3px solid var(--mark);
+  font-family: var(--font-read);
+}
+.hl-entry.is-missing .hl-entry-quote {
+  border-left-style: dashed;
+  border-left-color: var(--border-strong);
+  color: var(--muted);
+}
+.hl-entry-where {
+  margin: var(--space-1) 0;
+}
+.hl-entry-where .tag {
+  margin-left: 0;
+}
+.hl-entry-note {
+  margin: var(--space-1) 0;
+  white-space: pre-wrap;
+}
+.hl-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+.hl-entry .hl-note-editor {
+  margin-top: var(--space-1);
+}
+.hl-entry-error {
+  margin-top: var(--space-2);
+}
+.tag-warn {
+  color: var(--warn);
+  border-color: var(--warn);
+  background: var(--warn-bg);
+}
+
 /* -- small screens ---------------------------------------------------------------------- */
 
 @media (max-width: 600px) {

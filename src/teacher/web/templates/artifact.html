@@ -80,6 +80,19 @@
         <dl id="glossary-list" class="glossary-list" hidden></dl>
       </div>
     </details>
+    <details id="highlights" class="highlights" hidden>
+      <summary class="highlights-summary">
+        <span class="highlights-title">Highlights and notes</span>
+        <span id="highlights-count" class="highlights-count"></span>
+      </summary>
+      <div class="highlights-body">
+        <p class="highlights-hint muted">Select text in the page to highlight it, add a note to it or ask the tutor about it. Tap a highlight to change its note or remove it.</p>
+        <div id="highlights-error" class="error" role="alert" hidden></div>
+        <p id="highlights-empty" class="muted" hidden>You have not highlighted anything on this page yet.</p>
+        <ol id="highlights-list" class="highlights-list" hidden></ol>
+      </div>
+    </details>
+    <p id="highlights-status" class="visually-hidden" aria-live="polite"></p>
     <div id="blocks" class="blocks"></div>
     <div id="reader-footer" class="reader-footer" aria-live="polite"></div>
 
@@ -110,7 +123,7 @@
   <div id="tutor-messages" class="tutor-messages" role="log" aria-live="off" aria-label="Conversation with the tutor" tabindex="0">
     <div id="tutor-empty" class="tutor-empty">
       <p>Ask the tutor anything about this study page.</p>
-      <p>To ask about a particular passage, select its text in the page and choose <strong>Ask about this</strong>: the passage is attached to your next message.</p>
+      <p>To ask about a particular passage, select its text in the page and choose <strong>Ask the tutor</strong>: the passage is attached to your next message.</p>
       <p><strong>Check my understanding</strong> has the tutor ask you a question about what you have read, or about the passages you attached.</p>
     </div>
   </div>

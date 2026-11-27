@@ -44,10 +44,13 @@ from teacher.web.routers import (
     chat,
     concepts,
     glossary,
+    highlights,
     history,
     labs,
     library_search,
     offline,
+    offline_review,
+    phone,
     pyodide,
     reading,
     references,
@@ -349,6 +352,9 @@ def create_app(
     app.include_router(artifacts.router)
     app.include_router(reading.router)
     app.include_router(offline.router)
+    app.include_router(highlights.router)
+    app.include_router(offline_review.router)
+    app.include_router(phone.router)
     app.include_router(chat.router)
     app.include_router(glossary.router)
     app.include_router(concepts.router)

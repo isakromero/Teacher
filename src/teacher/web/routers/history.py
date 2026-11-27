@@ -790,7 +790,15 @@ def continue_studying(
     limit: Annotated[int, Query(ge=1, le=20)] = 3,
 ) -> ContinueOut:
     """The study pages and labs studied most recently, with their progress."""
-    max_attempts = request.app.state.max_attempts
+    return ContinueOut(
+        items=continue_items(session, settings, request.app.state.max_attempts, limit)
+    )
+
+
+def continue_items(
+    session: Any, settings: Any, max_attempts: int, limit: int
+) -> list[ContinueItemOut]:
+    """The items of `GET /api/history/continue?limit=<limit>` (also the phone summary's)."""
     items = []
     for artifact, last, seconds in StudyHistoryManager(session, settings).recently_studied(limit):
         out = artifact_out(session, settings, artifact, max_attempts)
@@ -800,12 +808,14 @@ def continue_studying(
                 artifact=out, url=url, last_studied_at=to_iso(last) or "", active_seconds=seconds
             )
         )
-    return ContinueOut(items=items)
+    return items
 
 
 __all__ = [
     "ArtifactTotalsOut",
+    "ContinueItemOut",
     "ContinueOut",
+    "continue_items",
     "SummaryOut",
     "ConceptStandingDetailOut",
     "ConceptStandingOut",

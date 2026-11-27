@@ -129,6 +129,8 @@ class Queue:
     cap: int
     next_due_at: datetime | None  # the earliest due time of an item not due yet
     ordered: tuple[ItemView, ...]  # the due items in the order they are asked
+    # The items in scope not due yet, soonest first (ties: by item id).
+    waiting: tuple[ItemView, ...] = ()
 
     @property
     def remaining_today(self) -> int:
@@ -296,7 +298,9 @@ class ReviewManager:
             raise ValueError(f"cap must be an integer from 1 to {MAX_DAILY_CAP}")
         views = self._views(concept)
         due = [v for v in views if v.item.due_at <= now]
-        later = [v.item.due_at for v in views if v.item.due_at > now]
+        waiting = sorted(
+            (v for v in views if v.item.due_at > now), key=lambda v: (v.item.due_at, v.item.id)
+        )
         due.sort(key=lambda v: (*priority(confident_error=v.confident_error, due_at=v.item.due_at), v.item.id))
         previous = self.session.scalar(
             select(ArtifactBlock.artifact_id)
@@ -312,8 +316,9 @@ class ReviewManager:
             due=len(due),
             done_today=self.done_since(day_start),
             cap=cap,
-            next_due_at=min(later) if later else None,
+            next_due_at=waiting[0].item.due_at if waiting else None,
             ordered=tuple(ordered),
+            waiting=tuple(waiting),
         )
 
     def variants(self, block: ArtifactBlock) -> builtins.list[ReviewVariant]:
@@ -340,6 +345,14 @@ class ReviewManager:
             return "variant", variant, dict(variant.content)
         content = ArtifactBlockManager(self.session, self.settings).read_content(view.block)
         return "original", None, content
+
+    def presented_content(self, view: ItemView) -> tuple[str, ReviewVariant | None, dict[str, Any]]:
+        """The full content of the form the item is presented in now: ("original" |
+        "variant", the variant, content); ReviewConflict when its variant was rebuilt since.
+        The item must have a presentation (`present`)."""
+        if view.item.presentation is None:
+            raise ValueError(f"review item {view.item.id} is not presented")
+        return self._form(view)
 
     def present(self, view: ItemView, rng: random.Random, *, now: datetime) -> Presentation:
         """The item's current presentation, choosing (and storing) a new one if it has none or
@@ -490,6 +503,15 @@ class ReviewManager:
             elif entry[2] is None or due_at < entry[2]:
                 entry[2] = due_at
         return {k: (v[0], v[1], v[2]) for k, v in out.items()}
+
+    def answer_times(self, since: datetime) -> builtins.list[datetime]:
+        """When every review answer from `since` (naive UTC) on was made (`created_at`: for an
+        answer uploaded from a phone, when it was made there), oldest first."""
+        return list(self.session.scalars(
+            select(ReviewAttempt.created_at)
+            .where(ReviewAttempt.created_at >= since)
+            .order_by(ReviewAttempt.created_at)
+        ))
 
     def attempts(self, item: ReviewItem) -> builtins.list[ReviewAttempt]:
         return list(self.session.scalars(
