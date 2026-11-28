@@ -1,0 +1,164 @@
+/* The Explore pages (static/js/explore.js, static/js/exploration.js). Adds to app.css and
+   discover.css (the candidate list) and uses their tokens only. */
+
+.page-explore {
+  max-width: calc(var(--page-mid) + 2 * var(--gutter));
+}
+.page-explore select {
+  max-width: 16rem;
+}
+.explore-past {
+  margin-top: var(--space-5);
+}
+.explore-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+.explore-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+}
+.explore-row + .explore-row {
+  border-top: 1px solid var(--border);
+}
+.explore-row-title {
+  font-family: var(--font-read);
+  overflow-wrap: anywhere;
+}
+.error-text {
+  color: var(--err);
+}
+.explore-brief-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+}
+.explore-brief-grid h3,
+.explore-questions h3 {
+  font-size: var(--text-sm);
+  margin: var(--space-2) 0 var(--space-1);
+}
+.explore-items {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+.explore-questions {
+  margin-top: var(--space-3);
+}
+.explore-step {
+  margin-top: var(--space-4);
+}
+.explore-step-head,
+.explore-concept-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.explore-step-head h3,
+.explore-concept-head h4 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.explore-concepts {
+  list-style: none;
+  padding-left: 0;
+  margin: var(--space-2) 0 0;
+  display: grid;
+  gap: var(--space-3);
+}
+.explore-concept p {
+  margin: var(--space-1) 0 0;
+}
+.explore-concept.is-dropped {
+  opacity: 0.6;
+}
+.explore-concept-actions,
+.explore-step-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+.explore-rename {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.explore-rename input {
+  flex: 1;
+  min-width: 0;
+}
+.explore-tick {
+  flex: none;
+  margin-right: var(--space-2);
+}
+.explore-candidate .discover-head {
+  justify-content: flex-start;
+}
+.explore-candidate .discover-score {
+  margin-left: auto;
+}
+.explore-candidate.is-rejected .discover-title {
+  text-decoration: line-through;
+}
+.tone-muted {
+  color: var(--muted);
+}
+.explore-footer {
+  margin-top: var(--space-5);
+}
+.explore-enrich {
+  margin-top: var(--space-5);
+}
+.explore-enrich-preview {
+  border-top: 1px solid var(--border);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+}
+.explore-enrich-preview h3 {
+  margin-bottom: var(--space-1);
+}
+.explore-enrich-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* The roadmap (static/js/roadmap.js). */
+.roadmap-summary {
+  margin-bottom: var(--space-4);
+}
+.roadmap-next-heading {
+  margin: var(--space-3) 0 var(--space-1);
+  font-size: var(--text-sm);
+}
+.roadmap-next-text {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-read);
+}
+.roadmap-step.is-current > .explore-step-head h3 {
+  color: var(--accent);
+}
+.roadmap-concept.is-done {
+  border-color: var(--ok);
+}
+.roadmap-known {
+  flex: none;
+  white-space: nowrap;
+}
+.roadmap-source-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+.roadmap-rules {
+  margin-bottom: var(--space-2);
+}
+.roadmap-line {
+  display: block;
+}

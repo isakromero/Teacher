@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{#- One exploration's roadmap (GET /api/explorations/{id}/roadmap): the overall progress, the one
+    next action, then the steps in order with each concept's standing, grounding, primary source
+    (another can be chosen) and that source's study page (or a "Generate page" button), and the
+    "I know this" mark. Nothing is generated unless the reader presses a button. Driven by
+    static/js/roadmap.js; wording from static/js/roadmap_model.js. -#}
+{% block title %}Roadmap: {{ prompt }}{% endblock %}
+{% block page_class %}page-explore{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ static('css/discover.css') }}">
+<link rel="stylesheet" href="{{ static('css/explore.css') }}">{% endblock %}
+{% block content %}
+<div id="roadmap-page" data-page="roadmap" data-exploration="{{ exploration_id }}">
+  <header class="page-header">
+    <p class="crumbs"><a href="/explore">Explore</a> / <a href="/explore/{{ exploration_id }}">{{ prompt }}</a></p>
+    <h1 id="roadmap-title">Roadmap: {{ prompt }}</h1>
+    <p id="roadmap-meta" class="lead" aria-live="polite"></p>
+  </header>
+  <div id="roadmap-error" class="notice notice-error" role="alert" hidden></div>
+  <div id="roadmap-enriching" class="notice notice-warn" role="status" hidden></div>
+
+  <section id="roadmap-summary" class="card roadmap-summary" aria-labelledby="roadmap-next-heading" hidden>
+    <div class="progress-track" aria-hidden="true"><div id="roadmap-progress-fill" class="progress-fill"></div></div>
+    <p id="roadmap-progress" class="progress-label" role="status" aria-live="polite"></p>
+    <h2 id="roadmap-next-heading" class="roadmap-next-heading">Next</h2>
+    <div id="roadmap-next"></div>
+    <div id="roadmap-model-field" class="field model-field" hidden>
+      <label for="roadmap-model">Model for new study pages</label>
+      <select id="roadmap-model" name="model"></select>
+    </div>
+    <div id="roadmap-action-error" class="error" role="alert" hidden></div>
+  </section>
+
+  <section id="roadmap-outline" aria-labelledby="roadmap-steps-heading" hidden>
+    <h2 id="roadmap-steps-heading">Steps</h2>
+    <details class="roadmap-rules small">
+      <summary>How progress is counted</summary>
+      <ul id="roadmap-rules" class="explore-items"></ul>
+    </details>
+    <div id="roadmap-steps"></div>
+    <p id="roadmap-dropped" class="muted small" hidden></p>
+  </section>
+  <p id="roadmap-loading" class="loading">Loading the roadmap...</p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/roadmap.js') }}"></script>
+{% endblock %}

@@ -385,6 +385,46 @@ def _start(
 # -- endpoints ----------------------------------------------------------------------------
 
 
+def start_study_page(
+    request: Request,
+    background: BackgroundTasks,
+    session: Session,
+    settings: Settings,
+    sources: list[KnowledgeSource],
+    *,
+    kind: str = DEFAULT_KIND,
+    title: str | None = None,
+    slug: str | None = None,
+    params: dict[str, Any] | None = None,
+    model: str | None = None,
+) -> ArtifactOut:
+    """What `POST /api/artifacts` does once the sources are found: the title (default "Study:
+    <first source's title>") and a free slug, the artifact created and generated in the
+    background (`_start`), and the request logged (`study_page_requested`). The roadmap's
+    "Generate page" (`teacher.web.routers.explorations`) starts a page through here too, so
+    both go through the same checks and the same pipeline."""
+    title = title if title is not None else f"Study: {sources[0].title}"
+    slug = validate_slug(slug) if slug is not None else unique_slug(session, settings, slugify(title))
+    out = _start(
+        request,
+        background,
+        session,
+        settings,
+        slug=slug,
+        kind=kind,
+        title=title,
+        params=params or {},
+        sources=[(source, DEFAULT_ROLE) for source in sources],
+        model=model,
+    )
+    StudyHistoryManager(session, settings).log(
+        "study_page_requested",
+        artifact=ArtifactManager(session, settings).get_by_slug(out.slug),
+        payload={"sources": [source.slug for source in sources], "model": model},
+    )
+    return out
+
+
 @router.post("/artifacts", status_code=202)
 def create_artifact(
     body: ArtifactCreate,
@@ -396,29 +436,10 @@ def create_artifact(
     """Create an artifact from sources and generate it in the background."""
     source_manager = KnowledgeSourceManager(session, settings)
     sources = [source_manager.get_by_slug(slug) for slug in body.sources]
-    title = body.title if body.title is not None else f"Study: {sources[0].title}"
-    if body.slug is not None:
-        slug = validate_slug(body.slug)
-    else:
-        slug = unique_slug(session, settings, slugify(title))
-    out = _start(
-        request,
-        background,
-        session,
-        settings,
-        slug=slug,
-        kind=body.kind,
-        title=title,
-        params=body.params,
-        sources=[(source, DEFAULT_ROLE) for source in sources],
-        model=body.model,
-    )
-    StudyHistoryManager(session, settings).log(
-        "study_page_requested",
-        artifact=ArtifactManager(session, settings).get_by_slug(out.slug),
-        payload={"sources": [source.slug for source in sources], "model": body.model},
-    )
-    return out
+    return start_study_page(
+        request, background, session, settings, sources,
+        kind=body.kind, title=body.title, slug=body.slug, params=body.params, model=body.model,
+    )  # fmt: skip
 
 
 @router.get("/generation-models")
@@ -533,5 +554,6 @@ __all__ = [
     "generator_for",
     "lab_study_page",
     "router",
+    "start_study_page",
     "unique_slug",
 ]

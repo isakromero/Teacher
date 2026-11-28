@@ -96,7 +96,8 @@ function describeEvent(e) {
     case "relations_requested":
       return [p.regenerate ? "Asked to regenerate the relations of " : "Asked for relations of ", conceptLink(e.concept), "."];
     case "source_added":
-      return ["Added the source ", sourceLink(e.source), p.via === "url" ? " from a web address." : "."];
+      return ["Added the source ", sourceLink(e.source),
+        p.via === "url" ? " from a web address." : p.via === "exploration" ? " found by an exploration." : "."];
     case "source_updated":
       return [`Edited ${p.fields.join(", ")} of `, sourceLink(e.source), "."];
     case "source_deleted":

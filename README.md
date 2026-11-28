@@ -10,13 +10,50 @@ production and a local SQLite file for working locally or testing (see "Local an
 databases"); the folders are on the machine the server runs on. The only network calls are to
 the Supabase database (when that is the one in use), the Anthropic API (writing and grading),
 the OpenAI API (embeddings for search), the URLs you add as sources, and for a YouTube video the
-YouTube Data API and YouTube itself (for the transcript).
+YouTube Data API and YouTube itself (for the transcript). "Find sources" and "Explore" also call
+arXiv's public API and fetch each address they find (without storing it).
 
 ## What it does
 
 - **Library.** Add PDFs or URLs. Teacher saves the source, extracts its text and metadata, and
   lists what it cites. A YouTube video's address adds its transcript (with timestamps linking
   back to the video); this needs `YOUTUBE_API_KEY`.
+- **Find sources.** On the Add page (or `teacher discover "<topic>"`), Teacher looks for sources
+  on a topic or a concept: Claude with web search and arXiv's search, in parallel. It opens each
+  result to check that it can be read (and says why not: too little text, a login, ...), marks
+  what is already in the library, and ranks the rest for your level with a one-line reason
+  (one Haiku call). Nothing is added until you press Add on a result and then "Add to library".
+- **Explore a topic.** On the Explore page (or `teacher explore "<topic>"`), name a topic and
+  your level. Teacher writes a brief (what is in and out of scope, told what you have studied),
+  outlines at most 12 concepts in ordered steps (asking questions about the topic from a few
+  perspectives first), checks each concept against your concept graph (without changing it),
+  and finds candidate sources for the concepts that are new or that no library source
+  introduces (at most two searches and five candidates each). You review it: rename or drop a
+  concept, reorder steps, tick the sources you want. Nothing is added to the library or the
+  graph yet.
+- **Enrich an exploration.** When you have ticked sources, press Enrich (or run
+  `teacher explore --enrich <id>`). Teacher first shows what will happen: which sources it will
+  add (or link, when your library has them already), which concepts and prerequisite links it
+  will write to your concept graph and which it will skip. Only when you confirm does it add the
+  sources as the Add page does, extract their concepts (no study page is made), write the outline
+  (concepts it cannot find are created unreviewed; a link that would duplicate another relation
+  or close a cycle is skipped and shown), and mark the concepts a source now introduces as
+  grounded. A source that fails stays ticked with its error; enrich again to retry it or after
+  ticking more.
+- **Roadmap.** A completed exploration has a roadmap (Open the roadmap on its page, the
+  Explore list, or `teacher explore --roadmap <id>`): its steps in order, each concept with your
+  standing on it, whether a source grounds it, the recommended source to study it from (you can
+  choose another of its grounding sources) and that source's study page with how far you are,
+  or a "Generate page" button, which starts the same generation as the source page's button.
+  One source that grounds several concepts gets one page, shown under each. Nothing is generated
+  until you press it. A concept is done when your standing on it is strong, its source's study
+  page is complete (every gate cleared), or you mark it "I know this" (undo by unticking); a
+  step is done when all its concepts that are not dropped are done. The current step is the
+  first that is not done; later ones are upcoming, not locked. The roadmap shows your overall
+  progress and one next action (open or continue a page, review a weak concept whose questions
+  are due, generate a page, or find and enrich sources for a concept no source introduces), and
+  home shows the roadmaps in progress under "Continue your roadmap". Progress is computed each
+  time; only your source choices and "I know this" marks are stored.
 - **Study pages.** Generated from one or more sources. A page mixes prose, multiple-choice and
   short-written-answer gates, prediction prompts, charts, interactive demos and figures cropped
   from the source PDF. A draft is reviewed and revised by a second model pass before it is stored.
@@ -33,7 +70,8 @@ YouTube Data API and YouTube itself (for the transcript).
 - **Costs.** Every model and embedding call is recorded with its tokens and its cost in US
   dollars, priced when it is made. A study page or lab shows what generating it cost and what
   has been spent on it since (tutor, grading, ...); the tutor shows what a conversation and
-  each reply cost.
+  each reply cost; "Find sources" and an exploration show what they spent. Claude's web
+  searches are counted with their calls but not priced (the price table has no rate for them).
 
 ## Setup
 
@@ -269,6 +307,10 @@ uv run teacher concepts relate <concept-slug> | --all
 uv run teacher concepts tag-blocks <artifact-slug> | --all
 uv run teacher references extract <source-slug> | --all
 uv run teacher costs backfill [--dry-run]
+uv run teacher discover "<topic>" | --concept SLUG [--level intro|intermediate|advanced] [--json]
+uv run teacher explore "<topic>" [--level intro|intermediate|advanced] [--json]
+uv run teacher explore --enrich <exploration-id> [--yes] [--json]
+uv run teacher explore --roadmap <exploration-id> [--json]
 uv run teacher users list
 uv run teacher users add|set-password|disable|enable <email>
 ```
@@ -283,6 +325,15 @@ generation runs and their stage files, graded answers, tutor replies and referen
 extractions). It makes no API call, can be run again safely (it adds nothing twice), and prints
 how many rows are exact and how many are estimates: calls of which only the combined input
 token count was kept are priced at an upper bound and shown as "at most".
+
+`teacher discover` finds candidate sources for a topic or a concept and prints them ranked,
+adding nothing. `teacher explore` runs a whole exploration in the foreground (its stages on
+stderr) and prints the outline, each concept's match and candidate sources, and what it cost;
+the exploration is stored and listed on the Explore page when the app runs without accounts.
+`teacher explore --enrich <id>` prints what enriching that exploration will do and asks before
+doing it (`--yes` does not ask), then runs it and prints the summary. `teacher explore
+--roadmap <id>` prints that exploration's roadmap (progress, next action, each step and concept
+with its source and page) and changes nothing; `--json` prints it as the API returns it.
 
 `teacher db info` prints the database in use (never its password), its revision and its data
 folder. `teacher db copy` copies one database into the other, empty one (see "Local and
@@ -330,6 +381,10 @@ src/teacher/
   tutor.py               tutor chat
   review_*.py            review queue
   concept_*.py           concept extraction, graph and search
+  discovery/             finding candidate sources for a topic (web search, arXiv, triage)
+  exploration/           exploring a topic: brief, outline, graph match, sources to review,
+                         and enriching it (ingest, write the outline to the graph, grounding)
+  source_ingest.py       storing a fetched address as a source (the Add page and enrichment)
   costs.py, pricing.py, cost_backfill.py   the cost ledger, the price table, the backfill
   labs.py, lab_generator.py, pyodide_runtime.py   labs
   db/, managers/         database models and the classes that read and write them

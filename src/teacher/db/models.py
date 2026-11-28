@@ -1,4 +1,4 @@
-"""ORM models for all thirty-seven Teacher tables.
+"""ORM models for all forty-three Teacher tables.
 
 Conventions: naive-UTC timestamps with both a Python default and a CURRENT_TIMESTAMP server default;
 JSON columns carry a named `CHECK (json_valid(col))`; all constraints are named via `Base.metadata`.
@@ -33,6 +33,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     LargeBinary,
     PrimaryKeyConstraint,
@@ -1470,6 +1471,8 @@ API_CALL_PURPOSES: tuple[str, ...] = (
     "metadata",
     "reference_extraction",
     "embedding",
+    "source_discovery",  # revision 0020: `teacher discover`, POST /api/sources/discover
+    "exploration",  # revision 0020: an exploration's every call (`teacher.exploration`)
 )
 API_CALL_PROVIDERS: tuple[str, ...] = ("anthropic", "openai")
 
@@ -1509,6 +1512,7 @@ class ApiCall(Base):
         ),
         CheckConstraint("cost_usd IS NULL OR cost_usd >= 0", name="cost"),
         CheckConstraint("(cost_usd IS NULL) = (priced_on IS NULL)", name="priced"),
+        CheckConstraint("web_search_requests >= 0", name="web_search_requests"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -1544,6 +1548,18 @@ class ApiCall(Base):
         ForeignKey("knowledge_sources.id", ondelete="SET NULL"), index=True
     )
     backfill_key: Mapped[str | None] = mapped_column(Text, unique=True)
+    # Revision 0020: the exploration the call served, and the web searches Claude ran in it
+    # (billed per search on top of the tokens; `cost_usd` never includes them, see
+    # `teacher.pricing`: the price table has no rate for them).
+    exploration_id: Mapped[int | None] = mapped_column(
+        ForeignKey("explorations.id", ondelete="SET NULL"), index=True
+    )
+    web_search_requests: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    # Revision 0021: the enrichment of the exploration the call served (its `exploration_id` is
+    # set too), so what one enrichment cost can be told apart from the exploration's run.
+    exploration_enrichment_id: Mapped[int | None] = mapped_column(
+        ForeignKey("exploration_enrichments.id", ondelete="SET NULL"), index=True
+    )
 
     def __repr__(self) -> str:
         return (
@@ -1768,6 +1784,495 @@ class Highlight(Base):
         )
 
 
+
+# -- explorations (revision 0020, `teacher.exploration`, `teacher.managers.explorations`) -------
+
+#: The vocabularies of the exploration tables (their CHECK constraints spell out the same values).
+EXPLORATION_LEVELS: tuple[str, ...] = ("intro", "intermediate", "advanced")
+EXPLORATION_STATUSES: tuple[str, ...] = ("running", "completed", "failed")
+EXPLORATION_STAGES: tuple[str, ...] = ("brief", "outline", "graph_match", "discovery")
+EXPLORATION_CONCEPT_STATUSES: tuple[str, ...] = ("planned", "known", "grounded", "dropped")
+EXPLORATION_MATCH_METHODS: tuple[str, ...] = ("exact", "judged", "new")
+EXPLORATION_COVERAGE: tuple[str, ...] = ("new", "thin", "covered")
+EXPLORATION_DISCOVERY_STATES: tuple[str, ...] = ("not_needed", "pending", "done", "failed")
+EXPLORATION_SEARCH_OUTCOMES: tuple[str, ...] = ("ok", "failed")
+CANDIDATE_DECISIONS: tuple[str, ...] = ("proposed", "approved", "rejected", "ingested")
+# Revision 0021: enriching a completed exploration (`teacher.exploration.enrichment`).
+ENRICHMENT_STATUSES: tuple[str, ...] = ("running", "completed", "failed")
+ENRICHMENT_STAGES: tuple[str, ...] = ("ingest", "graph", "grounding")
+#: How an outline concept got its graph concept: `matched` (the graph match found it before),
+#: `found` (re-resolved at enrichment: exact name or alias, or the resolver's judge) or `created`.
+GRAPH_OUTCOMES: tuple[str, ...] = ("matched", "found", "created")
+
+
+class Exploration(Base):
+    """One exploration of a topic (revision 0020; `teacher.exploration` runs it,
+    `teacher.managers.explorations` reads and edits it). It belongs to one account (`user_id`;
+    NULL when the app runs without accounts, and for `teacher explore`); deleting the account
+    deletes it.
+
+    `prompt` is the topic as the reader typed it and `level` the reader level they chose
+    (`teacher.discovery.common.LEVELS`). `status` is `running` until the run ends `completed`
+    or `failed`; `error` is set exactly when it failed and `finished_at` exactly when it is no
+    longer running. `stage` is the stage running now (or the last one that ran), with
+    `progress_done` of `progress_total` steps of it done (the discovery stage counts concepts);
+    `stages` is the log of every stage, `[{"name", "status", "started_at", "finished_at",
+    "error"}]`. What the stages produced: `brief` (the scope: summary, in and out of scope, what
+    the level means, what may be taken as known), `questions` (the outline's perspectives and
+    their questions) and `steps` (the outline's step titles, in order: step n is
+    `steps[n - 1]`). `notes` are things the reader should know about the run that did not fail
+    it (e.g. a rejected outline reply that was asked for again)."""
+
+    __tablename__ = "explorations"
+    __table_args__ = (
+        CheckConstraint("length(prompt) > 0", name="prompt"),
+        CheckConstraint(f"level IN ({_sql_list(EXPLORATION_LEVELS)})", name="level"),
+        CheckConstraint(f"status IN ({_sql_list(EXPLORATION_STATUSES)})", name="status"),
+        CheckConstraint(
+            f"stage IS NULL OR stage IN ({_sql_list(EXPLORATION_STAGES)})", name="stage"
+        ),
+        CheckConstraint(
+            "progress_done >= 0 AND progress_total >= progress_done", name="progress"
+        ),
+        CheckConstraint("(status = 'failed') = (error IS NOT NULL)", name="error"),
+        CheckConstraint("(status = 'running') = (finished_at IS NULL)", name="finished"),
+        CheckConstraint("json_valid(brief)", name="brief_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(questions)", name="questions_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(steps)", name="steps_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(stages)", name="stages_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(notes)", name="notes_json").ddl_if(dialect="sqlite"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    prompt: Mapped[str] = mapped_column(Text)
+    level: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, default="running", server_default="running")
+    stage: Mapped[str | None] = mapped_column(Text)
+    progress_done: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    progress_total: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    error: Mapped[str | None] = mapped_column(Text)
+    brief: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
+    questions: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON(none_as_null=True))
+    steps: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    stages: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list, server_default="[]")
+    notes: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, onupdate=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+    concepts: Mapped[list[ExplorationConcept]] = relationship(
+        back_populates="exploration",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="ExplorationConcept.position",
+    )
+
+    def __repr__(self) -> str:
+        return f"Exploration(id={self.id!r}, status={self.status!r}, stage={self.stage!r})"
+
+
+class ExplorationConcept(Base):
+    """One concept of an exploration's outline (revision 0020). Deleting the exploration
+    deletes it.
+
+    From the outline: `key` (the slug of the name the outline gave, `drafted_name`; stable when
+    the concept is renamed, and what `prerequisites` name: a JSON array of other concepts' keys
+    of the same exploration), `position` (1, 2, ... in study order: by step, then as drafted),
+    `step` (the step group, 1 = first), `name` (the reader may rename it), `aliases` (JSON
+    array), `summary`, and `search_query` (the outline's differently worded search, used for the
+    one follow-up search). From the graph match: `concept_id` (the matched concept, NULL for a
+    new one or when the matched concept was deleted since), `match_method` (exact, judged or
+    new), `match_reason` (the judge's sentence, or how an exact match was found) and
+    `match_detail` (the shortlist the judge saw), and `coverage` (`new`; `thin`: known, but no
+    library source introduces it; `covered`). From discovery: `discovery_status` (not_needed,
+    pending, done, failed), `discovery_error` (set exactly when failed) and `discovery_log`
+    (each search attempt: its query, what it found, why a follow-up ran).
+
+    `status`: `planned` (to be learned: new to the graph), `known` (matched to a concept of the
+    graph), `dropped` (the reader took it out of the plan), `grounded` (linked to the graph and
+    grounded by a library source, `teacher.exploration.grounding`).
+
+    From an enrichment (revision 0021, `teacher.exploration.enrichment`): `graph_outcome` (how
+    it got its graph concept, now `concept_id`: `matched` by the graph match, `found` again when
+    re-resolved, or `created`; NULL until an enrichment wrote it) with `graph_reason`;
+    `grounding` (JSON, the library sources linked to its graph concept when the enrichment last
+    checked: `[{"slug", "title", "role", "grounds"}]`) and `prerequisite_links` (JSON, what
+    became of each drafted prerequisite as a `builds_on` relation: `[{"key", "outcome": added |
+    present | skipped, "code", "reason", "relation_id"}]`). A planned concept the enrichment
+    created keeps `planned` (it is new to the reader) until it is grounded.
+
+    From the roadmap (revision 0022, `teacher.exploration.roadmap`): `primary_source_id` (the
+    reader's choice of the source to study it from, one of its grounding sources; NULL: the
+    recommended one, `teacher.exploration.grounding.primary_source`; deleting the source clears
+    it) and `marked_known_at` (when the reader said "I know this": the roadmap counts it done;
+    NULL: not marked, or the mark was taken back). Neither changes `status`."""
+
+    __tablename__ = "exploration_concepts"
+    __table_args__ = (
+        UniqueConstraint("exploration_id", "key"),
+        UniqueConstraint("exploration_id", "position"),
+        CheckConstraint("length(key) > 0", name="key"),
+        CheckConstraint("position >= 1", name="position"),
+        CheckConstraint("step >= 1", name="step"),
+        CheckConstraint("length(name) > 0", name="name"),
+        CheckConstraint(
+            f"status IN ({_sql_list(EXPLORATION_CONCEPT_STATUSES)})", name="status"
+        ),
+        CheckConstraint(
+            f"match_method IS NULL OR match_method IN ({_sql_list(EXPLORATION_MATCH_METHODS)})",
+            name="match_method",
+        ),
+        CheckConstraint(
+            f"coverage IS NULL OR coverage IN ({_sql_list(EXPLORATION_COVERAGE)})",
+            name="coverage",
+        ),
+        CheckConstraint(
+            f"discovery_status IN ({_sql_list(EXPLORATION_DISCOVERY_STATES)})",
+            name="discovery_status",
+        ),
+        CheckConstraint(
+            "(discovery_status = 'failed') = (discovery_error IS NOT NULL)",
+            name="discovery_error",
+        ),
+        CheckConstraint("json_valid(aliases)", name="aliases_json").ddl_if(dialect="sqlite"),
+        CheckConstraint(
+            "json_valid(prerequisites)", name="prerequisites_json"
+        ).ddl_if(dialect="sqlite"),
+        CheckConstraint(
+            "json_valid(match_detail)", name="match_detail_json"
+        ).ddl_if(dialect="sqlite"),
+        CheckConstraint(
+            "json_valid(discovery_log)", name="discovery_log_json"
+        ).ddl_if(dialect="sqlite"),
+        CheckConstraint(
+            f"graph_outcome IS NULL OR graph_outcome IN ({_sql_list(GRAPH_OUTCOMES)})",
+            name="graph_outcome",
+        ),
+        CheckConstraint("json_valid(grounding)", name="grounding_json").ddl_if(dialect="sqlite"),
+        CheckConstraint(
+            "json_valid(prerequisite_links)", name="prerequisite_links_json"
+        ).ddl_if(dialect="sqlite"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    exploration_id: Mapped[int] = mapped_column(
+        ForeignKey("explorations.id", ondelete="CASCADE")
+    )
+    key: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(Integer)
+    step: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(Text)
+    drafted_name: Mapped[str] = mapped_column(Text)
+    aliases: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    summary: Mapped[str] = mapped_column(Text)
+    prerequisites: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    search_query: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(Text, default="planned", server_default="planned")
+    concept_id: Mapped[int | None] = mapped_column(
+        ForeignKey("concepts.id", ondelete="SET NULL"), index=True
+    )
+    match_method: Mapped[str | None] = mapped_column(Text)
+    match_reason: Mapped[str | None] = mapped_column(Text)
+    match_detail: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
+    coverage: Mapped[str | None] = mapped_column(Text)
+    discovery_status: Mapped[str] = mapped_column(
+        Text, default="not_needed", server_default="not_needed"
+    )
+    discovery_error: Mapped[str | None] = mapped_column(Text)
+    discovery_log: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, default=list, server_default="[]"
+    )
+    # Revision 0021, written by an enrichment (`teacher.exploration.enrichment`).
+    graph_outcome: Mapped[str | None] = mapped_column(Text)
+    graph_reason: Mapped[str | None] = mapped_column(Text)
+    grounding: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, default=list, server_default="[]"
+    )
+    prerequisite_links: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, default=list, server_default="[]"
+    )
+    # Revision 0022, the reader's choices on the roadmap (`teacher.exploration.roadmap`).
+    primary_source_id: Mapped[int | None] = mapped_column(
+        ForeignKey("knowledge_sources.id", ondelete="SET NULL"), index=True
+    )
+    marked_known_at: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, onupdate=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+
+    exploration: Mapped[Exploration] = relationship(back_populates="concepts")
+    concept: Mapped[Concept | None] = relationship(viewonly=True)
+
+    def __repr__(self) -> str:
+        return (
+            f"ExplorationConcept(id={self.id!r}, exploration_id={self.exploration_id!r}, "
+            f"key={self.key!r}, status={self.status!r})"
+        )
+
+
+class ExplorationSearch(Base):
+    """One provider call of an exploration's discovery (revision 0020): for the concept
+    `outline_concept_id`, search `attempt` 1 (its first search) or 2 (the one follow-up),
+    what was searched (`query`, the topic sent; `query_detail`, the whole
+    `teacher.discovery.DiscoveryQuery`), the provider, its `outcome` (ok or failed; `error` set
+    exactly when it failed), how many `hits` it gave, the `warnings` that did not stop it, and
+    how long it took (`seconds`). Deleting the exploration or the concept deletes it."""
+
+    __tablename__ = "exploration_searches"
+    __table_args__ = (
+        CheckConstraint("attempt IN (1, 2)", name="attempt"),
+        CheckConstraint("length(query) > 0", name="query"),
+        CheckConstraint(
+            f"outcome IN ({_sql_list(EXPLORATION_SEARCH_OUTCOMES)})", name="outcome"
+        ),
+        CheckConstraint("(outcome = 'failed') = (error IS NOT NULL)", name="error"),
+        CheckConstraint("hits >= 0", name="hits"),
+        CheckConstraint("seconds >= 0", name="seconds"),
+        CheckConstraint("json_valid(query_detail)", name="query_detail_json").ddl_if(
+            dialect="sqlite"
+        ),
+        CheckConstraint("json_valid(warnings)", name="warnings_json").ddl_if(dialect="sqlite"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    exploration_id: Mapped[int] = mapped_column(
+        ForeignKey("explorations.id", ondelete="CASCADE"), index=True
+    )
+    outline_concept_id: Mapped[int] = mapped_column(
+        ForeignKey("exploration_concepts.id", ondelete="CASCADE"), index=True
+    )
+    attempt: Mapped[int] = mapped_column(Integer)
+    query: Mapped[str] = mapped_column(Text)
+    query_detail: Mapped[dict[str, Any]] = mapped_column(JSON)
+    provider: Mapped[str] = mapped_column(Text)
+    outcome: Mapped[str] = mapped_column(Text)
+    hits: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    error: Mapped[str | None] = mapped_column(Text)
+    warnings: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    seconds: Mapped[float] = mapped_column(Float)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"ExplorationSearch(id={self.id!r}, concept={self.outline_concept_id!r}, "
+            f"attempt={self.attempt!r}, provider={self.provider!r}, outcome={self.outcome!r})"
+        )
+
+
+class ExplorationCandidate(Base):
+    """One candidate source an exploration's discovery found (revision 0020), stored once per
+    exploration however many of its concepts found it (`candidate_key`, UNIQUE per exploration:
+    the registry's id of the work, `teacher.discovery.registry.candidate_id`; the runner also
+    merges candidates that share an arXiv id, a DOI or an address). The concepts that found it
+    are its `links` (`ExplorationLink`, with that concept's rank and triage score).
+
+    What it is: `url` (what is fetched and what adding it would fetch), `canonical_url` (its
+    comparison form, `teacher.discovery.registry.canonical_url`), `landing_url` (the address it
+    was rewritten from), `arxiv_id`, `doi`, `title`, `authors` (JSON array), `year`,
+    `summary`, `found_by` (JSON: each provider with its rank and reason, for the first search
+    that found it). Whether it can be read: the probe's `verdict` and `verdict_reason`,
+    `readable` (exactly when the verdict is `readable`) and the whole probe (`probe`, JSON).
+    `library`: the library sources it already is (JSON, `[{"slug", "title", "method"}]`).
+
+    The reader's decision: `decision` (`proposed` until the reader approves or rejects it;
+    `ingested` once milestone 3 has added it to the library, then `knowledge_source_id` is the
+    source it became, set NULL if that source is deleted) and when it was last decided
+    (`decided_at`). Deleting the exploration deletes it.
+
+    An enrichment's attempt (revision 0021, `teacher.exploration.enrichment`): `ingest_error`,
+    why the last attempt failed (the candidate stays `approved`, so the next enrichment tries it
+    again; never set on an ingested one), and `ingest_detail` (JSON, what the last attempt did:
+    `{"enrichment_id", "outcome": added | held, "method", "slug", "slug_note", "extraction":
+    ran | done_before | failed, ...}`). `knowledge_source_id` may be set on an approved candidate
+    whose source was stored but whose concept extraction failed: the next attempt links it."""
+
+    __tablename__ = "exploration_candidates"
+    __table_args__ = (
+        UniqueConstraint("exploration_id", "candidate_key"),
+        CheckConstraint("length(candidate_key) > 0", name="candidate_key"),
+        CheckConstraint("length(url) > 0", name="url"),
+        CheckConstraint("readable = (verdict = 'readable')", name="readable"),
+        CheckConstraint(f"decision IN ({_sql_list(CANDIDATE_DECISIONS)})", name="decision"),
+        CheckConstraint("json_valid(authors)", name="authors_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(found_by)", name="found_by_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(probe)", name="probe_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(library)", name="library_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("ingest_error IS NULL OR decision != 'ingested'", name="ingest_error"),
+        CheckConstraint(
+            "json_valid(ingest_detail)", name="ingest_detail_json"
+        ).ddl_if(dialect="sqlite"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    exploration_id: Mapped[int] = mapped_column(
+        ForeignKey("explorations.id", ondelete="CASCADE")
+    )
+    candidate_key: Mapped[str] = mapped_column(Text)
+    url: Mapped[str] = mapped_column(Text)
+    canonical_url: Mapped[str] = mapped_column(Text)
+    landing_url: Mapped[str | None] = mapped_column(Text)
+    arxiv_id: Mapped[str | None] = mapped_column(Text)
+    doi: Mapped[str | None] = mapped_column(Text)
+    title: Mapped[str] = mapped_column(Text)
+    authors: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    year: Mapped[int | None] = mapped_column(Integer)
+    summary: Mapped[str | None] = mapped_column(Text)
+    found_by: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, default=list, server_default="[]"
+    )
+    verdict: Mapped[str] = mapped_column(Text)
+    verdict_reason: Mapped[str] = mapped_column(Text)
+    readable: Mapped[bool] = mapped_column(Boolean)
+    probe: Mapped[dict[str, Any]] = mapped_column(JSON)
+    library: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, default=list, server_default="[]"
+    )
+    decision: Mapped[str] = mapped_column(Text, default="proposed", server_default="proposed")
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime)
+    knowledge_source_id: Mapped[int | None] = mapped_column(
+        ForeignKey("knowledge_sources.id", ondelete="SET NULL"), index=True
+    )
+    # Revision 0021: the last enrichment's attempt to ingest it.
+    ingest_error: Mapped[str | None] = mapped_column(Text)
+    ingest_detail: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, onupdate=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+
+    links: Mapped[list[ExplorationLink]] = relationship(
+        back_populates="candidate",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="ExplorationLink.id",
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"ExplorationCandidate(id={self.id!r}, exploration_id={self.exploration_id!r}, "
+            f"key={self.candidate_key!r}, decision={self.decision!r})"
+        )
+
+
+class ExplorationLink(Base):
+    """A candidate found for one concept of the exploration (revision 0020): `rank` among that
+    concept's candidates (1 = best; UNIQUE per concept), the search `attempt` that found it for
+    this concept, the triage score for this concept's query (`triage`, JSON, NULL when it was
+    not readable and so not scored; `overall` its overall score) and whether it `fits` the
+    concept (readable, triaged as teaching it, with a topic fit of at least
+    `teacher.exploration.sources.FIT_MIN_TOPIC`). Deleting the candidate or the concept
+    deletes it."""
+
+    __tablename__ = "exploration_links"
+    __table_args__ = (
+        UniqueConstraint("candidate_id", "outline_concept_id"),
+        UniqueConstraint("outline_concept_id", "rank"),
+        CheckConstraint("rank >= 1", name="rank"),
+        CheckConstraint("attempt IN (1, 2)", name="attempt"),
+        CheckConstraint("(triage IS NULL) = (overall IS NULL)", name="scored"),
+        CheckConstraint("json_valid(triage)", name="triage_json").ddl_if(dialect="sqlite"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    candidate_id: Mapped[int] = mapped_column(
+        ForeignKey("exploration_candidates.id", ondelete="CASCADE")
+    )
+    outline_concept_id: Mapped[int] = mapped_column(
+        ForeignKey("exploration_concepts.id", ondelete="CASCADE")
+    )
+    rank: Mapped[int] = mapped_column(Integer)
+    attempt: Mapped[int] = mapped_column(Integer)
+    triage: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
+    overall: Mapped[float | None] = mapped_column(Float)
+    fits: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+
+    candidate: Mapped[ExplorationCandidate] = relationship(back_populates="links")
+
+    def __repr__(self) -> str:
+        return (
+            f"ExplorationLink(candidate_id={self.candidate_id!r}, "
+            f"concept={self.outline_concept_id!r}, rank={self.rank!r})"
+        )
+
+
+class ExplorationEnrichment(Base):
+    """One enrichment of a completed exploration (revision 0021; `teacher.exploration.enrichment`
+    runs it): its approved candidates ingested (with concept extraction), its outline written to
+    the concept graph and its concepts' grounding checked. Deleting the exploration deletes it.
+
+    `status` is `running` until it ends `completed` (then `summary` is set: what it did) or
+    `failed` (`error`); `finished_at` is set exactly when it is no longer running. At most one
+    enrichment of an exploration runs at a time (a partial UNIQUE index on `exploration_id` over
+    the running rows). `stage` is the stage running now or the last one that ran, with
+    `progress_done` of `progress_total` (ingest counts candidates); `stages` is the stage log
+    like an exploration's. `plan` is what the reader confirmed: the preview's digest and what it
+    listed (candidate and concept ids, prerequisite links)."""
+
+    __tablename__ = "exploration_enrichments"
+    __table_args__ = (
+        CheckConstraint(f"status IN ({_sql_list(ENRICHMENT_STATUSES)})", name="status"),
+        CheckConstraint(
+            f"stage IS NULL OR stage IN ({_sql_list(ENRICHMENT_STAGES)})", name="stage"
+        ),
+        CheckConstraint(
+            "progress_done >= 0 AND progress_total >= progress_done", name="progress"
+        ),
+        CheckConstraint("(status = 'failed') = (error IS NOT NULL)", name="error"),
+        CheckConstraint("(status = 'running') = (finished_at IS NULL)", name="finished"),
+        CheckConstraint("(status = 'completed') = (summary IS NOT NULL)", name="summary"),
+        CheckConstraint("json_valid(plan)", name="plan_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(summary)", name="summary_json").ddl_if(dialect="sqlite"),
+        CheckConstraint("json_valid(stages)", name="stages_json").ddl_if(dialect="sqlite"),
+        Index(
+            "ix_exploration_enrichments_one_running",
+            "exploration_id",
+            unique=True,
+            sqlite_where=text("status = 'running'"),
+            postgresql_where=text("status = 'running'"),
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    exploration_id: Mapped[int] = mapped_column(
+        ForeignKey("explorations.id", ondelete="CASCADE"), index=True
+    )
+    status: Mapped[str] = mapped_column(Text, default="running", server_default="running")
+    stage: Mapped[str | None] = mapped_column(Text)
+    progress_done: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    progress_total: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    error: Mapped[str | None] = mapped_column(Text)
+    plan: Mapped[dict[str, Any]] = mapped_column(JSON)
+    summary: Mapped[dict[str, Any] | None] = mapped_column(JSON(none_as_null=True))
+    stages: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list, server_default="[]")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, onupdate=utcnow, server_default=CURRENT_TIMESTAMP
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+    def __repr__(self) -> str:
+        return (
+            f"ExplorationEnrichment(id={self.id!r}, exploration_id={self.exploration_id!r}, "
+            f"status={self.status!r}, stage={self.stage!r})"
+        )
+
+
 __all__ = [
     "API_CALL_PROVIDERS",
     "API_CALL_PURPOSES",
@@ -1783,6 +2288,7 @@ __all__ = [
     "BlockConcept",
     "BlockResponse",
     "BlockSegmentRef",
+    "CANDIDATE_DECISIONS",
     "ChatBlock",
     "ChatBlockResponse",
     "ChatMessage",
@@ -1793,6 +2299,23 @@ __all__ = [
     "ConceptPairJudgement",
     "ConceptRelation",
     "DEVICE_GRADER_PREFIX",
+    "ENRICHMENT_STAGES",
+    "ENRICHMENT_STATUSES",
+    "EXPLORATION_CONCEPT_STATUSES",
+    "EXPLORATION_COVERAGE",
+    "EXPLORATION_DISCOVERY_STATES",
+    "EXPLORATION_LEVELS",
+    "EXPLORATION_MATCH_METHODS",
+    "EXPLORATION_SEARCH_OUTCOMES",
+    "EXPLORATION_STAGES",
+    "EXPLORATION_STATUSES",
+    "Exploration",
+    "ExplorationCandidate",
+    "ExplorationLink",
+    "ExplorationConcept",
+    "ExplorationEnrichment",
+    "ExplorationSearch",
+    "GRAPH_OUTCOMES",
     "GenerationRun",
     "GlossaryTerm",
     "HIGHLIGHT_MAX_CONTEXT",

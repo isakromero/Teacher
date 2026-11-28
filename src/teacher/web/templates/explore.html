@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{#- Explore a topic: the form (POST /api/explorations) with the limits a run keeps to, and the
+    past explorations (GET /api/explorations). Driven by static/js/explore.js. -#}
+{% block title %}Explore a topic{% endblock %}
+{% block page_class %}page-explore{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ static('css/discover.css') }}">
+<link rel="stylesheet" href="{{ static('css/explore.css') }}">{% endblock %}
+{% block content %}
+<div id="explore-page" data-page="explore">
+  <header class="page-header">
+    <h1 id="explore-heading">Explore a topic</h1>
+    <p class="lead">Name what you want to learn. Teacher scopes it, outlines the concepts in
+      the order to learn them, checks each against your concept graph, and finds candidate
+      sources for the ones you do not have yet, for you to review.</p>
+  </header>
+
+  <section class="card" aria-labelledby="explore-heading">
+    <form id="explore-form" class="form" novalidate aria-busy="false">
+      <div class="field">
+        <label for="explore-topic">Topic <span class="req">(required)</span></label>
+        <input id="explore-topic" name="topic" type="text" autocomplete="off" maxlength="300"
+               enterkeyhint="go" placeholder="Public-key cryptography" aria-describedby="explore-limits">
+      </div>
+      <div class="field field-narrow">
+        <label for="explore-level">Your level</label>
+        <select id="explore-level" name="level">
+          {%- for key, label in levels.items() %}
+          <option value="{{ key }}"{% if key == default_level %} selected{% endif %}>{{ label }}</option>
+          {%- endfor %}
+        </select>
+      </div>
+      <p id="explore-limits" class="hint">{{ limits.note }}</p>
+      <div class="actions form-actions">
+        <button id="explore-submit" type="submit" class="button primary">Explore</button>
+        <span id="explore-status" class="status-text" role="status" aria-live="polite"></span>
+      </div>
+      <div id="explore-error" class="error" role="alert" hidden></div>
+    </form>
+  </section>
+
+  <section class="explore-past" aria-labelledby="explore-past-heading">
+    <h2 id="explore-past-heading">Past explorations</h2>
+    <div id="explore-list" aria-live="polite" aria-busy="true">
+      <p class="loading">Loading...</p>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/explore.js') }}"></script>
+{% endblock %}

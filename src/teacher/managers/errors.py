@@ -25,6 +25,11 @@ class SourceInUseError(ManagerError):
     """The knowledge source is still referenced by artifacts and cannot be deleted."""
 
 
+class StateConflictError(ManagerError):
+    """The row is not in a state that allows the change (an exploration still running, a
+    candidate already ingested, ...); the message says which (HTTP 409)."""
+
+
 class RelationConflictError(DuplicateError):
     """Two concepts can have at most one relation (of any type); the message names the existing one."""
 

@@ -109,6 +109,45 @@
     </form>
   </section>
 
+  {#- Find sources for a topic (POST /api/sources/discover): driven by static/js/add_discover.js.
+      Each result's Add button fills the web address above and fetches it; nothing is stored
+      until "Add to library". -#}
+  <section id="add-discover" class="card add-discover" aria-labelledby="add-discover-heading">
+    <link rel="stylesheet" href="{{ static('css/discover.css') }}">
+    <h2 id="add-discover-heading">Find sources</h2>
+    <p class="hint">
+      Teacher searches the web and arXiv for a topic, opens each result to check that it can be
+      read, and ranks what it found by how well it teaches the topic at your level. Nothing is
+      added: press Add on a result to check its details above, then add it.
+    </p>
+    <form id="discover-form" class="form" novalidate aria-busy="false">
+      <div class="field">
+        <label for="discover-topic">Topic <span class="req">(required)</span></label>
+        <input id="discover-topic" name="topic" type="text" autocomplete="off" maxlength="300"
+               enterkeyhint="search" placeholder="Diffie-Hellman key exchange"
+               aria-describedby="discover-hint">
+      </div>
+      <div class="field field-narrow">
+        <label for="discover-level">Your level</label>
+        <select id="discover-level" name="level">
+          {%- for key, label in levels.items() %}
+          <option value="{{ key }}"{% if key == default_level %} selected{% endif %}>{{ label }}</option>
+          {%- endfor %}
+        </select>
+      </div>
+      <p id="discover-hint" class="hint">
+        A search takes a minute or two and uses a few model calls; what it cost is shown with
+        the results.
+      </p>
+      <div class="actions form-actions">
+        <button id="discover-submit" type="submit" class="button">Find sources</button>
+        <span id="discover-status" class="status-text" role="status" aria-live="polite"></span>
+      </div>
+      <div id="discover-error" class="error" role="alert" hidden></div>
+    </form>
+    <div id="discover-results" aria-live="polite"></div>
+  </section>
+
   {#- The reading frontier: driven by static/js/add_frontier.js. -#}
   <section id="add-frontier" class="card add-frontier" aria-labelledby="add-frontier-heading">
     <link rel="stylesheet" href="{{ static('css/references.css') }}">
@@ -121,4 +160,5 @@
 {% block scripts %}
 <script type="module" src="{{ static('js/add.js') }}"></script>
 <script type="module" src="{{ static('js/add_frontier.js') }}"></script>
+<script type="module" src="{{ static('js/add_discover.js') }}"></script>
 {% endblock %}

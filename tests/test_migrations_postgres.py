@@ -26,7 +26,7 @@ from teacher.managers import ConceptManager
 
 pytestmark = pytest.mark.postgres_only("the migration chain on PostgreSQL")
 
-HEAD = "0019"
+HEAD = "0022"
 TABLES = set(Base.metadata.tables)
 SEARCH_TABLES = {"concept_search", "concept_search_tokens", "concept_trigram"}
 SEARCH_INDEXES = {
@@ -248,8 +248,9 @@ def test_json_columns_and_boolean_defaults(settings: Settings) -> None:
 
 
 def test_the_account_tables_have_row_level_security(settings: Settings) -> None:
-    """0017 enables RLS (with no policy) on users and user_sessions, 0018 on offline_attempts
-    and 0019 on highlights and offline_review_answers, so Supabase's Data API roles see none of
+    """0017 enables RLS (with no policy) on users and user_sessions, 0018 on offline_attempts,
+    0019 on highlights and offline_review_answers, 0020 on the five exploration tables and 0021 on
+    exploration_enrichments, so Supabase's Data API roles see none of
     their rows; the app, connecting as the tables' owner, is not affected."""
     with _connect(settings) as conn:
         rls = dict(
@@ -257,13 +258,18 @@ def test_the_account_tables_have_row_level_security(settings: Settings) -> None:
                 text(
                     "SELECT relname, relrowsecurity FROM pg_class WHERE relname IN "
                     "('users', 'user_sessions', 'offline_attempts', 'highlights', "
-                    "'offline_review_answers', 'api_calls')"
+                    "'offline_review_answers', 'api_calls', 'explorations', "
+                    "'exploration_concepts', 'exploration_searches', 'exploration_candidates', "
+                    "'exploration_links', 'exploration_enrichments')"
                 )
             ).all()
         )
         assert rls == {
             "users": True, "user_sessions": True, "offline_attempts": True, "highlights": True,
-            "offline_review_answers": True, "api_calls": False,
+            "offline_review_answers": True, "api_calls": False, "explorations": True,
+            "exploration_concepts": True, "exploration_searches": True,
+            "exploration_candidates": True, "exploration_links": True,
+            "exploration_enrichments": True,
         }
         # A role like Supabase's `anon`, with SELECT on the table (rolled back with the rest).
         probe = f"rls_probe_{uuid.uuid4().hex[:12]}"
@@ -274,3 +280,28 @@ def test_the_account_tables_have_row_level_security(settings: Settings) -> None:
         assert conn.execute(text("SELECT count(*) FROM users")).scalar() == 1  # the owner sees it
         conn.execute(text(f"SET LOCAL ROLE {probe}"))
         assert conn.execute(text("SELECT count(*) FROM users")).scalar() == 0  # others do not
+
+
+def test_0022_down_and_up_on_postgres(settings: Settings) -> None:
+    """0022 adds exploration_concepts.primary_source_id (FK, ON DELETE SET NULL, indexed) and
+    marked_known_at, and drops only them; the table keeps its row level security."""
+    def columns() -> set[str]:
+        with _connect(settings) as conn:
+            return {c["name"] for c in inspect(conn).get_columns("exploration_concepts")}
+
+    assert {"primary_source_id", "marked_known_at"} <= columns()
+    with _connect(settings) as conn:
+        fks = {fk["name"]: fk for fk in inspect(conn).get_foreign_keys("exploration_concepts")}
+        fk = fks["fk_exploration_concepts_primary_source_id_knowledge_sources"]
+        assert fk["referred_table"] == "knowledge_sources" and fk["options"].get("ondelete") == "SET NULL"
+        assert "ix_exploration_concepts_primary_source_id" in {
+            i["name"] for i in inspect(conn).get_indexes("exploration_concepts")}
+    dispose_engine(settings)
+    command.downgrade(alembic_config(settings), "0021")
+    assert not {"primary_source_id", "marked_known_at"} & columns()
+    upgrade_to_head(settings)
+    assert {"primary_source_id", "marked_known_at"} <= columns()
+    with _connect(settings) as conn:
+        assert conn.execute(
+            text("SELECT relrowsecurity FROM pg_class WHERE relname = 'exploration_concepts'")
+        ).scalar() is True

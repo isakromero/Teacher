@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{#- Home: the search box, and below it what to continue, what to study next and a summary of the
-    study history. Filled in by static/js/home.js (sections) and home_search.js (search). -#}
+{#- Home: the search box, and below it what to continue, the roadmaps in progress, what to
+    study next and a summary of the study history. Filled in by static/js/home.js (sections) and home_search.js (search). -#}
 {% block title %}Home{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{{ static('css/standing.css') }}">
@@ -45,6 +45,15 @@
           <a class="section-more" href="/library">Library</a>
         </div>
         <div id="home-continue" aria-live="polite" aria-busy="true"><p class="loading">Loading what you studied last...</p></div>
+      </section>
+
+      {#- Shown once there is a roadmap in progress (or its list failed to load). #}
+      <section id="home-roadmaps-section" class="home-section" aria-labelledby="home-roadmaps-heading" hidden>
+        <div class="section-head">
+          <h2 id="home-roadmaps-heading" class="section-label">Continue your roadmap</h2>
+          <a class="section-more" href="/explore">Explorations</a>
+        </div>
+        <div id="home-roadmaps" aria-live="polite" aria-busy="true"></div>
       </section>
 
       <section class="home-section" aria-labelledby="home-suggestions-heading">

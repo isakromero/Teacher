@@ -1,15 +1,19 @@
-// The home page's three sections: "Continue studying" (GET /api/history/continue), "Suggested
-// next" (GET /api/history/suggestions, the first three as compact cards) and "Recent study"
-// (GET /api/history/summary in the reader's time zone). Each section loads on its own and
-// shows its own error; the search box is home_search.js.
+// The home page's sections: "Continue studying" (GET /api/history/continue), "Continue your
+// roadmap" (GET /api/explorations: the newest roadmaps not yet complete, each with its progress
+// and next action; the section stays hidden while there is none), "Suggested next" (GET
+// /api/history/suggestions, the first three as compact cards) and "Recent study" (GET
+// /api/history/summary in the reader's time zone). Each section loads on its own and shows its
+// own error; the search box is home_search.js.
 
 import { api, describeError } from "./api.js";
 import { byId, h, plural, setChildren } from "./dom.js";
 import { continueView, sessionView, suggestionLink, summaryTiles } from "./home_model.js";
+import { roadmapSummaryView } from "./roadmap_model.js";
 import { actionLinks, kindLabel } from "./standing_model.js";
 import { statusChip } from "./standing.js";
 
 const SUGGESTIONS = 3;
+const ROADMAPS = 2;
 const SESSIONS = 4;
 
 function done(el, ...children) {
@@ -70,6 +74,40 @@ async function loadContinue() {
     return;
   }
   done(el, h("ol", { class: "card-list" }, data.items.map(continueCard)));
+}
+
+// -- continue your roadmap -----------------------------------------------------------------------
+
+function roadmapCard(item, v) {
+  return h(
+    "li",
+    { class: "card suggestion-card roadmap-card" },
+    h("p", { class: "card-eyebrow" }, h("span", { class: "suggestion-kind" }, "Roadmap"), v.step ? h("span", { class: "muted" }, ` ${v.step}`) : null),
+    h("h3", { class: "card-title" }, h("a", { href: v.href }, item.prompt)),
+    h("p", { class: "card-meta" }, v.progress),
+    v.next ? h("p", { class: "card-text" }, `Next: ${v.next}`) : null,
+    h("p", { class: "card-action" }, h("a", { class: "action-link", href: v.href }, "Open the roadmap"))
+  );
+}
+
+async function loadRoadmaps() {
+  const section = byId("home-roadmaps-section");
+  const el = byId("home-roadmaps");
+  let items;
+  let open;
+  try {
+    items = await api.get("/api/explorations");
+    open = items
+      .map((item) => [item, roadmapSummaryView(item.roadmap)])
+      .filter(([, v]) => v && !v.complete)
+      .slice(0, ROADMAPS);
+  } catch (err) {
+    section.hidden = false;
+    failed(el, "your roadmaps", err);
+    return;
+  }
+  section.hidden = !open.length;
+  done(el, open.length ? h("ol", { class: "card-list" }, open.map(([item, v]) => roadmapCard(item, v))) : null);
 }
 
 // -- suggested next ----------------------------------------------------------------------------
@@ -175,5 +213,6 @@ async function loadRecent() {
 }
 
 loadContinue();
+loadRoadmaps();
 loadSuggestions();
 loadRecent();

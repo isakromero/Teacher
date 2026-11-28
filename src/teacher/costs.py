@@ -37,7 +37,11 @@ glossary builds (their run), the reading, chat and review routers (grading, the 
 thread), the tutor (explicit meter: thread, then the stored reply's message via
 `link_message`), reference extraction, concept extraction and block tagging (their source or
 artifact), concept relating (no link: it belongs to a concept, which the ledger cannot point
-at), and `teacher concepts reindex` (embeddings). Every web request also runs under a base
+at), `teacher concepts reindex` (embeddings), source discovery (`teacher discover` and its
+endpoint: `source_discovery`) an exploration's run (`teacher.exploration.runner`:
+`exploration`, with the exploration) and its enrichment (`teacher.exploration.enrichment`:
+`exploration`, with the exploration and the enrichment; the source details, concept extraction
+and embeddings it runs add their source). Every web request also runs under a base
 meter with no links (`teacher.web.app.CostMeterMiddleware`), so a call without a closer scope
 is still recorded, unlinked: a search query's embedding, the embedding of an edited concept,
 and the metadata detection of a file being added (it runs before the source exists, in a
@@ -53,12 +57,23 @@ Call sites (every `messages.create`, `messages.stream` and `embeddings.create` i
 checks in `teacher.page_revision`, the glossary, the lab generator, concept extraction, block
 tagging, concept relating and reference extraction), `teacher.judge.LLMJudgeGrader._call`,
 `teacher.metadata.MetadataExtractor`, `teacher.review_bank.ClaudeReviewBankBuilder.build`,
-`teacher.tutor.Tutor._call` (each round of the tool loop) and
-`teacher.embeddings.OpenAIEmbedder.embed` (each batch).
+`teacher.tutor.Tutor._call` (each round of the tool loop),
+`teacher.discovery.providers.WebSearchProvider.search` (each call, a continuation included),
+`teacher.discovery.triage.Triager.triage` and `teacher.embeddings.OpenAIEmbedder.embed` (each
+batch). An exploration's brief, outline and graph-match judge go through `stream_message`.
+
+Source discovery (`teacher.discovery`: its web search and triage calls) records each call
+right after it returns, like the others, as `source_discovery` on its own (`teacher discover`,
+`POST /api/sources/discover`) and as `exploration` inside an exploration
+(`teacher.exploration`, whose scope links every call to the exploration: `exploration_id`).
+Web searches are billed per search on top of the tokens: a Claude reply's
+`usage.server_tool_use.web_search_requests` is stored with its row (`web_search_requests`) and
+never priced, because the price table (`teacher.pricing`) has no rate for them; totals count
+them (`CostTotal.web_search_requests`) and say they are unpriced.
 
 Totals. `artifact_cost` (what generating a page or lab cost, by stage, and what was spent on it
-since, by purpose) and `thread_cost` / `message_costs` (a tutor conversation and its replies)
-sum the stored figures. A total counts the calls with no known price separately and names
+since, by purpose), `thread_cost` / `message_costs` (a tutor conversation and its replies) and
+`exploration_cost` (an exploration, by step) sum the stored figures. A total counts the calls with no known price separately and names
 their models (`CostTotal.unknown_price_calls`), and says when it includes estimates
 (`CostTotal.estimate_calls`: backfilled calls priced at an upper bound, see
 `teacher.cost_backfill`).
@@ -101,7 +116,27 @@ PURPOSE_LABELS: dict[str, str] = {
     "metadata": "metadata",
     "reference_extraction": "references",
     "embedding": "embeddings",
+    "source_discovery": "source discovery",
+    "exploration": "exploration",
 }
+# How an exploration's steps are named in its cost breakdown (other steps: their own name).
+EXPLORATION_STEP_LABELS: dict[str, str] = {
+    "brief": "brief",
+    "outline": "outline",
+    "concept judge": "graph match (judge)",
+    "embedding": "graph match (embeddings)",
+    "web_search": "web search",
+    "triage": "source triage",
+}
+# How an enrichment's steps are named in its exploration's cost breakdown (their key is
+# "enrichment:<step>"; other steps: "enrichment: <step>").
+ENRICHMENT_STEP_LABELS: dict[str, str] = {
+    "metadata": "enrichment: source details",
+    "concepts": "enrichment: concept extraction",
+    "concept judge": "enrichment: concept judge",
+    "embedding": "enrichment: embeddings",
+}
+ENRICHMENT_KEY_PREFIX = "enrichment:"
 # How a generation's stages are named in its cost breakdown (other stages: their own name).
 STAGE_LABELS: dict[str, str] = {
     "analyse": "outline",
@@ -128,6 +163,8 @@ class CallLinks:
     chat_thread_id: int | None = None
     chat_message_id: int | None = None
     knowledge_source_id: int | None = None
+    exploration_id: int | None = None
+    exploration_enrichment_id: int | None = None
 
     def merged(self, **links: int | None) -> CallLinks:
         """These links plus `links` (None leaves a link as it is). ValueError for an unknown
@@ -166,6 +203,7 @@ class LedgerEntry:
     created_at: datetime = field(default_factory=utcnow)
     backfill_key: str | None = None
     id: int | None = None
+    web_search_requests: int = 0  # Claude's server-side web searches (never priced)
 
     def row(self) -> ApiCall:
         return ApiCall(
@@ -184,6 +222,7 @@ class LedgerEntry:
             priced_on=self.priced_on,
             is_estimate=self.is_estimate,
             backfill_key=self.backfill_key,
+            web_search_requests=self.web_search_requests,
             **{f.name: getattr(self.links, f.name) for f in fields(self.links)},
         )
 
@@ -298,13 +337,21 @@ class Meter:
         model: str,
         usage: TokenUsage,
         response_id: str | None = None,
+        web_search_requests: int = 0,
     ) -> LedgerEntry:
         """Price and store one call; `purpose` is the call site's own, used when the meter
-        names none. A model without a known price is stored with no cost (and logged)."""
+        names none. A model without a known price is stored with no cost (and logged).
+        `web_search_requests` (Claude's server-side searches) is stored, never priced."""
         purpose = self.purpose if self.purpose is not None else purpose
         _check_purpose(purpose)
         if not isinstance(step, str) or not step.strip():
             raise ValueError("a recorded call needs a step")
+        if (
+            isinstance(web_search_requests, bool)
+            or not isinstance(web_search_requests, int)
+            or web_search_requests < 0
+        ):
+            raise ValueError("web_search_requests must be a non-negative integer")
         priced = pricing.cost(model, usage)
         if priced is None:
             logger.warning(
@@ -327,6 +374,7 @@ class Meter:
             ),
             links=self.links,
             response_id=response_id,
+            web_search_requests=web_search_requests,
         )
         entry_id = self.sink.write(entry)
         meter: Meter | None = self
@@ -406,10 +454,19 @@ def anthropic_usage(message: Any) -> TokenUsage:
     )
 
 
+def web_search_requests(message: Any) -> int:
+    """How many server-side web searches a Claude reply ran
+    (`usage.server_tool_use.web_search_requests`; 0 when it reports none)."""
+    usage = getattr(message, "usage", None)
+    server = getattr(usage, "server_tool_use", None)
+    count = getattr(server, "web_search_requests", None)
+    return count if isinstance(count, int) and not isinstance(count, bool) else 0
+
+
 def record_reply(
     message: Any, *, meter: Meter, purpose: str, step: str
 ) -> LedgerEntry:
-    """Record one Claude reply (its model, usage and id) through `meter`."""
+    """Record one Claude reply (its model, usage, web searches and id) through `meter`."""
     return meter.record(
         purpose=purpose,
         step=step,
@@ -417,6 +474,7 @@ def record_reply(
         model=str(message.model),
         usage=anthropic_usage(message),
         response_id=getattr(message, "id", None),
+        web_search_requests=web_search_requests(message),
     )
 
 
@@ -488,6 +546,7 @@ class CostTotal:
     unknown_price_models: tuple[str, ...] = ()
     estimate_calls: int = 0
     parts: tuple[CostPart, ...] = ()
+    web_search_requests: int = 0  # web searches of the calls: billed, never in total_usd
 
     @property
     def estimate(self) -> bool:
@@ -502,6 +561,8 @@ class CostTotal:
             "estimate": self.estimate,
             "estimate_calls": self.estimate_calls,
             "parts": [part.to_dict() for part in self.parts],
+            "web_search_requests": self.web_search_requests,
+            "web_search_fees_priced": False,
         }
 
 
@@ -511,6 +572,7 @@ class _Row:
     cost_usd: float | None
     is_estimate: bool
     model: str
+    web_search_requests: int = 0
 
 
 def summarise(rows: Iterable[_Row], labels: dict[str, str]) -> CostTotal:
@@ -544,6 +606,7 @@ def summarise(rows: Iterable[_Row], labels: dict[str, str]) -> CostTotal:
         unknown_price_models=tuple(sorted({r.model for r in rows if r.cost_usd is None})),
         estimate_calls=estimates,
         parts=tuple(parts),
+        web_search_requests=sum(r.web_search_requests for r in rows),
     )
 
 
@@ -603,6 +666,66 @@ def thread_cost(session: Session, thread_id: int) -> CostTotal:
     )
 
 
+def _exploration_labels() -> dict[str, str]:
+    labels = dict(EXPLORATION_STEP_LABELS)
+    labels.update({ENRICHMENT_KEY_PREFIX + k: v for k, v in ENRICHMENT_STEP_LABELS.items()})
+    return labels
+
+
+def _enrichment_key(step: str) -> str:
+    return ENRICHMENT_KEY_PREFIX + step
+
+
+def exploration_cost(session: Session, exploration_id: int) -> CostTotal:
+    """The ledger's total for exploration `exploration_id`, by step (brief, outline, concept
+    judge, embedding, web_search, triage), with its web searches counted
+    (`web_search_requests`: billed per search, not priced and not in `total_usd`). The calls of
+    its enrichments (`exploration_enrichment_id` set) are parts of their own, keyed
+    `enrichment:<step>` (source details, concept extraction, concept judge, embeddings)."""
+    found = session.execute(
+        select(
+            ApiCall.step, ApiCall.cost_usd, ApiCall.is_estimate, ApiCall.model,
+            ApiCall.web_search_requests, ApiCall.exploration_enrichment_id,
+        ).where(ApiCall.exploration_id == exploration_id)
+    ).all()
+    labels = _exploration_labels()
+    for r in found:
+        if r.exploration_enrichment_id is not None and _enrichment_key(r.step) not in labels:
+            labels[_enrichment_key(r.step)] = f"enrichment: {r.step.replace('_', ' ')}"
+    return summarise(
+        (
+            _Row(
+                r.step if r.exploration_enrichment_id is None else _enrichment_key(r.step),
+                r.cost_usd, r.is_estimate, r.model, r.web_search_requests or 0,
+            )  # fmt: skip
+            for r in found
+        ),
+        labels,
+    )
+
+
+def enrichment_cost(session: Session, enrichment_id: int) -> CostTotal:
+    """The ledger's total for one enrichment of an exploration, by step (labels as in
+    `exploration_cost`)."""
+    found = session.execute(
+        select(
+            ApiCall.step, ApiCall.cost_usd, ApiCall.is_estimate, ApiCall.model,
+            ApiCall.web_search_requests,
+        ).where(ApiCall.exploration_enrichment_id == enrichment_id)
+    ).all()
+    labels = _exploration_labels()
+    for r in found:
+        labels.setdefault(_enrichment_key(r.step), f"enrichment: {r.step.replace('_', ' ')}")
+    return summarise(
+        (
+            _Row(_enrichment_key(r.step), r.cost_usd, r.is_estimate, r.model,
+                 r.web_search_requests or 0)  # fmt: skip
+            for r in found
+        ),
+        labels,
+    )
+
+
 def message_costs(session: Session, message_ids: Sequence[int]) -> dict[int, CostTotal]:
     """The ledger's total for each of `message_ids` that has calls (a tutor reply's rounds)."""
     if not message_ids:
@@ -622,6 +745,8 @@ def message_costs(session: Session, message_ids: Sequence[int]) -> dict[int, Cos
 
 
 __all__ = [
+    "ENRICHMENT_STEP_LABELS",
+    "EXPLORATION_STEP_LABELS",
     "GENERATION_PURPOSES",
     "PURPOSE_LABELS",
     "STAGE_LABELS",
@@ -638,6 +763,8 @@ __all__ = [
     "artifact_cost",
     "cost_scope",
     "current_meter",
+    "enrichment_cost",
+    "exploration_cost",
     "link_message",
     "message_costs",
     "metering",
@@ -646,4 +773,5 @@ __all__ = [
     "require_meter",
     "summarise",
     "thread_cost",
+    "web_search_requests",
 ]

@@ -9,13 +9,16 @@ demand), `search_embedder` (embeds the graph page's search queries), `max_attemp
 registry of concepts with a relating run in progress), `review_bank_builder` (writes the review
 queue's question variants, `teacher.review_bank`; None when the app has none),
 `reference_extractor` (lists each source's references, `teacher.reference_extraction`; None
-when the app has none) and `clock` (the
+when the app has none), `source_finder` (finds candidate sources for a topic,
+`teacher.discovery`; None when the app has none), `explorer` (runs explorations,
+`teacher.exploration`; None when the app has none) and `clock` (the
 review queue's time: a callable returning naive UTC) and `auth_gate` (the account gate,
 `teacher.web.auth`, or None when the app has no access code: nobody signs in). Every request runs under a base cost
 meter (`CostMeterMiddleware`, `teacher.costs`), so every API call the app makes is recorded. On startup the lifespan logs
 which database it uses (the provider's `describe()`, never a password), migrates the
 database to head and marks any
-artifact left in status `generating` as `failed` (a generation job cannot survive a restart).
+artifact left in status `generating` as `failed` (a generation job cannot survive a restart),
+and likewise every generation run and every exploration still `running`.
 """
 
 from __future__ import annotations
@@ -34,8 +37,10 @@ from teacher.db.engine import session_scope
 from teacher.db.migrate import upgrade_to_head
 from teacher.db.providers import create_db_provider
 from teacher.db.models import GenerationRun
+from teacher.exploration import fail_interrupted_enrichments, fail_interrupted_explorations
 from teacher.managers import ArtifactManager
 from teacher.managers.generation_runs import GenerationRunManager
+from teacher.reading import DEFAULT_MAX_ATTEMPTS
 from teacher.url_sources import UrlFetcher
 from teacher.web.auth import install_auth_gate
 from teacher.web.errors import install_error_handlers
@@ -43,6 +48,8 @@ from teacher.web.routers import (
     artifacts,
     chat,
     concepts,
+    discovery,
+    explorations,
     glossary,
     highlights,
     history,
@@ -123,8 +130,11 @@ def create_app(
     lab_runner: Any = None,
     review_bank_builder: Any = None,
     reference_extractor: Any = None,
+    source_finder: Any = None,
+    explorer: Any = None,
+    enricher: Any = None,
     clock: Any = None,
-    max_attempts: int = 2,
+    max_attempts: int = DEFAULT_MAX_ATTEMPTS,
     access_code: str | None = None,
 ) -> FastAPI:
     """Build the API app. `settings` defaults to `Settings.from_env()`.
@@ -181,6 +191,26 @@ def create_app(
     makes no reference call unless an extractor is passed (e.g.
     `teacher.reference_extraction.StubReferenceExtractor()` offline); without one, extraction
     is reported as unavailable and every source's state stays "never run".
+
+    `source_finder` finds candidate sources for a topic or concept (`POST
+    /api/sources/discover`, `teacher.discovery`). Like `reference_extractor`, it defaults to
+    `teacher.discovery.build_source_finder` (web search with the generation model, arXiv, and
+    triage with the metadata model) only together with the default generator; an app given a
+    generator has no finder unless one is passed, and the endpoint then answers 503.
+
+    `explorer` runs explorations (`/api/explorations`, `teacher.exploration.Explorer`). It
+    defaults to `teacher.exploration.build_explorer` (the generation model plans, the concept
+    model judges the graph match, with the graph search's embedder `search_embedder` and the
+    `source_finder`) only when the app has a source finder and no explorer is passed; without
+    one, starting an exploration answers 503 (reading stored ones still works).
+
+    `enricher` enriches a completed exploration (`teacher.exploration.Enricher`: its approved
+    sources ingested with concept extraction, its outline written to the graph). It defaults to
+    one built from the app's URL fetcher, metadata extractor, the generator's concept extractor
+    and the explorer's graph matcher, when there is an explorer, the concept extractor has an
+    embedder (the offline stub's has none) and no enricher is passed; the two must embed with
+    the same model (otherwise there is none, and starting an enrichment answers 503 saying
+    so). Without one, starting an enrichment answers 503.
 
     `access_code` puts the account gate in front of every route (`teacher.web.auth`): every
     page and API route then needs a signed-in user account, and registering an account needs
@@ -239,6 +269,10 @@ def create_app(
         from teacher.reference_extraction import ReferenceExtractor
 
         reference_extractor = ReferenceExtractor(model=ModelSettings.from_env().metadata)
+    if source_finder is None and generator is None:
+        from teacher.discovery import build_source_finder
+
+        source_finder = build_source_finder(ModelSettings.from_env())
     if clock is None:
         from teacher.db.models import utcnow
 
@@ -317,6 +351,8 @@ def create_app(
         upgrade_to_head(app.state.settings)
         fail_interrupted_generations(app.state.settings)
         fail_interrupted_runs(app.state.settings)
+        fail_interrupted_explorations(app.state.settings)
+        fail_interrupted_enrichments(app.state.settings)
         yield
 
     app = FastAPI(title="Teacher", version="0.1.0", lifespan=lifespan)
@@ -339,6 +375,30 @@ def create_app(
     app.state.relating = concepts.RunningSet()
     app.state.review_bank_builder = review_bank_builder
     app.state.reference_extractor = reference_extractor
+    app.state.source_finder = source_finder
+    if explorer is None and source_finder is not None:
+        from teacher.exploration import build_explorer
+
+        explorer = build_explorer(
+            ModelSettings.from_env(), finder=source_finder, embedder=app.state.search_embedder
+        )
+    app.state.explorer = explorer
+    app.state.enricher_unavailable = None
+    if (
+        enricher is None
+        and explorer is not None
+        and getattr(app.state.concept_extractor, "embedder", None) is not None
+    ):
+        from teacher.exploration import build_enricher
+
+        try:
+            enricher = build_enricher(
+                fetcher=app.state.url_fetcher, metadata_extractor=metadata_extractor,
+                concept_extractor=app.state.concept_extractor, matcher=explorer.matcher,
+            )  # fmt: skip
+        except ValueError as exc:  # e.g. two embedding models: say why on every start
+            app.state.enricher_unavailable = str(exc)
+    app.state.enricher = enricher
     app.state.clock = clock
 
     install_error_handlers(app)
@@ -348,6 +408,8 @@ def create_app(
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    app.include_router(discovery.router)
+    app.include_router(explorations.router)
     app.include_router(sources.router)
     app.include_router(artifacts.router)
     app.include_router(reading.router)

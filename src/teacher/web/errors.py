@@ -4,6 +4,7 @@
 |--------------------------------------------|--------|
 | `NotFoundError`                            | 404    |
 | `DuplicateError`, `SourceInUseError`       | 409    |
+| `StateConflictError`                       | 409    |
 | any other `ManagerError`, `ValueError`     | 422    |
 | `GradingUnavailableError`                  | 503    |
 | `MetadataUnavailableError`                 | 503    |
@@ -18,6 +19,11 @@
 | `RelationsOutputError`                     | 502    |
 | `RelationsGraphChangedError`               | 409    |
 | any other `ConceptRelatingError`           | 500    |
+| `DiscoveryUnavailableError`                | 503    |
+| any other `DiscoveryError`                 | 502    |
+| `ExplorationUnavailableError`              | 503    |
+| `ExplorationOutputError`                   | 502    |
+| any other `ExplorationError`               | 500    |
 | request validation (bad body/query/form)   | 422    |
 | `fastapi.HTTPException`                    | its own status (FastAPI's default handler) |
 """
@@ -40,6 +46,12 @@ from teacher.concept_relating import (
     RelationsUnavailableError,
 )
 from teacher.db.fts import ConceptSearchUnavailableError
+from teacher.discovery.common import DiscoveryError, DiscoveryUnavailableError
+from teacher.exploration.common import (
+    ExplorationError,
+    ExplorationOutputError,
+    ExplorationUnavailableError,
+)
 from teacher.glossary import (
     GlossaryInputError,
     GlossaryOutputError,
@@ -51,6 +63,7 @@ from teacher.managers.errors import (
     ManagerError,
     NotFoundError,
     SourceInUseError,
+    StateConflictError,
 )
 from teacher.metadata import MetadataUnavailableError
 from teacher.tutor import TutorRequestError, TutorUnavailableError
@@ -59,6 +72,7 @@ STATUS_BY_EXCEPTION: dict[type[Exception], int] = {
     NotFoundError: 404,
     DuplicateError: 409,
     SourceInUseError: 409,
+    StateConflictError: 409,
     ManagerError: 422,
     ValueError: 422,
     GradingUnavailableError: 503,
@@ -74,6 +88,11 @@ STATUS_BY_EXCEPTION: dict[type[Exception], int] = {
     RelationsOutputError: 502,
     RelationsGraphChangedError: 409,
     ConceptRelatingError: 500,
+    DiscoveryUnavailableError: 503,
+    DiscoveryError: 502,
+    ExplorationUnavailableError: 503,
+    ExplorationOutputError: 502,
+    ExplorationError: 500,
 }
 
 

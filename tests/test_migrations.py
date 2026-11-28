@@ -67,9 +67,14 @@ LEDGER_TABLES = {"api_calls"}  # 0016
 USER_TABLES = {"users", "user_sessions"}  # 0017
 OFFLINE_TABLES = {"offline_attempts"}  # 0018
 HIGHLIGHT_TABLES = {"highlights", "offline_review_answers"}  # 0019
+EXPLORATION_TABLES = {  # 0020
+    "explorations", "exploration_concepts", "exploration_searches", "exploration_candidates",
+    "exploration_links",
+}
+ENRICHMENT_TABLES = {"exploration_enrichments"}  # 0021
 TABLES = (
     TABLES_0010 | TAG_TABLES | REVIEW_TABLES | CITATION_TABLES | LEDGER_TABLES | USER_TABLES
-    | OFFLINE_TABLES | HIGHLIGHT_TABLES
+    | OFFLINE_TABLES | HIGHLIGHT_TABLES | EXPLORATION_TABLES | ENRICHMENT_TABLES
 )
 # The two FTS5 virtual tables (word and trigram index) and the shadow tables FTS5 keeps for them.
 FTS_TABLES = {
@@ -94,7 +99,7 @@ CHAT_BLOCK_TABLES = {"chat_blocks", "chat_block_responses"}
 LAB_TABLES = {"lab_workspaces", "lab_runs"}
 HISTORY_TABLES = {"study_sessions", "study_events", "attention_spans"}
 ACTIVITY_TABLES = ("block_responses", "chat_block_responses", "chat_messages", "lab_runs")
-HEAD = "0019"
+HEAD = "0022"
 
 # The chain's SQLite side: raw sqlite3, PRAGMAs, the file backup and FTS5. The Postgres side is
 # in test_migrations_postgres.py.
@@ -1509,7 +1514,7 @@ def test_upgrade_0012_to_0013_adds_the_review_queue_and_keeps_data(tmp_path: Pat
     settings = _at_0011_with_answers(tmp_path)
     command.upgrade(alembic_config(settings), "0012")
     command.upgrade(alembic_config(settings), "0013")
-    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES - EXPLORATION_TABLES - ENRICHMENT_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         conn.execute("PRAGMA foreign_keys=ON")
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == (2,)
@@ -1572,7 +1577,7 @@ def test_downgrade_0013_to_0012_drops_only_the_review_queue(tmp_path: Path) -> N
     command.downgrade(alembic_config(settings), "0012")
     assert current_revision(settings) == "0012"
     assert _tables(settings) == (
-        (TABLES - REVIEW_TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES) | FTS_TABLES | {"alembic_version"}
+        (TABLES - REVIEW_TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES - EXPLORATION_TABLES - ENRICHMENT_TABLES) | FTS_TABLES | {"alembic_version"}
     )
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == (2,)
@@ -1680,7 +1685,7 @@ def test_downgrade_0015_to_0014_drops_only_the_citations(tmp_path: Path) -> None
         )
     command.downgrade(alembic_config(settings), "0014")
     assert current_revision(settings) == "0014"
-    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - CITATION_TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES - EXPLORATION_TABLES - ENRICHMENT_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         assert conn.execute(
             "SELECT count(*) FROM knowledge_sources WHERE id IN (101, 102)"
@@ -1778,7 +1783,7 @@ def test_downgrade_0016_to_0015_drops_only_the_ledger(tmp_path: Path) -> None:
     command.downgrade(alembic_config(settings), "0015")
     assert current_revision(settings) == "0015"
     assert _tables(settings) == (
-        (TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES) | FTS_TABLES | {"alembic_version"}
+        (TABLES - LEDGER_TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES - EXPLORATION_TABLES - ENRICHMENT_TABLES) | FTS_TABLES | {"alembic_version"}
     )
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT input_tokens FROM chat_messages WHERE id = 401").fetchall() == [
@@ -1789,14 +1794,18 @@ def test_downgrade_0016_to_0015_drops_only_the_ledger(tmp_path: Path) -> None:
 
 
 def test_0016_froze_the_live_checks() -> None:
-    """The check texts 0016 froze must match the model's (until a later revision changes them)."""
+    """The check texts 0016 froze must match the model's, except those 0020 changed (the
+    purpose CHECK) or added (the web search count)."""
     from teacher.db.models import ApiCall
 
     script = ScriptDirectory.from_config(alembic_config(Settings(root=Path("unused"))))
     module = script.get_revision("0016").module
+    later = script.get_revision("0020").module
     table = ApiCall.__table__
     live = {c.name: str(c.sqltext) for c in table.constraints if isinstance(c, CheckConstraint)}
     frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
+    frozen["ck_api_calls_purpose"] = later.PURPOSE_CHECK
+    frozen["ck_api_calls_web_search_requests"] = later.WEB_SEARCHES_CHECK
     assert live == frozen
 
 
@@ -1867,7 +1876,7 @@ def test_downgrade_0017_to_0016_drops_only_the_accounts(tmp_path: Path) -> None:
         conn.execute("INSERT INTO users (id, email, password_hash) VALUES (1, 'a@b.io', 'h')")
     command.downgrade(alembic_config(settings), "0016")
     assert current_revision(settings) == "0016"
-    assert _tables(settings) == (TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - USER_TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES - EXPLORATION_TABLES - ENRICHMENT_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT count(*) FROM api_calls").fetchone() == (1,)
         assert conn.execute("SELECT input_tokens FROM chat_messages WHERE id = 401").fetchall() == [
@@ -1958,7 +1967,7 @@ def test_downgrade_0018_to_0017_drops_only_offline_attempts(tmp_path: Path) -> N
         responses = conn.execute("SELECT count(*) FROM block_responses").fetchone()
     command.downgrade(alembic_config(settings), "0017")
     assert current_revision(settings) == "0017"
-    assert _tables(settings) == (TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - OFFLINE_TABLES - HIGHLIGHT_TABLES - EXPLORATION_TABLES - ENRICHMENT_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == responses
         assert conn.execute("SELECT count(*) FROM users").fetchone() == (1,)
@@ -2064,7 +2073,7 @@ def test_downgrade_0019_to_0018_drops_only_the_new_tables(tmp_path: Path) -> Non
         responses = conn.execute("SELECT count(*) FROM block_responses").fetchone()
     command.downgrade(alembic_config(settings), "0018")
     assert current_revision(settings) == "0018"
-    assert _tables(settings) == (TABLES - HIGHLIGHT_TABLES) | FTS_TABLES | {"alembic_version"}
+    assert _tables(settings) == (TABLES - HIGHLIGHT_TABLES - EXPLORATION_TABLES - ENRICHMENT_TABLES) | FTS_TABLES | {"alembic_version"}
     with _sqlite(settings) as conn:
         assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == responses
         assert conn.execute("SELECT count(*) FROM users").fetchone() == (1,)
@@ -2085,3 +2094,395 @@ def test_0019_froze_the_live_checks() -> None:
         }
         frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
         assert live == frozen, table.name
+
+
+# -- 0020: explorations, and discovery and explorations in the cost ledger ----------------------
+
+
+def _at_0019_with_data(tmp_path: Path) -> Settings:
+    """At 0019 with an artifact, its answers, two sources, a chat thread, a ledger row and a
+    user."""
+    settings = _at_0018_with_data(tmp_path)
+    command.upgrade(alembic_config(settings), "0019")
+    return settings
+
+
+def test_upgrade_0019_to_0020_adds_explorations_and_keeps_data(tmp_path: Path) -> None:
+    settings = _at_0019_with_data(tmp_path)
+    counted = ("artifacts", "block_responses", "chat_messages", "api_calls", "users", "highlights")
+    with _sqlite(settings) as conn:
+        before = {t: conn.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in counted}
+        ledger = conn.execute("SELECT id, purpose, cost_usd FROM api_calls ORDER BY id").fetchall()
+    backup = upgrade_to_head(settings)
+    assert backup is not None and current_revision(settings) == HEAD
+    assert EXPLORATION_TABLES <= _tables(settings)
+    with _sqlite(settings) as conn:
+        conn.execute("PRAGMA foreign_keys=ON")
+        for table, count in before.items():
+            assert conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0] == count
+        # The existing ledger rows are kept, with no searches and no exploration.
+        assert conn.execute("SELECT id, purpose, cost_usd FROM api_calls ORDER BY id").fetchall() == ledger
+        assert {r for r in conn.execute("SELECT web_search_requests, exploration_id FROM api_calls")} == {(0, None)}
+        for table in EXPLORATION_TABLES:
+            assert conn.execute(f"SELECT count(*) FROM {table}").fetchone() == (0,)
+
+        insert = "INSERT INTO explorations (id, user_id, prompt, level, status, error, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        ok = [1, 1, "Diffie-Hellman", "intro", "running", None, None]
+        conn.execute(insert, ok)
+        row = conn.execute(
+            "SELECT stage, progress_done, progress_total, steps, stages, notes, brief, "
+            "created_at IS NOT NULL FROM explorations"
+        ).fetchone()
+        assert row == (None, 0, 0, "[]", "[]", "[]", None, 1)
+        for change, constraint in [
+            ({3: "expert"}, "ck_explorations_level"),
+            ({2: ""}, "ck_explorations_prompt"),
+            ({4: "done"}, "ck_explorations_status"),
+            ({4: "failed", 6: "2026-11-27 12:00:00"}, "ck_explorations_error"),
+            ({4: "completed"}, "ck_explorations_finished"),
+            ({1: 999}, "FOREIGN KEY"),
+        ]:
+            values = [change.get(i, v) for i, v in enumerate(ok)]
+            values[0] = 2
+            with pytest.raises(sqlite3.IntegrityError, match=constraint):
+                conn.execute(insert, values)
+        with pytest.raises(sqlite3.IntegrityError, match="ck_explorations_progress"):
+            conn.execute("UPDATE explorations SET progress_done = 2, progress_total = 1")
+        with pytest.raises(sqlite3.IntegrityError, match="ck_explorations_stage"):
+            conn.execute("UPDATE explorations SET stage = 'write'")
+        with pytest.raises(sqlite3.IntegrityError, match="ck_explorations_steps_json"):
+            conn.execute("UPDATE explorations SET steps = 'not json'")
+
+        concept = (
+            "INSERT INTO exploration_concepts (id, exploration_id, key, position, step, name, "
+            "drafted_name, summary, search_query, status, discovery_status, discovery_error) "
+            "VALUES (?, 1, ?, ?, 1, 'A', 'A', 's', 'q', ?, ?, ?)"
+        )
+        conn.execute(concept, (1, "a", 1, "planned", "not_needed", None))
+        for values, constraint in [
+            ((2, "a", 2, "planned", "not_needed", None), "UNIQUE"),
+            ((2, "b", 1, "planned", "not_needed", None), "UNIQUE"),
+            ((2, "b", 0, "planned", "not_needed", None), "ck_exploration_concepts_position"),
+            ((2, "b", 2, "new", "not_needed", None), "ck_exploration_concepts_status"),
+            ((2, "b", 2, "planned", "failed", None), "ck_exploration_concepts_discovery_error"),
+            ((2, "b", 2, "planned", "done", "x"), "ck_exploration_concepts_discovery_error"),
+        ]:
+            with pytest.raises(sqlite3.IntegrityError, match=constraint):
+                conn.execute(concept, values)
+        conn.execute(
+            "INSERT INTO exploration_searches (exploration_id, outline_concept_id, attempt, query, "
+            "query_detail, provider, outcome, error, seconds) VALUES (1, 1, 2, 'q', '{}', 'web', 'failed', 'x', 1.5)"
+        )
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_searches_attempt"):
+            conn.execute(
+                "INSERT INTO exploration_searches (exploration_id, outline_concept_id, attempt, "
+                "query, query_detail, provider, outcome, seconds) VALUES (1, 1, 3, 'q', '{}', 'web', 'ok', 1)"
+            )
+        candidate = (
+            "INSERT INTO exploration_candidates (id, exploration_id, candidate_key, url, "
+            "canonical_url, title, verdict, verdict_reason, readable, probe, decision, "
+            "knowledge_source_id) VALUES (?, 1, ?, 'https://x.example', 'https://x.example', 't', ?, 'r', ?, '{}', ?, ?)"
+        )
+        conn.execute(candidate, (1, "c_1", "readable", 1, "proposed", 101))
+        for values, constraint in [
+            ((2, "c_1", "readable", 1, "proposed", None), "UNIQUE"),
+            ((2, "c_2", "too_thin", 1, "proposed", None), "ck_exploration_candidates_readable"),
+            ((2, "c_2", "readable", 1, "maybe", None), "ck_exploration_candidates_decision"),
+        ]:
+            with pytest.raises(sqlite3.IntegrityError, match=constraint):
+                conn.execute(candidate, values)
+        link = ("INSERT INTO exploration_links (candidate_id, outline_concept_id, rank, attempt, "
+                "triage, overall) VALUES (1, 1, ?, 1, ?, ?)")  # fmt: skip
+        conn.execute(link, (1, '{"overall": 4}', 4.0))
+        with pytest.raises(sqlite3.IntegrityError, match="UNIQUE"):
+            conn.execute(link, (2, None, None))  # the same candidate and concept
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_links_scored"):
+            conn.execute("UPDATE exploration_links SET overall = NULL")
+        assert conn.execute("SELECT fits FROM exploration_links").fetchone() == (0,)
+
+        # The ledger: the two new purposes, the search count and the exploration link.
+        call = (
+            "INSERT INTO api_calls (purpose, step, provider, model, input_tokens, "
+            "cache_write_tokens, cache_read_tokens, output_tokens, exploration_id, "
+            "web_search_requests) VALUES (?, 's', 'anthropic', 'm', 1, 0, 0, 1, ?, ?)"
+        )
+        conn.execute(call, ("exploration", 1, 3))
+        conn.execute(call, ("source_discovery", None, 2))
+        with pytest.raises(sqlite3.IntegrityError, match="ck_api_calls_purpose"):
+            conn.execute(call, ("fun", None, 0))
+        with pytest.raises(sqlite3.IntegrityError, match="ck_api_calls_web_search_requests"):
+            conn.execute(call, ("exploration", None, -1))
+        # Deleting the source clears the candidate's link; deleting the exploration deletes
+        # its rows and keeps its ledger rows (the money was spent).
+        conn.execute("DELETE FROM knowledge_sources WHERE id = 101")
+        assert conn.execute("SELECT knowledge_source_id FROM exploration_candidates").fetchone() == (None,)
+        conn.execute("DELETE FROM explorations WHERE id = 1")
+        for table in EXPLORATION_TABLES:
+            assert conn.execute(f"SELECT count(*) FROM {table}").fetchone() == (0,)
+        assert conn.execute(
+            "SELECT purpose, exploration_id FROM api_calls WHERE web_search_requests > 0 ORDER BY id"
+        ).fetchall() == [("exploration", None), ("source_discovery", None)]
+        conn.execute("INSERT INTO explorations (id, user_id, prompt, level) VALUES (3, 1, 'x', 'intro')")
+        conn.execute("DELETE FROM users WHERE id = 1")  # an account's explorations go with it
+        assert conn.execute("SELECT count(*) FROM explorations").fetchone() == (0,)
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_downgrade_0020_to_0019_drops_only_the_explorations(tmp_path: Path) -> None:
+    settings = _at_0019_with_data(tmp_path)
+    upgrade_to_head(settings)
+    with _sqlite(settings) as conn:
+        conn.execute("INSERT INTO explorations (id, prompt, level) VALUES (1, 'x', 'intro')")
+        conn.execute(
+            "INSERT INTO api_calls (purpose, step, provider, model, input_tokens, cache_write_tokens, "
+            "cache_read_tokens, output_tokens, exploration_id) VALUES ('exploration', 's', 'anthropic', "
+            "'m', 1, 0, 0, 1, 1)"
+        )
+        kept = conn.execute("SELECT id, purpose FROM api_calls WHERE purpose != 'exploration' ORDER BY id").fetchall()
+        responses = conn.execute("SELECT count(*) FROM block_responses").fetchone()
+    command.downgrade(alembic_config(settings), "0019")
+    assert current_revision(settings) == "0019"
+    assert _tables(settings) == (TABLES - EXPLORATION_TABLES - ENRICHMENT_TABLES) | FTS_TABLES | {"alembic_version"}
+    with _sqlite(settings) as conn:
+        # The new purposes' rows are deleted (the old CHECK refuses them); the others stay.
+        assert conn.execute("SELECT id, purpose FROM api_calls ORDER BY id").fetchall() == kept
+        columns = {r[1] for r in conn.execute("PRAGMA table_info(api_calls)")}
+        assert not {"exploration_id", "web_search_requests"} & columns
+        assert conn.execute("SELECT count(*) FROM block_responses").fetchone() == responses
+        with pytest.raises(sqlite3.IntegrityError, match="ck_api_calls_purpose"):
+            conn.execute(
+                "INSERT INTO api_calls (purpose, step, provider, model, input_tokens, "
+                "cache_write_tokens, cache_read_tokens, output_tokens) VALUES ('exploration', 's', "
+                "'anthropic', 'm', 1, 0, 0, 1)"
+            )
+    upgrade_to_head(settings)  # and up again
+    assert EXPLORATION_TABLES <= _tables(settings)
+
+
+def test_0020_froze_the_live_checks() -> None:
+    """The check texts 0020 froze must match the models', plus the checks 0021 added to two of
+    its tables."""
+    from teacher.db.models import (
+        ApiCall,
+        Exploration,
+        ExplorationCandidate,
+        ExplorationConcept,
+        ExplorationLink,
+        ExplorationSearch,
+    )
+
+    script = ScriptDirectory.from_config(alembic_config(Settings(root=Path("unused"))))
+    module = script.get_revision("0020").module
+    later = script.get_revision("0021").module
+    for model in (Exploration, ExplorationConcept, ExplorationSearch, ExplorationCandidate, ExplorationLink):
+        table = model.__table__
+        live = {
+            c.name: str(c.sqltext) for c in table.constraints if isinstance(c, CheckConstraint)
+        }
+        frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
+        frozen.update(
+            {f"ck_{table.name}_{name}": sqltext for name, sqltext in later.ADDED_CHECKS.get(table.name, ())}
+        )
+        assert live == frozen, table.name
+    live = {c.name: str(c.sqltext) for c in ApiCall.__table__.constraints if isinstance(c, CheckConstraint)}
+    assert live["ck_api_calls_purpose"] == module.PURPOSE_CHECK
+    assert live["ck_api_calls_web_search_requests"] == module.WEB_SEARCHES_CHECK
+
+
+# -- 0021: enrichments of explorations ----------------------------------------------------------
+
+
+def _at_0020_with_an_exploration(tmp_path: Path) -> Settings:
+    """At 0020 with the 0019 data, an exploration with a concept and a candidate, and a ledger
+    row of it."""
+    settings = _at_0019_with_data(tmp_path)
+    command.upgrade(alembic_config(settings), "0020")
+    with _sqlite(settings) as conn:
+        conn.execute("INSERT INTO explorations (id, prompt, level, status, finished_at) VALUES (1, 'DH', 'intro', 'completed', '2026-11-27 12:00:00')")
+        conn.execute(
+            "INSERT INTO exploration_concepts (id, exploration_id, key, position, step, name, "
+            "drafted_name, summary, search_query) VALUES (1, 1, 'a', 1, 1, 'A', 'A', 's', 'q')"
+        )
+        conn.execute(
+            "INSERT INTO exploration_candidates (id, exploration_id, candidate_key, url, "
+            "canonical_url, title, verdict, verdict_reason, readable, probe, decision) VALUES "
+            "(1, 1, 'c_1', 'https://x.example', 'https://x.example', 't', 'readable', 'r', 1, '{}', 'approved')"
+        )
+        conn.execute(
+            "INSERT INTO api_calls (purpose, step, provider, model, input_tokens, cache_write_tokens, "
+            "cache_read_tokens, output_tokens, exploration_id) VALUES ('exploration', 'brief', "
+            "'anthropic', 'm', 1, 0, 0, 1, 1)"
+        )
+    return settings
+
+
+def test_upgrade_0020_to_0021_adds_enrichments_and_keeps_data(tmp_path: Path) -> None:
+    settings = _at_0020_with_an_exploration(tmp_path)
+    counted = ("artifacts", "api_calls", "explorations", "exploration_concepts", "exploration_candidates")
+    with _sqlite(settings) as conn:
+        before = {t: conn.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in counted}
+    backup = upgrade_to_head(settings)
+    assert backup is not None and current_revision(settings) == HEAD
+    assert ENRICHMENT_TABLES <= _tables(settings)
+    with _sqlite(settings) as conn:
+        conn.execute("PRAGMA foreign_keys=ON")
+        for table, count in before.items():
+            assert conn.execute(f"SELECT count(*) FROM {table}").fetchone()[0] == count
+        # The new columns of existing rows.
+        assert conn.execute("SELECT ingest_error, ingest_detail FROM exploration_candidates").fetchone() == (None, None)
+        assert conn.execute(
+            "SELECT graph_outcome, graph_reason, grounding, prerequisite_links FROM exploration_concepts"
+        ).fetchone() == (None, None, "[]", "[]")
+        assert conn.execute("SELECT exploration_id, exploration_enrichment_id FROM api_calls WHERE exploration_id IS NOT NULL").fetchall() == [(1, None)]
+
+        insert = ("INSERT INTO exploration_enrichments (id, exploration_id, status, error, plan, "
+                  "summary, finished_at) VALUES (?, 1, ?, ?, ?, ?, ?)")  # fmt: skip
+        conn.execute(insert, (1, "running", None, "{}", None, None))
+        assert conn.execute(
+            "SELECT stage, progress_done, progress_total, stages, created_at IS NOT NULL FROM exploration_enrichments"
+        ).fetchone() == (None, 0, 0, "[]", 1)
+        # At most one running enrichment of an exploration.
+        with pytest.raises(sqlite3.IntegrityError, match="UNIQUE"):
+            conn.execute(insert, (2, "running", None, "{}", None, None))
+        done = "2026-11-27 13:00:00"
+        conn.execute(insert, (2, "completed", None, "{}", '{"sources": {}}', done))
+        conn.execute(insert, (3, "failed", "boom", "{}", None, done))
+        for values, constraint in [
+            ((4, "paused", None, "{}", None, done), "ck_exploration_enrichments_status"),
+            ((4, "failed", None, "{}", None, done), "ck_exploration_enrichments_error"),
+            ((4, "completed", None, "{}", None, done), "ck_exploration_enrichments_summary"),
+            ((4, "completed", None, "{}", '{}', None), "ck_exploration_enrichments_finished"),
+            ((4, "failed", "x", "not json", None, done), "ck_exploration_enrichments_plan_json"),
+        ]:
+            with pytest.raises(sqlite3.IntegrityError, match=constraint):
+                conn.execute(insert, values)
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_enrichments_stage"):
+            conn.execute("UPDATE exploration_enrichments SET stage = 'brief' WHERE id = 1")
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_enrichments_progress"):
+            conn.execute("UPDATE exploration_enrichments SET progress_done = 2 WHERE id = 1")
+        # The candidate's and concept's new checks.
+        conn.execute("UPDATE exploration_candidates SET ingest_error = 'x', ingest_detail = '{}'")
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_candidates_ingest_error"):
+            conn.execute("UPDATE exploration_candidates SET decision = 'ingested'")
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_concepts_graph_outcome"):
+            conn.execute("UPDATE exploration_concepts SET graph_outcome = 'guessed'")
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_concepts_grounding_json"):
+            conn.execute("UPDATE exploration_concepts SET grounding = 'not json'")
+        conn.execute("UPDATE exploration_concepts SET graph_outcome = 'created', grounding = '[{}]'")
+        # The ledger link: cleared when the enrichment goes, the row stays.
+        conn.execute("UPDATE api_calls SET exploration_enrichment_id = 2 WHERE exploration_id = 1")
+        conn.execute("DELETE FROM exploration_enrichments WHERE id = 2")
+        assert conn.execute("SELECT exploration_enrichment_id FROM api_calls WHERE exploration_id = 1").fetchone() == (None,)
+        conn.execute("DELETE FROM explorations WHERE id = 1")  # its enrichments go with it
+        assert conn.execute("SELECT count(*) FROM exploration_enrichments").fetchone() == (0,)
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_downgrade_0021_to_0020_drops_only_the_enrichments(tmp_path: Path) -> None:
+    settings = _at_0020_with_an_exploration(tmp_path)
+    upgrade_to_head(settings)
+    with _sqlite(settings) as conn:
+        conn.execute("INSERT INTO exploration_enrichments (id, exploration_id, plan) VALUES (1, 1, '{}')")
+        conn.execute("UPDATE api_calls SET exploration_enrichment_id = 1")
+        conn.execute("UPDATE exploration_concepts SET graph_outcome = 'created'")
+        ledger = conn.execute("SELECT id, purpose, exploration_id FROM api_calls ORDER BY id").fetchall()
+    command.downgrade(alembic_config(settings), "0020")
+    assert current_revision(settings) == "0020"
+    assert _tables(settings) == (TABLES - ENRICHMENT_TABLES) | FTS_TABLES | {"alembic_version"}
+    with _sqlite(settings) as conn:
+        assert conn.execute("SELECT id, purpose, exploration_id FROM api_calls ORDER BY id").fetchall() == ledger
+        assert "exploration_enrichment_id" not in {r[1] for r in conn.execute("PRAGMA table_info(api_calls)")}
+        assert not {"ingest_error", "ingest_detail"} & {r[1] for r in conn.execute("PRAGMA table_info(exploration_candidates)")}
+        assert not {"graph_outcome", "grounding"} & {r[1] for r in conn.execute("PRAGMA table_info(exploration_concepts)")}
+        assert conn.execute("SELECT decision FROM exploration_candidates").fetchone() == ("approved",)
+        # 0020's checks are still there.
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_candidates_decision"):
+            conn.execute("UPDATE exploration_candidates SET decision = 'maybe'")
+    upgrade_to_head(settings)  # and up again
+    assert ENRICHMENT_TABLES <= _tables(settings)
+
+
+def test_0021_froze_the_live_checks() -> None:
+    from teacher.db.models import ExplorationEnrichment
+
+    script = ScriptDirectory.from_config(alembic_config(Settings(root=Path("unused"))))
+    module = script.get_revision("0021").module
+    table = ExplorationEnrichment.__table__
+    live = {c.name: str(c.sqltext) for c in table.constraints if isinstance(c, CheckConstraint)}
+    frozen = {f"ck_{table.name}_{name}": sqltext for name, sqltext in module.CHECKS[table.name]}
+    assert live == frozen
+
+
+# -- 0022: the roadmap's choices on exploration concepts ------------------------------------------
+
+
+def _at_0021_with_an_exploration(tmp_path: Path) -> Settings:
+    """At 0021 with the 0020 exploration (one concept) and a source of its own (id 900)."""
+    settings = _at_0020_with_an_exploration(tmp_path)
+    command.upgrade(alembic_config(settings), "0021")
+    with _sqlite(settings) as conn:
+        conn.execute(
+            "INSERT INTO knowledge_sources (id, slug, kind, title, dir_path, primary_file, "
+            "media_type, content_sha256) VALUES (900, 'roadmap-src', 'paper', 'R', "
+            "'knowledge_sources/roadmap-src', 'r.txt', 'text/plain', ?)",
+            ("9" * 64,),
+        )
+        conn.execute("UPDATE exploration_concepts SET graph_outcome = 'created', grounding = '[{}]'")
+    return settings
+
+
+def test_upgrade_0021_to_0022_adds_the_roadmap_choices_and_keeps_data(tmp_path: Path) -> None:
+    settings = _at_0021_with_an_exploration(tmp_path)
+    with _sqlite(settings) as conn:
+        before = conn.execute("SELECT * FROM exploration_concepts").fetchall()
+        indexes_before = {r[1] for r in conn.execute("PRAGMA index_list(exploration_concepts)")}
+    backup = upgrade_to_head(settings)
+    assert backup is not None and current_revision(settings) == HEAD
+    with _sqlite(settings) as conn:
+        conn.execute("PRAGMA foreign_keys=ON")
+        columns = [r[1] for r in conn.execute("PRAGMA table_info(exploration_concepts)")]
+        assert columns[-2:] == ["primary_source_id", "marked_known_at"]
+        # Every existing value kept, the new columns NULL.
+        after = conn.execute(
+            "SELECT " + ", ".join(c for c in columns if c not in ("primary_source_id", "marked_known_at"))
+            + ", primary_source_id, marked_known_at FROM exploration_concepts"
+        ).fetchall()
+        assert [row[:-2] for row in after] == before and [row[-2:] for row in after] == [(None, None)]
+        indexes = {r[1] for r in conn.execute("PRAGMA index_list(exploration_concepts)")}
+        assert indexes == indexes_before | {"ix_exploration_concepts_primary_source_id"}
+        # 0020's and 0021's checks survive the rebuild.
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_concepts_status"):
+            conn.execute("UPDATE exploration_concepts SET status = 'maybe'")
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_concepts_graph_outcome"):
+            conn.execute("UPDATE exploration_concepts SET graph_outcome = 'guessed'")
+        conn.execute("UPDATE exploration_concepts SET primary_source_id = 900, marked_known_at = '2026-11-27 21:00:00'")
+        with pytest.raises(sqlite3.IntegrityError, match="FOREIGN KEY"):
+            conn.execute("UPDATE exploration_concepts SET primary_source_id = 999")
+        # Deleting the source clears the choice; the mark and the row stay.
+        conn.execute("DELETE FROM knowledge_sources WHERE id = 900")
+        assert conn.execute("SELECT primary_source_id, marked_known_at FROM exploration_concepts").fetchone() == (
+            None, "2026-11-27 21:00:00")
+        assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
+
+
+def test_downgrade_0022_to_0021_drops_only_the_roadmap_choices(tmp_path: Path) -> None:
+    settings = _at_0021_with_an_exploration(tmp_path)
+    upgrade_to_head(settings)
+    with _sqlite(settings) as conn:
+        conn.execute("UPDATE exploration_concepts SET primary_source_id = 900, marked_known_at = '2026-11-27 21:00:00'")
+        kept = conn.execute("SELECT id, key, status, graph_outcome, grounding FROM exploration_concepts").fetchall()
+    command.downgrade(alembic_config(settings), "0021")
+    assert current_revision(settings) == "0021"
+    assert _tables(settings) == TABLES | FTS_TABLES | {"alembic_version"}
+    with _sqlite(settings) as conn:
+        columns = {r[1] for r in conn.execute("PRAGMA table_info(exploration_concepts)")}
+        assert not {"primary_source_id", "marked_known_at"} & columns
+        assert "ix_exploration_concepts_primary_source_id" not in {
+            r[1] for r in conn.execute("PRAGMA index_list(exploration_concepts)")}
+        assert conn.execute("SELECT id, key, status, graph_outcome, grounding FROM exploration_concepts").fetchall() == kept
+        assert conn.execute("SELECT count(*) FROM knowledge_sources WHERE id = 900").fetchone() == (1,)
+        with pytest.raises(sqlite3.IntegrityError, match="ck_exploration_concepts_graph_outcome"):
+            conn.execute("UPDATE exploration_concepts SET graph_outcome = 'guessed'")
+    upgrade_to_head(settings)  # and up again
+    with _sqlite(settings) as conn:
+        assert conn.execute("SELECT primary_source_id, marked_known_at FROM exploration_concepts").fetchone() == (None, None)

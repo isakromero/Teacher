@@ -14,7 +14,7 @@ import mimetypes
 import re
 import shutil
 import tempfile
-from datetime import UTC, date, datetime
+from datetime import date
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -26,7 +26,6 @@ from teacher.db.engine import session_scope
 from teacher.db.models import KnowledgeSource, SourceSegment
 from teacher.files import sha256_file, slugify
 from teacher.managers import (
-    DuplicateError,
     KnowledgeSourceManager,
     NotFoundError,
     SourceConceptManager,
@@ -34,6 +33,7 @@ from teacher.managers import (
     StudyHistoryManager,
 )
 from teacher.metadata import MetadataUnavailableError
+from teacher.source_ingest import detect_details, split_identifiers, store_fetched, write_fetched
 from teacher.url_sources import KIND_PAPER, FetchedSource
 from teacher.web.common import to_iso
 from teacher.web.deps import SessionDep, SettingsDep
@@ -259,31 +259,9 @@ def _media_type(upload: UploadFile) -> str | None:
     return declared or None
 
 
-def _split_identifiers(
-    manager: KnowledgeSourceManager, pairs: list[tuple[str, str]]
-) -> tuple[dict[str, str], list[tuple[str, str]]]:
-    """Check that every identifier is free, then split them into the first value per scheme
-    (for `manager.add`) and the rest (attached afterwards). Checked up front: the manager's
-    add() takes one value per scheme, and the extra values must not fail once the files have
-    been copied."""
-    for scheme, value in pairs:
-        owner = manager.find_by_identifier(scheme, value)
-        if owner is not None:
-            raise DuplicateError(f"identifier {scheme}:{value} already belongs to {owner.slug!r}")
-    first: dict[str, str] = {}
-    rest: list[tuple[str, str]] = []
-    for scheme, value in pairs:
-        if scheme in first:
-            rest.append((scheme, value))
-        else:
-            first[scheme] = value
-    return first, rest
-
-
-def _write_fetched(fetched: FetchedSource, folder: str) -> Path:
-    path = Path(folder) / f"fetched{fetched.suffix}"
-    path.write_bytes(fetched.content)
-    return path
+# Shared with an exploration's enrichment (`teacher.source_ingest`).
+_split_identifiers = split_identifiers
+_write_fetched = write_fetched
 
 
 # -- endpoints ----------------------------------------------------------------------------
@@ -527,23 +505,19 @@ def inspect_url(request: Request, settings: SettingsDep, body: UrlIn) -> Inspect
         }  # fmt: skip
         if duplicate_of is not None:
             return InspectUrlOut(**out)
-        if fetched.kind == KIND_PAPER:
-            try:
-                detected = request.app.state.metadata_extractor.extract(path, fetched.media_type)
-            except MetadataUnavailableError as exc:
-                out["detection_error"] = str(exc)
-            else:
+        try:
+            detected = detect_details(fetched, path, request.app.state.metadata_extractor)
+        except MetadataUnavailableError as exc:
+            if fetched.kind != KIND_PAPER:
+                raise
+            out["detection_error"] = str(exc)
+        else:
+            if detected is not None:
                 out.update(
                     title=detected.title, authors=list(detected.authors), year=detected.year,
                     arxiv_id=detected.arxiv_id, doi=detected.doi, summary=detected.summary,
                     model=detected.model,
                 )  # fmt: skip
-        elif fetched.details is not None:
-            details = fetched.details
-            out.update(
-                title=details.title, authors=list(details.authors), year=details.year,
-                arxiv_id=details.arxiv_id, doi=details.doi, summary=details.summary,
-            )  # fmt: skip
     return InspectUrlOut(**out)
 
 
@@ -566,36 +540,20 @@ def create_source_from_url(
     creators = [c.strip() for c in body.creators if c.strip()]
     pairs = _parse_identifiers(body.identifiers)
     manager = KnowledgeSourceManager(session, settings)
-    first, rest = _split_identifiers(manager, pairs)
+    _split_identifiers(manager, pairs)  # taken identifiers fail before anything is fetched
 
     fetched: FetchedSource = request.app.state.url_fetcher.fetch(body.url)
-    metadata: dict[str, Any] = {
-        "fetched_at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "requested_url": fetched.requested_url,
-        "original_media_type": fetched.original_media_type,
-    }
-    if fetched.words is not None:
-        metadata["words"] = fetched.words
-    if fetched.details is not None and fetched.details.site_name:
-        metadata["site_name"] = fetched.details.site_name
-    metadata.update(fetched.extra_metadata)
-    with tempfile.TemporaryDirectory(prefix="teacher-fetch-") as tmp:
-        source = manager.add(
-            _write_fetched(fetched, tmp),
-            slug=slug,
-            kind=fetched.kind,
-            title=body.title,
-            creators=creators,
-            originated_on=body.originated_on,
-            summary=_blank_to_none(body.summary),
-            origin_url=fetched.url,
-            notes=_blank_to_none(body.notes),
-            media_type=fetched.media_type,
-            metadata=metadata,
-            identifiers=first or None,
-        )
-    for scheme, value in rest:
-        manager.add_identifier(source, scheme, value)
+    source = store_fetched(
+        manager,
+        fetched,
+        slug=slug,
+        title=body.title,
+        creators=creators,
+        originated_on=body.originated_on,
+        summary=_blank_to_none(body.summary),
+        notes=_blank_to_none(body.notes),
+        identifiers=pairs,
+    )
     StudyHistoryManager(session, settings).log(
         "source_added", source=source, payload={"via": "url"}
     )

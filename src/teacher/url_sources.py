@@ -58,8 +58,38 @@ HTML_TYPES = frozenset({"text/html", "application/xhtml+xml"})
 TEXT_TYPES = {"text/plain": ".txt", "text/markdown": ".md", "text/x-markdown": ".md"}
 
 
+#: Why a URL could not be used (`UrlSourceError.reason`): what source discovery
+#: (`teacher.discovery.probe`) reports as a candidate's verdict. Every raise in this module
+#: names one; an error raised elsewhere (a YouTube video's, `teacher.youtube_sources`) is
+#: `UNREADABLE` unless it says otherwise.
+REASON_INVALID_URL = "invalid_url"  # not http(s), no host, credentials in it
+REASON_BLOCKED = "blocked"  # a private or local address
+REASON_FETCH_FAILED = "fetch_failed"  # DNS, connection, redirects, other HTTP errors
+REASON_TIMEOUT = "timeout"
+REASON_PAYWALLED = "paywalled"  # HTTP 401, 402 or 403: a login or a paywall
+REASON_HTTP_ERROR = "http_error"  # any other status than 200
+REASON_TOO_LARGE = "too_large"
+REASON_EMPTY = "empty"
+REASON_UNSUPPORTED_TYPE = "unsupported_type"
+REASON_UNDECODABLE = "undecodable"
+REASON_TOO_THIN = "too_thin"  # fewer than MIN_WORDS words of readable text
+REASON_UNREADABLE = "unreadable"  # anything else
+URL_ERROR_REASONS = (
+    REASON_INVALID_URL, REASON_BLOCKED, REASON_FETCH_FAILED, REASON_TIMEOUT, REASON_PAYWALLED,
+    REASON_HTTP_ERROR, REASON_TOO_LARGE, REASON_EMPTY, REASON_UNSUPPORTED_TYPE,
+    REASON_UNDECODABLE, REASON_TOO_THIN, REASON_UNREADABLE,
+)  # fmt: skip
+
+
 class UrlSourceError(ValueError):
-    """The URL cannot be used as a knowledge source; the message says why."""
+    """The URL cannot be used as a knowledge source; the message says why, and `reason` (one of
+    `URL_ERROR_REASONS`) what kind of failure it is."""
+
+    def __init__(self, message: str, *, reason: str = REASON_UNREADABLE) -> None:
+        if reason not in URL_ERROR_REASONS:
+            raise ValueError(f"unknown UrlSourceError reason {reason!r}")
+        super().__init__(message)
+        self.reason = reason
 
 
 @dataclass(frozen=True)
@@ -591,27 +621,38 @@ class UrlFetcher:
             parts = urlsplit(url)
             host = parts.hostname
         except ValueError as exc:
-            raise UrlSourceError(f"{url!r} is not a valid web address ({exc})") from exc
+            raise UrlSourceError(
+                f"{url!r} is not a valid web address ({exc})", reason=REASON_INVALID_URL
+            ) from exc
         if parts.scheme not in ("http", "https"):
             raise UrlSourceError(
                 f"{url!r} is not a web address Teacher can fetch: it must start with http:// "
-                "or https://"
+                "or https://",
+                reason=REASON_INVALID_URL,
             )
         if not host:
-            raise UrlSourceError(f"{url!r} has no host name")
+            raise UrlSourceError(f"{url!r} has no host name", reason=REASON_INVALID_URL)
         if parts.username or parts.password:
-            raise UrlSourceError("the address contains a user name or password; remove it")
+            raise UrlSourceError(
+                "the address contains a user name or password; remove it",
+                reason=REASON_INVALID_URL,
+            )
         try:
             addresses = self.resolve(host)
         except OSError as exc:
-            raise UrlSourceError(f"the host {host!r} could not be found ({exc})") from exc
+            raise UrlSourceError(
+                f"the host {host!r} could not be found ({exc})", reason=REASON_FETCH_FAILED
+            ) from exc
         if not addresses:
-            raise UrlSourceError(f"the host {host!r} could not be found")
+            raise UrlSourceError(
+                f"the host {host!r} could not be found", reason=REASON_FETCH_FAILED
+            )
         for address in addresses:
             if not ipaddress.ip_address(address.split("%")[0]).is_global:
                 raise UrlSourceError(
                     f"the host {host!r} is a private or local address ({address}), which "
-                    "Teacher does not fetch"
+                    "Teacher does not fetch",
+                    reason=REASON_BLOCKED,
                 )
         return url
 
@@ -638,17 +679,18 @@ class UrlFetcher:
                         location = response.headers.get("location")
                         if not location:
                             raise UrlSourceError(
-                                f"{url} answered with a redirect (HTTP {status}) to nowhere"
+                                f"{url} answered with a redirect (HTTP {status}) to nowhere",
+                                reason=REASON_FETCH_FAILED,
                             )
                         url = urljoin(url, location)
                         continue
                     if status != 200:
-                        hint = (
-                            " The page may need a login."
-                            if status in (401, 402, 403)
-                            else ""
+                        login = status in (401, 402, 403)
+                        hint = " The page may need a login." if login else ""
+                        raise UrlSourceError(
+                            f"{url} answered with HTTP {status}.{hint}",
+                            reason=REASON_PAYWALLED if login else REASON_HTTP_ERROR,
                         )
-                        raise UrlSourceError(f"{url} answered with HTTP {status}.{hint}")
                     content_type = response.headers.get("content-type")
                     body = bytearray()
                     for chunk in response.iter_bytes():
@@ -658,18 +700,23 @@ class UrlFetcher:
                             raise UrlSourceError(
                                 f"{url} is larger than Teacher accepts "
                                 f"({MAX_PDF_BYTES // 1_000_000} MB for a PDF, "
-                                f"{MAX_TEXT_BYTES // 1_000_000} MB for a page)"
+                                f"{MAX_TEXT_BYTES // 1_000_000} MB for a page)",
+                                reason=REASON_TOO_LARGE,
                             )
                     return url, content_type or "", bytes(body)
             except httpx2.TimeoutException as exc:
                 raise UrlSourceError(
-                    f"{url} did not answer within {self.timeout:g} seconds"
+                    f"{url} did not answer within {self.timeout:g} seconds",
+                    reason=REASON_TIMEOUT,
                 ) from exc
             except httpx2.HTTPError as exc:
                 raise UrlSourceError(
-                    f"{url} could not be fetched ({exc.__class__.__name__}: {exc})"
+                    f"{url} could not be fetched ({exc.__class__.__name__}: {exc})",
+                    reason=REASON_FETCH_FAILED,
                 ) from exc
-        raise UrlSourceError(f"the address redirects more than {MAX_REDIRECTS} times")
+        raise UrlSourceError(
+            f"the address redirects more than {MAX_REDIRECTS} times", reason=REASON_FETCH_FAILED
+        )
 
     # -- the result -----------------------------------------------------------------------
 
@@ -689,14 +736,17 @@ class UrlFetcher:
         header_charset = _HEADER_CHARSET.search(content_type)
         charset = header_charset.group(1) if header_charset else None
         if not body:
-            raise UrlSourceError(f"{final} returned an empty document")
+            raise UrlSourceError(f"{final} returned an empty document", reason=REASON_EMPTY)
 
         if body.startswith(b"%PDF"):
             return FetchedSource(
                 requested, final, KIND_PAPER, PDF_TYPE, ".pdf", body, media_type or PDF_TYPE
             )
         if media_type == PDF_TYPE:
-            raise UrlSourceError(f"{final} says it is a PDF, but its content is not one")
+            raise UrlSourceError(
+                f"{final} says it is a PDF, but its content is not one",
+                reason=REASON_UNSUPPORTED_TYPE,
+            )
         if media_type in HTML_TYPES:
             root = parse_html(_decode(body, final, charset))
             markdown = html_to_markdown(root)
@@ -705,7 +755,8 @@ class UrlFetcher:
                 raise UrlSourceError(
                     f"{final} has too little readable text ({words} words; at least "
                     f"{MIN_WORDS} are needed). The page may need JavaScript or a login to "
-                    "show its content."
+                    "show its content.",
+                    reason=REASON_TOO_THIN,
                 )
             return FetchedSource(
                 requested,
@@ -724,7 +775,8 @@ class UrlFetcher:
             if words < MIN_WORDS:
                 raise UrlSourceError(
                     f"{final} has too little text ({words} words; at least {MIN_WORDS} are "
-                    "needed)"
+                    "needed)",
+                    reason=REASON_TOO_THIN,
                 )
             stored = "text/markdown" if TEXT_TYPES[media_type] == ".md" else "text/plain"
             return FetchedSource(
@@ -740,7 +792,8 @@ class UrlFetcher:
             )
         raise UrlSourceError(
             f"{final} is {media_type or 'of an undeclared type'}, which Teacher cannot read; "
-            "supported are web pages (HTML), PDFs, plain text and Markdown"
+            "supported are web pages (HTML), PDFs, plain text and Markdown",
+            reason=REASON_UNSUPPORTED_TYPE,
         )
 
 
@@ -756,12 +809,14 @@ def _decode(body: bytes, url: str, charset: str | None) -> str:
         text = body.decode(encoding, errors="replace")
     except LookupError as exc:
         raise UrlSourceError(
-            f"{url} is written in the encoding {encoding!r}, which Teacher cannot read"
+            f"{url} is written in the encoding {encoding!r}, which Teacher cannot read",
+            reason=REASON_UNDECODABLE,
         ) from exc
     bad = text.count("�")
     if bad > MAX_BAD_CHARS * max(len(text), 1):
         raise UrlSourceError(
-            f"the text of {url} could not be decoded ({bad} unreadable characters as {encoding})"
+            f"the text of {url} could not be decoded ({bad} unreadable characters as {encoding})",
+            reason=REASON_UNDECODABLE,
         )
     return text
 
@@ -773,6 +828,19 @@ __all__ = [
     "MAX_REDIRECTS",
     "MAX_TEXT_BYTES",
     "MIN_WORDS",
+    "REASON_BLOCKED",
+    "REASON_EMPTY",
+    "REASON_FETCH_FAILED",
+    "REASON_HTTP_ERROR",
+    "REASON_INVALID_URL",
+    "REASON_PAYWALLED",
+    "REASON_TIMEOUT",
+    "REASON_TOO_LARGE",
+    "REASON_TOO_THIN",
+    "REASON_UNDECODABLE",
+    "REASON_UNREADABLE",
+    "REASON_UNSUPPORTED_TYPE",
+    "URL_ERROR_REASONS",
     "FetchedSource",
     "PageDetails",
     "UrlFetcher",

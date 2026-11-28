@@ -14,6 +14,10 @@
     teacher history export [--format json|markdown] [--output PATH]
     teacher references extract <source-slug> | --all [--redo] [--stub]
     teacher costs backfill [--dry-run]
+    teacher discover "<topic>" | --concept SLUG [--level intro|intermediate|advanced] [--json]
+    teacher explore "<topic>" [--level intro|intermediate|advanced] [--json]
+    teacher explore --enrich <exploration-id> [--yes] [--json]
+    teacher explore --roadmap <exploration-id> [--json]
     teacher users list
     teacher users add|set-password|disable|enable <email>
 
@@ -97,6 +101,61 @@ combined input count was kept: their cost is an upper bound) and how many have n
 with the total. It is idempotent (a second run adds nothing) and never duplicates a call the
 ledger recorded live. `--dry-run` prints the same without adding anything. It makes no API call
 and migrates the database to head first; status 1 with the error on stderr when it fails.
+
+`discover` finds candidate sources for a topic, or for a concept of the graph (`--concept`
+with its slug: its name, aliases and summary are searched), at a reader `--level` (default
+intermediate), with `teacher.discovery`: Claude with web search (the generation model) and
+arXiv in parallel, merged and matched against the library, each candidate fetched without
+storing anything, the readable ones scored by one call to the metadata model. It prints the
+ranked candidates with their verdicts, scores and reasons, every provider's status (a failed
+one also as a warning on stderr), and what the model calls cost; `--json` prints the whole
+result as JSON instead. It adds nothing to the library. Its model calls are recorded in the
+cost ledger (purpose `source_discovery`) and their cost is printed. Status 1 with the error on
+stderr when every provider failed, triage failed, or the topic or concept is not valid. It
+migrates the database to head first.
+
+`explore` explores a topic at a reader `--level` (default intermediate) with
+`teacher.exploration`, in the foreground: a brief (the generation model, told what the reader
+has studied), an outline of at most 12 concepts in ordered steps, each concept matched against
+the concept graph (read-only: nothing is written to the graph) and, for each one that is new or
+thinly covered, candidate sources found as `discover` finds them (at most two searches and five
+candidates per concept). It prints these limits and each stage on stderr as it starts (there
+is no price estimate), then the outline with
+every concept's match, its candidates with their verdicts and reasons, every concept whose
+search failed (also as a warning on stderr), and what the run cost (from the cost ledger, purpose
+`exploration`); `--json` prints the whole exploration as the API returns it. The exploration is
+stored (without an account, so it is listed on the Explore page when the app runs without
+accounts) and nothing is added to the library. Status 1 with the error on stderr when the topic
+or level is not valid, the run cannot start (no credentials, a stale embedding index) or it
+failed. It migrates the database to head first.
+
+`explore --enrich <id>` enriches a completed exploration stored without an account (those
+`explore` made, or the app's when it runs without accounts) with `teacher.exploration.
+enrichment`: it prints what will happen (the ticked sources to add or link, the concepts to use
+or look up again and create, each prerequisite link and whether it will be added, is present or
+will be skipped, and which model calls it makes; there is no price estimate) and asks to go on
+(`--yes` goes on without asking; without a terminal to ask on it is an error and nothing
+changes). Then, in the foreground with each stage on stderr: the approved sources are ingested
+as the Add page adds an address, with concept extraction only (no study page), the outline is
+written to the concept graph and each concept's grounding is checked. It prints the summary
+(sources added, already held, failed with their errors; concepts matched, found, created;
+relations added, present, skipped with reasons; concepts grounded and still ungrounded) and
+what it cost; `--json` prints the whole exploration instead. Status 1 with the error on stderr
+when the exploration is not found or not completed, one is being enriched, the plan was not
+confirmed, it cannot start or it failed (a source that failed is not a failure of the
+enrichment: it is listed, kept ticked, and tried again next time).
+
+`explore --roadmap <id>` prints the roadmap of a completed exploration stored without an account
+(`teacher.exploration.roadmap`): its overall progress and next action, then each step (done,
+current or upcoming) with its concepts: whether each is done and why, the reader's standing, the
+primary source (recommended or chosen) and its study page with how far it is, or that it has
+none yet, or that no source grounds it. `--json` prints the roadmap as `GET
+/api/explorations/{id}/roadmap` returns it. It is read-only: nothing is generated or written
+(it does not bring the review queue's items up to date as the web app does first, so a weak
+concept's review counts are those of the last queue read) and the gates count as cleared after
+the app's default number of attempts (`teacher.reading.DEFAULT_MAX_ATTEMPTS`). Status 1 with
+the error on stderr when the exploration is not found or not completed. It migrates the
+database to head first.
 
 `db info` prints the database in use (the provider's description: never a password), the
 revision it is at and the head revision, and the data root its files live under. It changes
@@ -300,6 +359,51 @@ def build_parser() -> argparse.ArgumentParser:
     )
     cost_backfill.add_argument(
         "--dry-run", action="store_true", help="say what would be added, add nothing"
+    )
+    from teacher.discovery.common import DEFAULT_LEVEL, LEVELS
+
+    discover = commands.add_parser(
+        "discover", help="find candidate sources for a topic or a concept (adds nothing)"
+    )
+    discover_target = discover.add_mutually_exclusive_group(required=True)
+    discover_target.add_argument("topic", nargs="?", help="what to find sources for")
+    discover_target.add_argument(
+        "--concept", default=None, help="a concept's slug: find sources for that concept"
+    )
+    discover.add_argument(
+        "--level", choices=tuple(LEVELS), default=DEFAULT_LEVEL,
+        help=f"the reader's level (default {DEFAULT_LEVEL})",
+    )  # fmt: skip
+    discover.add_argument(
+        "--json", action="store_true", help="print the whole result as JSON"
+    )
+    explore = commands.add_parser(
+        "explore",
+        help="outline a topic into concepts, match them against the graph and find sources "
+        "(adds nothing); or enrich a completed exploration (--enrich)",
+    )
+    explore_target = explore.add_mutually_exclusive_group(required=True)
+    explore_target.add_argument("topic", nargs="?", help="what to explore")
+    explore_target.add_argument(
+        "--enrich", type=int, default=None, metavar="ID",
+        help="add the ticked sources of completed exploration ID to the library and its "
+        "outline to the concept graph (asks first)",
+    )  # fmt: skip
+    explore_target.add_argument(
+        "--roadmap", type=int, default=None, metavar="ID",
+        help="print the roadmap of completed exploration ID: its steps, progress and next "
+        "action (read-only)",
+    )  # fmt: skip
+    explore.add_argument(
+        "--level", choices=tuple(LEVELS), default=None,
+        help=f"the reader's level (default {DEFAULT_LEVEL})",
+    )  # fmt: skip
+    explore.add_argument(
+        "--yes", action="store_true", help="with --enrich: go ahead without asking"
+    )
+    explore.add_argument(
+        "--json", action="store_true",
+        help="print the whole exploration (with --roadmap: the roadmap) as JSON",
     )
     users = commands.add_parser("users", help="the accounts people sign in with")
     user_actions = users.add_subparsers(dest="action", required=True)
@@ -792,6 +896,436 @@ def costs_backfill(*, dry_run: bool = False) -> int:
     return 0
 
 
+# -- discover -------------------------------------------------------------------------------
+
+
+def build_source_finder(models: ModelSettings) -> Any:
+    """The source finder `discover` uses (tests replace this function)."""
+    from teacher.discovery import build_source_finder as build
+
+    return build(models)
+
+
+def discover(
+    topic: str | None, *, concept: str | None = None, level: str, as_json: bool = False
+) -> int:
+    """Find candidate sources for `topic` or the concept `concept` and print them (as JSON with
+    `as_json`); nothing is added. A provider that failed is listed (and repeated on stderr);
+    the status is 0 as long as a result came back, else 1."""
+    import json
+
+    from teacher.costs import cost_scope
+    from teacher.db.migrate import upgrade_to_head
+    from teacher.discovery import (
+        LEDGER_PURPOSE,
+        DiscoveryError,
+        DiscoveryQuery,
+        concept_query,
+        find_sources,
+    )
+    from teacher.managers import ManagerError
+
+    try:
+        settings = Settings.from_env()
+        finder = build_source_finder(ModelSettings.from_env())
+        upgrade_to_head(settings)
+        if concept is not None:
+            query = concept_query(settings, concept, level)
+        else:
+            query = DiscoveryQuery(topic or "", level=level)
+        with cost_scope(settings, purpose=LEDGER_PURPOSE):
+            result = find_sources(settings, finder, query)
+    except (DiscoveryError, ManagerError, ValueError) as exc:
+        return _fail(str(exc))
+    for status in result.providers:
+        if not status.ok:
+            print(f"warning: the {status.name} provider failed: {status.error}", file=sys.stderr)
+    if as_json:
+        sys.stdout.write(json.dumps(result.to_dict(), ensure_ascii=False, indent=2) + "\n")
+        return 0
+    for line in result.summary_lines():
+        print(line)
+    return 0
+
+
+# -- explore --------------------------------------------------------------------------------
+
+
+def build_explorer(models: ModelSettings) -> Any:
+    """The explorer `explore` uses (tests replace this function): the default source finder
+    and the concept graph's embedder (`teacher.embeddings.OpenAIEmbedder`)."""
+    from teacher.embeddings import OpenAIEmbedder
+    from teacher.exploration import build_explorer as build
+
+    return build(
+        models, finder=build_source_finder(models), embedder=OpenAIEmbedder(models.embedding)
+    )
+
+
+def _exploration_lines(data: dict[str, Any]) -> list[str]:
+    """An exploration (`teacher.exploration.view.exploration_detail`) as text."""
+    lines = [
+        f"Exploration {data['id']}: {data['prompt']!r} (level {data['level']}): {data['status']}."
+    ]
+    brief = data.get("brief")
+    if brief:
+        lines.append(f"Brief: {brief['summary']}")
+        lines.append(f"  In scope: {'; '.join(brief['in_scope'])}")
+        if brief["out_of_scope"]:
+            lines.append(f"  Out of scope: {'; '.join(brief['out_of_scope'])}")
+        lines.append(f"  Level: {brief['level_note']}")
+    for step in data["steps"]:
+        lines.append(f"Step {step['number']}: {step['title']}")
+        for c in step["concepts"]:
+            known = c["known"]
+            if c["status"] == "known" and known:
+                standing = known["standing"]["status"]
+                what = f"known: {known['concept']['slug']} ({c['match']['method']}), standing {standing}"
+            elif c["match"] is not None and c["match"]["concept_missing"]:
+                what = "known, but its concept was deleted since"
+            else:
+                what = c["status"] if c["status"] != "planned" else "new"
+            lines.append(f"  {c['position']:2}. {c['name']} [{what}; coverage {c['coverage']}]")
+            prereqs = ", ".join(p["name"] for p in c["prerequisites"])
+            if prereqs:
+                lines.append(f"      builds on: {prereqs}")
+            for entry in c["discovery"]["log"]:
+                if "attempt" in entry:
+                    found = (
+                        f"failed: {entry['error']}" if entry["error"]
+                        else f"{entry['candidates']} candidate(s), {entry['fitting']} fitting"
+                    )
+                    lines.append(f"      search {entry['attempt']} {entry['query']!r}: {found}")
+                elif entry.get("note"):
+                    lines.append(f"      {entry['note']}")
+            for cand in c["candidates"]:
+                score = f"[{cand['overall']:.1f}]" if cand["overall"] is not None else "[--]"
+                fit = "; fits" if cand["fits"] else ""
+                lines.append(f"      {cand['rank']}. {score} {cand['title']} <{cand['url']}>")
+                lines.append(f"         {cand['verdict']}: {cand['verdict_reason']}{fit}")
+                if cand["triage"]:
+                    lines.append(f"         {cand['triage']['treatment']}: {cand['triage']['reason']}")
+                if cand["library"]:
+                    held = ", ".join(m["slug"] for m in cand["library"])
+                    lines.append(f"         already in the library: {held}")
+            if c["discovery"]["error"]:
+                lines.append(f"      SOURCE SEARCH FAILED: {c['discovery']['error']}")
+    for note in data["notes"]:
+        lines.append(f"Note: {note}")
+    if data["error"]:
+        lines.append(f"Error: {data['error']}")
+    cost = data["cost"]
+    text = f"Cost: ${cost['total_usd']:.4f} in {cost['calls']} model call(s)"
+    if cost["unknown_price_calls"]:
+        text += f", plus calls with no known price ({', '.join(cost['unknown_price_models'])})"
+    if cost["web_search_requests"]:
+        text += f"; {cost['web_search_requests']} web search(es), not priced"
+    lines.append(text + "; recorded in the cost ledger.")
+    return lines
+
+
+def explore(topic: str, *, level: str, as_json: bool = False) -> int:
+    """Explore `topic` in the foreground and print the result (JSON with `as_json`)."""
+    import json
+
+    from teacher.db.engine import session_scope
+    from teacher.db.migrate import upgrade_to_head
+    from teacher.exploration import (
+        LIMITS,
+        ExplorationError,
+        exploration_detail,
+        run_exploration,
+        start_exploration,
+    )
+    from teacher.managers import ExplorationManager, ManagerError
+
+    try:
+        settings = Settings.from_env()
+        explorer = build_explorer(ModelSettings.from_env())
+        upgrade_to_head(settings)
+        exploration_id = start_exploration(settings, explorer, topic, level, owner=None)
+    except (ExplorationError, ManagerError, ValueError) as exc:
+        return _fail(str(exc))
+    print(f"exploration {exploration_id}: started. {LIMITS['note']}", file=sys.stderr)
+    run_exploration(
+        settings, exploration_id, explorer,
+        on_stage=lambda stage: print(f"exploration {exploration_id}: {stage}", file=sys.stderr),
+    )  # fmt: skip
+    with session_scope(settings) as session:
+        row = ExplorationManager(session, settings, owner=None).get(exploration_id)
+        data = exploration_detail(session, settings, row)
+    for step in data["steps"]:
+        for c in step["concepts"]:
+            if c["discovery"]["error"]:
+                print(
+                    f"warning: the source search for {c['name']!r} failed: "
+                    f"{c['discovery']['error']}",
+                    file=sys.stderr,
+                )
+    if as_json:
+        sys.stdout.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    else:
+        for line in _exploration_lines(data):
+            print(line)
+    if data["status"] != "completed":
+        return _fail(data["error"] or f"the exploration is {data['status']}")
+    return 0
+
+
+def build_enricher(models: ModelSettings) -> Any:
+    """The enricher `explore --enrich` uses (tests replace this function): the Add page's URL
+    fetcher and metadata extractor, concept extraction and the graph match's resolver, sharing
+    one embedder."""
+    from teacher.concept_extraction import ConceptExtractor
+    from teacher.exploration import GraphMatcher
+    from teacher.exploration import build_enricher as build
+    from teacher.metadata import MetadataExtractor
+    from teacher.url_sources import UrlFetcher
+
+    embedder = build_embedder(models)
+    return build(
+        fetcher=UrlFetcher(),
+        metadata_extractor=MetadataExtractor(model=models.metadata),
+        concept_extractor=ConceptExtractor(model=models.concept, embedder=embedder),
+        matcher=GraphMatcher(embedder=embedder, model=models.concept),
+    )
+
+
+def confirm(prompt: str) -> bool:
+    """Ask a yes/no question on the terminal (tests replace this function); PromptError
+    without a terminal to ask on."""
+    if not sys.stdin.isatty():
+        raise PromptError("no terminal to ask on; pass --yes to go ahead without asking")
+    try:
+        answer = input(prompt)
+    except (EOFError, KeyboardInterrupt):
+        raise PromptError("cancelled: nothing was changed") from None
+    return answer.strip().lower() in ("y", "yes")
+
+
+def _preview_lines(preview: dict[str, Any]) -> list[str]:
+    """What an enrichment will do (`teacher.exploration.enrichment.enrichment_preview`)."""
+    src, con, links = preview["sources"], preview["concepts"], preview["links"]
+    lines = [
+        f"Enriching exploration {preview['exploration_id']} will:",
+        f"  add {src['to_add']} source(s) to the library and link {src['to_link']} it already "
+        "holds, each with concept extraction only (no study page):",
+    ]
+    for item in src["items"]:
+        if item["action"] == "link":
+            held = item["held"]
+            what = f"link {held['slug']} (already in the library, by {held['method']})"
+        else:
+            what = "add"
+        extraction = "" if item["extraction"] == "run" else "; its concepts were extracted before"
+        lines.append(f"    - {item['title']} <{item['url']}>: {what}{extraction}")
+        if item["last_error"]:
+            lines.append(f"      (the last attempt failed: {item['last_error']})")
+    lines.append(
+        f"  write {con['total']} concept(s) to the concept graph: {con['matched']} already "
+        f"there, {con['to_resolve']} looked up again after the ingest and created if absent "
+        "(unreviewed, origin model):"
+    )
+    for item in con["items"]:
+        where = f"use {item['concept']['slug']}" if item["concept"] else "look up, create if absent"
+        lines.append(f"    - {item['name']}: {where}")
+    lines.append(
+        f"  write {links['total']} prerequisite link(s) as builds_on: {links['to_add']} to add, "
+        f"{links['present']} already present, {links['to_skip']} to skip:"
+    )
+    for item in links["items"]:
+        reason = f" ({item['reason']})" if item["reason"] else ""
+        lines.append(f"    - {item['from']} builds on {item['to']}: {item['expected']}{reason}")
+    if preview["dropped"]:
+        lines.append(f"  leave out the dropped concept(s): {', '.join(preview['dropped'])}")
+    lines.append(f"  {preview['model_calls']}")
+    return lines
+
+
+def _summary_lines(enrichment: dict[str, Any]) -> list[str]:
+    summary = enrichment["summary"] or {}
+    lines = [f"Enrichment {enrichment['id']}: {enrichment['status']}."]
+    if summary:
+        src, con, rel, gro = (summary[k] for k in ("sources", "concepts", "relations", "grounding"))
+        lines.append(
+            f"Sources: {src['added']} added, {src['held']} already held, {src['failed']} failed."
+        )
+        for item in src["items"]:
+            if item["outcome"] == "failed":
+                lines.append(f"  FAILED {item['title']} <{item['url']}>: {item['error']}")
+            else:
+                lines.append(f"  {item['outcome']}: {item['title']} -> {item['slug']}")
+        lines.append(
+            f"Concepts: {con['matched'] + con['found']} matched ({con['found']} found again "
+            f"after the ingest), {con['created']} created."
+        )
+        for item in con["items"]:
+            lines.append(f"  {item['outcome']}: {item['name']} -> {item['slug']}")
+        lines.append(
+            f"Relations: {rel['added']} added, {rel['present']} already present, "
+            f"{rel['skipped']} skipped."
+        )
+        for item in rel["items"]:
+            if item["outcome"] == "skipped":
+                lines.append(f"  skipped {item['from']} builds on {item['to']}: {item['reason']}")
+        lines.append(f"Grounding: {gro['grounded']} grounded, {gro['ungrounded']} still ungrounded.")
+        for item in gro["items"]:
+            if item["grounded"]:
+                lines.append(f"  grounded: {item['name']} by {', '.join(item['sources'])}")
+            else:
+                lines.append(
+                    f"  NOT GROUNDED: {item['name']} ({item['proposed']} proposed candidate(s) "
+                    "left to tick)"
+                )
+    if enrichment["error"]:
+        lines.append(f"Error: {enrichment['error']}")
+    cost = enrichment["cost"]
+    lines.append(
+        f"Cost: ${cost['total_usd']:.4f} in {cost['calls']} model call(s)"
+        + (f", plus calls with no known price ({', '.join(cost['unknown_price_models'])})"
+           if cost["unknown_price_calls"] else "")  # fmt: skip
+        + "; recorded in the cost ledger."
+    )
+    return lines
+
+
+def explore_enrich(exploration_id: int, *, yes: bool = False, as_json: bool = False) -> int:
+    """Show what enriching exploration `exploration_id` will do, ask (unless `yes`), then run
+    it in the foreground and print the summary (the exploration as JSON with `as_json`)."""
+    import json
+
+    from teacher.db.engine import session_scope
+    from teacher.db.migrate import upgrade_to_head
+    from teacher.exploration import (
+        ExplorationError,
+        enrichment_preview,
+        exploration_detail,
+        run_enrichment,
+        start_enrichment,
+    )
+    from teacher.managers import ExplorationManager, ManagerError
+
+    try:
+        settings = Settings.from_env()
+        enricher = build_enricher(ModelSettings.from_env())
+        upgrade_to_head(settings)
+        with session_scope(settings) as session:
+            row = ExplorationManager(session, settings, owner=None).get(exploration_id)
+            preview = enrichment_preview(session, settings, row)
+        if not preview["can_start"]:
+            raise ValueError(preview["blocked"])
+        for line in _preview_lines(preview):
+            print(line, file=sys.stderr if as_json else sys.stdout)
+        if not yes and not confirm("Go ahead? [y/N] "):
+            return _fail("nothing was changed: the enrichment was not confirmed")
+        enrichment_id = start_enrichment(
+            settings, enricher, exploration_id, owner=None, digest=preview["digest"]
+        )
+    except (ExplorationError, ManagerError, ValueError, PromptError) as exc:
+        return _fail(str(exc))
+    print(f"enrichment {enrichment_id} of exploration {exploration_id}: started", file=sys.stderr)
+    run_enrichment(
+        settings, enrichment_id, enricher,
+        on_stage=lambda stage: print(f"enrichment {enrichment_id}: {stage}", file=sys.stderr),
+    )  # fmt: skip
+    with session_scope(settings) as session:
+        row = ExplorationManager(session, settings, owner=None).get(exploration_id)
+        data = exploration_detail(session, settings, row)
+    enrichment = data["enrichment"]
+    if as_json:
+        sys.stdout.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    else:
+        for line in _summary_lines(enrichment):
+            print(line)
+    for item in (enrichment["summary"] or {}).get("sources", {}).get("items", []):
+        if item["outcome"] == "failed":
+            print(f"warning: {item['title']!r} was not ingested: {item['error']}", file=sys.stderr)
+    if enrichment["status"] != "completed":
+        return _fail(enrichment["error"] or f"the enrichment is {enrichment['status']}")
+    return 0
+
+
+def _roadmap_lines(view: dict[str, Any]) -> list[str]:
+    """A roadmap (`teacher.exploration.roadmap.roadmap_view`) as text."""
+    x, p = view["exploration"], view["progress"]
+    state = "complete" if p["complete"] else f"step {view['current_step']} of {p['steps_total']}"
+    lines = [
+        f"Roadmap of exploration {x['id']}: {x['prompt']!r} (level {x['level']}): {state}.",
+        f"Progress: {p['concepts_done']} of {p['concepts_total']} concept(s) done, "
+        f"{p['steps_done']} of {p['steps_total']} step(s) done.",
+        f"Next: {view['next_action']['text']}",
+    ]
+    if view["next_action"]["url"]:
+        lines[-1] += f" <{view['next_action']['url']}>"
+    for step in view["steps"]:
+        lines.append(
+            f"Step {step['number']}: {step['title']} [{step['state']}; {step['done']} of "
+            f"{step['total']} done]"
+        )
+        for c in step["concepts"]:
+            mark = "x" if c["done"] else " "
+            standing = c["standing"]["status"] if c["standing"] else "not in the graph"
+            lines.append(f"  [{mark}] {c['name']} (standing {standing})")
+            if c["done"]:
+                lines.append(f"      done: {', '.join(c['done_by'])}")
+            source = c["primary_source"]
+            if source is not None:
+                how = "chosen" if source["chosen"] else "recommended"
+                lines.append(f"      source ({how}): {source['title']} [{source['slug']}]")
+                others = [s["slug"] for s in c["sources"] if s["slug"] != source["slug"]]
+                if others:
+                    lines.append(f"      other grounding sources: {', '.join(others)}")
+            if c["choice_problem"]:
+                lines.append(f"      NO SOURCE: {c['choice_problem']}")
+            page = c["page"]
+            if page is not None:
+                if page["status"] == "generating":
+                    how_far = "being generated"
+                elif page["complete"]:
+                    how_far = "complete"
+                else:
+                    how_far = f"{page['gates_cleared']} of {page['gates_total']} gate(s) cleared"
+                lines.append(f"      page: {page['title']} [{page['slug']}]: {how_far}")
+            elif c["can_generate"]:
+                lines.append("      page: none yet (generate it on the roadmap page)")
+            elif c["state"] == "ungrounded":
+                lines.append("      NOT GROUNDED: no library source introduces it; enrich first")
+            if c["failed_page"]:
+                lines.append(f"      the last generation failed: {c['failed_page']['slug']}")
+            if c["shared_with"]:
+                lines.append(f"      its source is also the source of: {', '.join(c['shared_with'])}")
+    if view["dropped"]:
+        lines.append(f"Dropped (not counted): {', '.join(d['name'] for d in view['dropped'])}")
+    return lines
+
+
+def explore_roadmap(exploration_id: int, *, as_json: bool = False) -> int:
+    """Print the roadmap of exploration `exploration_id` (JSON with `as_json`). Read-only."""
+    import json
+
+    from teacher.db.engine import session_scope
+    from teacher.db.migrate import upgrade_to_head
+    from teacher.exploration import roadmap_view
+    from teacher.managers import ExplorationManager, ManagerError
+    from teacher.reading import DEFAULT_MAX_ATTEMPTS
+
+    try:
+        settings = Settings.from_env()
+        upgrade_to_head(settings)
+        with session_scope(settings) as session:
+            row = ExplorationManager(session, settings, owner=None).get(exploration_id)
+            view = roadmap_view(session, settings, row, max_attempts=DEFAULT_MAX_ATTEMPTS)
+            session.rollback()  # read-only: nothing to keep
+    except (ManagerError, ValueError) as exc:
+        return _fail(str(exc))
+    if as_json:
+        sys.stdout.write(json.dumps(view, ensure_ascii=False, indent=2) + "\n")
+    else:
+        for line in _roadmap_lines(view):
+            print(line)
+    return 0
+
+
 # -- users ----------------------------------------------------------------------------------
 
 
@@ -1026,6 +1560,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         return costs_backfill(dry_run=args.dry_run)
     if args.command == "users":
         return users_command(args.action, getattr(args, "email", None))
+    if args.command == "discover":
+        return discover(args.topic, concept=args.concept, level=args.level, as_json=args.json)
+    if args.command == "explore":
+        from teacher.discovery.common import DEFAULT_LEVEL
+
+        if args.enrich is not None:
+            if args.level is not None:
+                return _fail("--level is for exploring a topic, not with --enrich")
+            return explore_enrich(args.enrich, yes=args.yes, as_json=args.json)
+        if args.roadmap is not None:
+            if args.level is not None:
+                return _fail("--level is for exploring a topic, not with --roadmap")
+            if args.yes:
+                return _fail("--yes is only used with --enrich")
+            return explore_roadmap(args.roadmap, as_json=args.json)
+        if args.yes:
+            return _fail("--yes is only used with --enrich")
+        return explore(args.topic, level=args.level or DEFAULT_LEVEL, as_json=args.json)
     raise AssertionError(f"unhandled command {args.command!r}")  # argparse requires one
 
 

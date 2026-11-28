@@ -46,6 +46,10 @@ from teacher.managers.artifact_blocks import ArtifactBlockManager
 from teacher.managers.block_responses import BlockProgress, BlockResponseManager
 from teacher.managers.errors import NotFoundError
 
+#: The attempts a gate allows before it reveals its answer, unless the app is given another
+#: (`teacher.web.app.create_app(max_attempts=...)`; `teacher serve` uses this one).
+DEFAULT_MAX_ATTEMPTS = 2
+
 OPEN = "open"
 PASSED = "passed"
 REVEALED = "revealed"
@@ -308,6 +312,7 @@ def submit_response(
 
 
 __all__ = [
+    "DEFAULT_MAX_ATTEMPTS",
     "GATE_STATES",
     "OPEN",
     "PASSED",

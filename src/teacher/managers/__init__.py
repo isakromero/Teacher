@@ -35,8 +35,10 @@ from teacher.managers.errors import (
     RelationConflictError,
     SourceInUseError,
     StaleEmbeddingsError,
+    StateConflictError,
     VectorIndexError,
 )
+from teacher.managers.explorations import ExplorationManager
 from teacher.managers.generation_runs import GenerationRunManager
 from teacher.managers.glossary import GlossaryManager
 from teacher.managers.highlights import HighlightManager
@@ -71,6 +73,7 @@ __all__ = [
     "DroppedRelation",
     "DuplicateError",
     "EmbeddingIndexError",
+    "ExplorationManager",
     "GenerationRunManager",
     "GlossaryManager",
     "HighlightManager",
@@ -93,6 +96,7 @@ __all__ = [
     "SourceReferenceManager",
     "SourceSegmentManager",
     "StaleEmbeddingsError",
+    "StateConflictError",
     "StepStatus",
     "StudyHistoryManager",
     "TagSpec",

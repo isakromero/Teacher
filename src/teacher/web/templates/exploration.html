@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{#- One exploration to review (GET /api/explorations/{id}): the brief, the outline by step with
+    each concept's status and candidate sources, progress while it runs, and what it cost. The
+    edits (rename, drop, reorder steps, tick sources) are saved; nothing else happens until the
+    reader asks to enrich (the Enrich section: a preview of what will happen, then the confirmed
+    enrichment's progress and summary). A completed exploration links to its roadmap
+    (/explore/{id}/roadmap). Driven by static/js/exploration.js. -#}
+{% block title %}{{ prompt }}{% endblock %}
+{% block page_class %}page-explore{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ static('css/discover.css') }}">
+<link rel="stylesheet" href="{{ static('css/explore.css') }}">{% endblock %}
+{% block content %}
+<div id="exploration-page" data-page="exploration" data-exploration="{{ exploration_id }}">
+  <header class="page-header">
+    <p class="crumbs"><a href="/explore">Explore</a></p>
+    <h1 id="exploration-title">{{ prompt }}</h1>
+    <p id="exploration-meta" class="lead" aria-live="polite"></p>
+    <p id="exploration-roadmap-link" hidden><a class="button" href="/explore/{{ exploration_id }}/roadmap">Open the roadmap</a>
+      <span class="muted small">the steps to work through, with your progress and a study page per concept</span></p>
+  </header>
+  <div id="exploration-progress" class="notice" role="status" aria-live="polite" hidden></div>
+  <div id="exploration-error" class="notice notice-error" role="alert" hidden></div>
+  <div id="exploration-failures" class="notice notice-warn" role="alert" hidden></div>
+  <div id="exploration-edit-error" class="error" role="alert" hidden></div>
+
+  <section id="exploration-brief" class="card" aria-labelledby="exploration-brief-heading" hidden>
+    <h2 id="exploration-brief-heading">Brief</h2>
+    <div id="exploration-brief-body"></div>
+  </section>
+
+  <section id="exploration-outline" aria-labelledby="exploration-outline-heading" hidden>
+    <h2 id="exploration-outline-heading">Outline</h2>
+    <p class="hint">Rename or drop a concept, move a step, and tick the sources you want; your
+      choices are saved. Nothing is added to your library or your concept graph until you
+      enrich (below) and confirm.</p>
+    <div id="exploration-steps"></div>
+  </section>
+
+  <section id="exploration-enrich" class="card explore-enrich" aria-labelledby="exploration-enrich-heading" hidden>
+    <h2 id="exploration-enrich-heading">Enrich</h2>
+    <p class="hint">Add the sources you ticked to your library (their concepts are extracted; no
+      study page is made), write this outline and its prerequisite links to your concept graph,
+      and see which concepts a source now grounds. You see what will happen first; nothing
+      changes until you confirm.</p>
+    <div id="exploration-enrich-status" role="status" aria-live="polite"></div>
+    <div id="exploration-enrich-error" class="error" role="alert" hidden></div>
+    <p><button id="exploration-enrich-button" type="button" class="button">Enrich...</button></p>
+    <div id="exploration-enrich-preview" class="explore-enrich-preview" hidden></div>
+  </section>
+
+  <section id="exploration-footer" class="explore-footer" hidden>
+    <p id="exploration-cost" class="muted small"></p>
+    <p class="muted small">{{ limits.note }}</p>
+  </section>
+  <p id="exploration-loading" class="loading">Loading the exploration...</p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ static('js/exploration.js') }}"></script>
+{% endblock %}

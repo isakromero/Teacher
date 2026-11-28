@@ -1,5 +1,7 @@
 """Server-rendered HTML pages: home, the library, adding a source, a source, an artifact
-(reader), a lab, the concept graph, the study history. `/artifacts/{slug}` of a lab redirects to `/labs/{slug}`, and
+(reader), a lab, the concept graph, the study history, and exploring a topic (`/explore`: the
+form and the past explorations; `/explore/{id}`: one exploration to review, a 404 page for
+another account's; `/explore/{id}/roadmap`: its roadmap, likewise). `/artifacts/{slug}` of a lab redirects to `/labs/{slug}`, and
 `/labs/{slug}` of any other artifact to `/artifacts/{slug}`, so either link reaches the right
 page.
 
@@ -9,7 +11,8 @@ a redirect or a 404) and render a skeleton; everything else is fetched by the pa
 from the JSON API (`/api/...`), so no API logic lives here. `/` (home: search, what to continue,
 suggestions and a summary of the history), `/add` (the form to add a source; adding it is
 logged by the API) and `/history` log nothing: looking at the history is not studying.
-`/?q=<words>` opens home with that search.
+`/?q=<words>` opens home with that search. `/explore`, `/explore/{id}` and
+`/explore/{id}/roadmap` log nothing either: planning is not studying.
 
 Every template gets `nav`, the header link to mark as the current page (`aria-current`).
 `base.html` shows a small "Local SQLite" badge in the header when the app runs on the local
@@ -28,16 +31,19 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from teacher.db.providers import create_db_provider
+from teacher.discovery.common import DEFAULT_LEVEL, LEVEL_LABELS
+from teacher.exploration.common import LIMITS
 from teacher.labs import LAB_KIND
 from teacher.managers import (
     ArtifactManager,
     ConceptManager,
+    ExplorationManager,
     KnowledgeSourceManager,
     NotFoundError,
     StudyHistoryManager,
 )
 from teacher.managers.study_history import SESSION_IDLE_GAP
-from teacher.web.deps import SessionDep, SettingsDep
+from teacher.web.deps import CurrentUserDep, SessionDep, SettingsDep
 
 WEB_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = WEB_DIR / "templates"
@@ -104,8 +110,71 @@ def library_page(request: Request, session: SessionDep, settings: SettingsDep) -
 
 @router.get("/add", response_class=HTMLResponse)
 def add_page(request: Request) -> HTMLResponse:
-    """Add a source: a PDF from this computer or a web address."""
-    return templates.TemplateResponse(request, "add.html", {"nav": "add"})
+    """Add a source: a PDF from this computer or a web address, or one found by "Find
+    sources" (`POST /api/sources/discover`); `levels` are the reader levels it offers."""
+    return templates.TemplateResponse(
+        request,
+        "add.html",
+        {"nav": "add", "levels": LEVEL_LABELS, "default_level": DEFAULT_LEVEL},
+    )
+
+
+@router.get("/explore", response_class=HTMLResponse)
+def explore_page(request: Request) -> HTMLResponse:
+    """Explore a topic: the form (with the caps a run keeps to) and the past explorations."""
+    return templates.TemplateResponse(
+        request,
+        "explore.html",
+        {
+            "nav": "explore",
+            "levels": LEVEL_LABELS,
+            "default_level": DEFAULT_LEVEL,
+            "limits": LIMITS,
+        },
+    )
+
+
+@router.get("/explore/{exploration_id}", response_class=HTMLResponse)
+def exploration_page(
+    exploration_id: int,
+    request: Request,
+    session: SessionDep,
+    settings: SettingsDep,
+    user: CurrentUserDep,
+) -> HTMLResponse:
+    """One exploration to review (filled in by static/js/exploration.js)."""
+    owner = user.id if user is not None else None
+    try:
+        row = ExplorationManager(session, settings, owner=owner).get(exploration_id)
+    except NotFoundError:
+        return not_found(request, f"There is no exploration {exploration_id}.")
+    return templates.TemplateResponse(
+        request,
+        "exploration.html",
+        {"exploration_id": row.id, "prompt": row.prompt, "nav": "explore", "limits": LIMITS},
+    )
+
+
+@router.get("/explore/{exploration_id}/roadmap", response_class=HTMLResponse)
+def roadmap_page(
+    exploration_id: int,
+    request: Request,
+    session: SessionDep,
+    settings: SettingsDep,
+    user: CurrentUserDep,
+) -> HTMLResponse:
+    """One exploration's roadmap (filled in by static/js/roadmap.js; a roadmap of an exploration
+    that is not completed is the API's 409, which the page shows)."""
+    owner = user.id if user is not None else None
+    try:
+        row = ExplorationManager(session, settings, owner=owner).get(exploration_id)
+    except NotFoundError:
+        return not_found(request, f"There is no exploration {exploration_id}.")
+    return templates.TemplateResponse(
+        request,
+        "roadmap.html",
+        {"exploration_id": row.id, "prompt": row.prompt, "nav": "explore"},
+    )
 
 
 @router.get("/history", response_class=HTMLResponse)

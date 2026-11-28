@@ -252,14 +252,23 @@ for (const [name, input] of Object.entries(modeInputs)) {
 
 // A web address filled in from elsewhere: an /add?url=... link (a reference's "Add to library")
 // or the "Cited by your library" list (add_frontier.js, through the `teacher:prefill-url`
-// event). It only fills the field; the reader presses Fetch.
-function prefillUrl(url) {
+// event). It only fills the field; the reader presses Fetch. With `fetch` (a "Find sources"
+// result's Add button, add_discover.js) it is also fetched, which stores nothing: the details
+// appear for the reader to check, and only "Add to library" adds it.
+function prefillUrl(url, { fetch = false } = {}) {
   if (uploading) return;
   setMode("url");
   urlInput.value = url;
-  urlFetch.focus();
+  if (fetch) {
+    form.scrollIntoView({ block: "start" });
+    detectUrl();
+  } else {
+    urlFetch.focus();
+  }
 }
-document.addEventListener("teacher:prefill-url", (event) => prefillUrl(event.detail.url));
+document.addEventListener("teacher:prefill-url", (event) =>
+  prefillUrl(event.detail.url, { fetch: Boolean(event.detail.fetch) })
+);
 const linked = prefilledUrl(window.location.search);
 if (linked && linked.error) {
   setMode("url");
